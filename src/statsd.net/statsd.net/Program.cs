@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Topshelf;
+using Topshelf.ServiceConfigurators;
 
 namespace statsd.net
 {
@@ -12,8 +14,15 @@ namespace statsd.net
   {
     static void Main(string[] args)
     {
-      var timedBlock = TimedDataBlockFactory.CreateTimedBlock(new TimeSpan(0, 1, 0));
-      var udpListener = new UdpStatsListener(12000, timedBlock);
+     HostFactory.Run(x =>
+       {
+         x.Service(p => new StatsdService());
+         x.RunAsLocalService();
+         x.SetDisplayName("Statsd.net");
+         x.SetDescription("A stats aggregation service for Graphite.");
+         x.SetServiceName("Statsd.net");
+         x.StartAutomatically();
+       });
     }
   }
 }

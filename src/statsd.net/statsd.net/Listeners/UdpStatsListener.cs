@@ -13,38 +13,27 @@ namespace statsd.net.Listeners
 {
   public class UdpStatsListener
   {
-    private IPropagatorBlock<StatsdMessage, GraphiteLine[]> _block;
-    private CancellationTokenSource _cancelTokenSource;
-    private UdpClient _udpClient;
-    
-    public UdpStatsListener(int port, IPropagatorBlock<StatsdMessage, GraphiteLine[]> block)
+    private int _port;
+
+    public UdpStatsListener(int port)
     {
-      _block = block;
-      _cancelTokenSource = new CancellationTokenSource();
-      _udpClient = new UdpClient(port);
+      _port = port;
     }
 
-    public void Listen()
+    public async void LinkTo( ITargetBlock<string> target, CancellationToken cancellationToken)
     {
-      var token = _cancelTokenSource.Token;
-      var remoteEndpoint = new IPEndPoint(IPAddress.Any, 0);
-      var listenTask = Task.Factory.StartNew(() =>
+      var udpClient = new UdpClient(_port);
+      while (true)
+      {
+        cancellationToken.ThrowIfCancellationRequested();
+        var data = await udpClient.ReceiveAsync();
+        string rawPacket = Encoding.UTF8.GetString(data.Buffer);
+        string[] lines = rawPacket.Remove('\r').Split('\n');
+        for (int index = 0; index < lines.Length; index++)
         {
-          token.ThrowIfCancellationRequested();
-          while (true)
-          {
-            var data = _udpClient.Receive(ref remoteEndpoint);
-            string rawPacket = Encoding.UTF8.GetString(data);
-            string[] lines = rawPacket.Remove('\r').Split('\n');
-            StatsdMessage message;
-            for (int index = 0; index < lines.Length; index++)
-            {
-              message = StatsdMessageFactory.ParseMessage(lines[index]);
-              _block.Post(message);
-            }
-          }
-        },
-        cancellationToken: _cancelTokenSource.Token);
+          target.Post(lines[index]);
+        }
+      }
     }
   }
 }
