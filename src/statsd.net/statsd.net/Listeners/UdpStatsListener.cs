@@ -14,18 +14,20 @@ namespace statsd.net.Listeners
   public class UdpStatsListener
   {
     private int _port;
+    private CancellationToken _cancellationToken;
 
-    public UdpStatsListener(int port)
+    public UdpStatsListener(int port, CancellationToken cancellationToken)
     {
       _port = port;
+      _cancellationToken = cancellationToken;
     }
 
-    public async void LinkTo( ITargetBlock<string> target, CancellationToken cancellationToken)
+    public async void LinkTo( ITargetBlock<string> target)
     {
       var udpClient = new UdpClient(_port);
       while (true)
       {
-        cancellationToken.ThrowIfCancellationRequested();
+        _cancellationToken.ThrowIfCancellationRequested();
         var data = await udpClient.ReceiveAsync();
         string rawPacket = Encoding.UTF8.GetString(data.Buffer);
         string[] lines = rawPacket.Remove('\r').Split('\n');

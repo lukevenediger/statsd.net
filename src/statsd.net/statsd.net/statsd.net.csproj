@@ -33,6 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.9.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -48,7 +49,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backends\ConsoleBackend.cs" />
     <Compile Include="Collator.cs" />
+    <Compile Include="Configuration\Aggregator\AggregatorSection.cs" />
+    <Compile Include="Configuration\Aggregator\PercentileCollection.cs" />
+    <Compile Include="Configuration\Aggregator\PercentileElement.cs" />
+    <Compile Include="Configuration\Aggregator\TimersElement.cs" />
+    <Compile Include="Configuration\Aggregator\CountersElement.cs" />
+    <Compile Include="Configuration\Aggregator\GaugesElement.cs" />
+    <Compile Include="Configuration\BackendElement.cs" />
+    <Compile Include="Configuration\BackendsCollection.cs" />
+    <Compile Include="Configuration\ListenerElement.cs" />
+    <Compile Include="Configuration\ListenersCollection.cs" />
+    <Compile Include="Configuration\StatsdSection.cs" />
+    <Compile Include="Configuration\WebConsoleElement.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
     <Compile Include="Messages\MessageType.cs" />
     <Compile Include="Messages\Set.cs" />
@@ -68,12 +82,12 @@
     <Compile Include="Writers\SQLWriter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Configuration\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
