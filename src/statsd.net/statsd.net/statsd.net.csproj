@@ -74,8 +74,10 @@
     <Compile Include="Messages\Timing.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StatsdService.cs" />
+    <Compile Include="ServiceWrapper.cs" />
+    <Compile Include="Statsd.cs" />
     <Compile Include="System\MessageParserBlockFactory.cs" />
+    <Compile Include="System\StatsdMessageRouterBlock.cs" />
     <Compile Include="System\TimedDataBlockFactory.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Writers\GraphiteWriter.cs" />

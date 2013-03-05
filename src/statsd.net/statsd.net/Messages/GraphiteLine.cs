@@ -30,5 +30,10 @@ namespace statsd.net.Messages
     {
       return _name + " " + _quantity + " " + _epoc;
     }
+
+    public static GraphiteLine Clone(GraphiteLine line)
+    {
+      return new GraphiteLine(line._name, line._quantity, line._epoc);
+    }
   }
 }

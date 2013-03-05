@@ -37,5 +37,6 @@ namespace statsd.net.Listeners
         }
       }
     }
+
   }
 }

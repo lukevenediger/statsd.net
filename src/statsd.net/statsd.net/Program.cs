@@ -16,7 +16,7 @@ namespace statsd.net
     {
      HostFactory.Run(x =>
        {
-         x.Service(p => new StatsdService());
+         x.Service(p => new ServiceWrapper());
          x.RunAsLocalService();
          x.SetDisplayName("Statsd.net");
          x.SetDescription("A stats aggregation service for Graphite.");

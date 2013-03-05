@@ -11,10 +11,10 @@ using Topshelf;
 
 namespace statsd.net
 {
-  public class StatsdService : ServiceControl
+  public class ServiceWrapper : ServiceControl
   {
     CancellationTokenSource _tokenSource;
-    public StatsdService()
+    public ServiceWrapper()
     {
       _tokenSource = new CancellationTokenSource();
     }
