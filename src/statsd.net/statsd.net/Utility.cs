@@ -15,24 +15,32 @@ namespace statsd.net
       timer.Elapsed += (sender, e) =>
         {
           callback();
+          timer.Start();
         };
-      timer.AutoReset = true;
+      timer.AutoReset = false;
       timer.Start();
-      return new TimerHandle(timer);
+      return new TimerHandle(timer, callback);
     }
 
     public class TimerHandle
     {
       private Timer _timer;
+      private Action _callback;
 
-      public TimerHandle(Timer timer)
+      public TimerHandle(Timer timer, Action callback)
       {
         _timer = timer;
+        _callback = callback;
       }
 
       public void Cancel()
       {
         _timer.Stop();
+      }
+
+      public void RunOnce()
+      {
+        _callback();
       }
     }
 

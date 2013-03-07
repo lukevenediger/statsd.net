@@ -8,6 +8,8 @@ namespace statsd.net.Messages
 {
   public static class StatsdMessageFactory
   {
+    private static char[] splitter = new char[] { '|' };
+
     public static StatsdMessage ParseMessage(string line)
     {
       string[] nameAndValue = line.Split(':');
@@ -15,7 +17,7 @@ namespace statsd.net.Messages
       {
         throw new ArgumentOutOfRangeException("Name cannot be empty.");
       }
-      string[] statProperties = nameAndValue[1].Split('|');
+      string[] statProperties = nameAndValue[1].Split(splitter, StringSplitOptions.RemoveEmptyEntries);
       switch (statProperties[1])
       {
         case "c":

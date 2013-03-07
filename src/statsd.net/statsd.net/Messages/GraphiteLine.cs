@@ -35,5 +35,10 @@ namespace statsd.net.Messages
     {
       return new GraphiteLine(line._name, line._quantity, line._epoc);
     }
+
+    public static GraphiteLine[] CloneMany(GraphiteLine[] line)
+    {
+      return line.Select(p => GraphiteLine.Clone(p)).ToArray();
+    }
   }
 }

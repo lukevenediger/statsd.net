@@ -11,7 +11,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net.Listeners
 {
-  public class UdpStatsListener
+  public class UdpStatsListener : IListener
   {
     private int _port;
     private CancellationToken _cancellationToken;
@@ -22,7 +22,7 @@ namespace statsd.net.Listeners
       _cancellationToken = cancellationToken;
     }
 
-    public async void LinkTo( ITargetBlock<string> target)
+    public async void LinkTo(ITargetBlock<string> target)
     {
       var udpClient = new UdpClient(_port);
       while (true)
@@ -37,6 +37,5 @@ namespace statsd.net.Listeners
         }
       }
     }
-
   }
 }

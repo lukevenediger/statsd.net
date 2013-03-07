@@ -63,6 +63,7 @@
     <Compile Include="Configuration\ListenersCollection.cs" />
     <Compile Include="Configuration\StatsdSection.cs" />
     <Compile Include="Configuration\WebConsoleElement.cs" />
+    <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
     <Compile Include="Messages\MessageType.cs" />
     <Compile Include="Messages\Set.cs" />
@@ -76,7 +77,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceWrapper.cs" />
     <Compile Include="Statsd.cs" />
+    <Compile Include="System\AggregatorFactory.cs" />
     <Compile Include="System\MessageParserBlockFactory.cs" />
+    <Compile Include="System\Percentile.cs" />
     <Compile Include="System\StatsdMessageRouterBlock.cs" />
     <Compile Include="System\TimedDataBlockFactory.cs" />
     <Compile Include="Utility.cs" />

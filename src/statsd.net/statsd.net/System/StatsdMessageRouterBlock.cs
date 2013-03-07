@@ -33,16 +33,16 @@ namespace statsd.net.System
     {
       switch (messageValue.MessageType)
       {
-        case MessageType.Counter: _counters.Post(messageValue); break;
-        case MessageType.Gauge: _gauges.Post(messageValue); break;
+        case MessageType.Counter: _counters.Post(messageValue as Counter); break;
+        case MessageType.Gauge: _gauges.Post(messageValue as Gauge); break;
         case MessageType.Timing: 
           if (_timings.Count == 1) 
           {
-            _timings[0].Post(messageValue);
+            _timings[0].Post(messageValue as Timing);
           }
           else 
           {
-            _timings.ForEach(p => p.Post(messageValue));
+            _timings.ForEach(p => p.Post(messageValue as Timing));
           }
           break;
       }
