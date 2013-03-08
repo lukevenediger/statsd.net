@@ -66,5 +66,10 @@ namespace statsd.net
       _backends.Add(backend);
       _messageBroadcaster.LinkTo(backend);
     }
+
+    public void Stop()
+    {
+      _tokenSource.Cancel();
+    }
   }
 }

@@ -191,14 +191,22 @@ namespace statsd.net.System
               spinLock.Exit(false);
             }
           }
-          List<GraphiteLine> lines;
+          List<GraphiteLine> lines = new List<GraphiteLine>();
+          int percentileValue;
           foreach( var measurements in bucketOfLatencies )
           {
-            lines.AddRange(CalculateLatencyStats(ns + measurements.Key, measurements.Value));
+            lines.Add(new GraphiteLine(measurements.Key + ".count", measurements.Value.Count));
+            lines.Add(new GraphiteLine(measurements.Key + ".min", measurements.Value.Min()));
+            lines.Add(new GraphiteLine(measurements.Key + ".max", measurements.Value.Max()));
+            lines.Add(new GraphiteLine(measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average())));
+            lines.Add(new GraphiteLine(measurements.Key + ".sum", measurements.Value.Sum()));
             // Now do percentiles
             foreach (var percentile in percentiles)
             {
-              lines.AddRange(CalculatePercentile(ns + measurements.Key, measurements.Value, percentile));
+              if (Percentile.TryCompute(measurements.Value, percentile, out percentileValue))
+              {
+                lines.Add(new GraphiteLine(ns + measurements.Key + ".p" + percentile.ToString(), percentileValue));
+              }
             }
           }
           if (lines.Count > 0)
@@ -214,23 +222,6 @@ namespace statsd.net.System
           outgoing.Complete();
         });
       return DataflowBlock.Encapsulate(incoming, outgoing);
-    }
-
-    private static IEnumerable<GraphiteLine> CalculateLatencyStats(string name, List<int> measurements)
-    {
-      return new GraphiteLine[] 
-      {
-        new GraphiteLine(name + ".count", measurements.Count),
-        new GraphiteLine(name + ".min", measurements.Min()),
-        new GraphiteLine(name + ".max", measurements.Max()),
-        new GraphiteLine(name + ".mean", Convert.ToInt32(measurements.Average())),
-        new GraphiteLine(name + ".sum", measurements.Sum())
-      };
-    }
-
-    private static IEnumerable<GraphiteLine> CalculatePercentile(string name, List<int> measurements, int percentile)
-    {
-      
     }
   }
 }

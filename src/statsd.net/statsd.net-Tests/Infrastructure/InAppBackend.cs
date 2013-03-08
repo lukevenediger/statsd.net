@@ -8,9 +8,9 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net_Tests.Infrastructure
 {
-  public class InAppBackend : ITargetBlock<GraphiteLine>
+  public class InAppBackend : ITargetBlock<GraphiteLine[]>
   {
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine[] messageValue, ISourceBlock<GraphiteLine[]> source, bool consumeToAccept)
     {
       throw new NotImplementedException();
     }
