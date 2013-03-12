@@ -10,9 +10,11 @@ namespace statsd.net_Tests.Infrastructure
 {
   public class InAppBackend : ITargetBlock<GraphiteLine[]>
   {
+    public GraphiteLine[] LastMessage { get; set; }
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine[] messageValue, ISourceBlock<GraphiteLine[]> source, bool consumeToAccept)
     {
-      throw new NotImplementedException();
+      LastMessage = messageValue;
+      return DataflowMessageStatus.Accepted;
     }
 
     public void Complete()

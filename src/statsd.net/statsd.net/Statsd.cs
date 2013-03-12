@@ -3,6 +3,7 @@ using statsd.net.Messages;
 using statsd.net.System;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,7 +14,7 @@ namespace statsd.net
 {
   public class Statsd
   {
-    private TransformBlock<string, StatsdMessage> _messageParser;
+    private ActionBlock<string> _messageParser;
     private StatsdMessageRouterBlock _router;
     private BroadcastBlock<GraphiteLine[]> _messageBroadcaster;
     private List<ITargetBlock<GraphiteLine[]>> _backends;
@@ -36,8 +37,15 @@ namespace statsd.net
       
       // Initialise the core blocks
       _router = new StatsdMessageRouterBlock();
-      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token);
-      _messageParser.LinkTo(_router);
+      _messageParser = new ActionBlock<String>(p =>
+        {
+          _router.Post(StatsdMessageFactory.ParseMessage(p));
+        },
+        new ExecutionDataflowBlockOptions()
+        {
+          MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded
+        });
+      //_messageParser.LinkTo(_router);
       _messageBroadcaster = new BroadcastBlock<GraphiteLine[]>(GraphiteLine.CloneMany);
 
       _backends = new List<ITargetBlock<GraphiteLine[]>>();

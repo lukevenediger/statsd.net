@@ -20,7 +20,7 @@ namespace statsd.net.System
         },
         new ExecutionDataflowBlockOptions()
         {
-          MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded,
+          //MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded,
           CancellationToken = cancellationToken
         });
       return block;

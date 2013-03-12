@@ -44,6 +44,10 @@ namespace statsd.net.System
         });
       var intervalHandle = Utility.SetInterval(flushPeriod, () =>
         {
+          if (counters.Count == 0)
+          {
+            return;
+          }
           var epoch = Utility.GetEpoch();
           bool gotLock = false;
           Dictionary<string, int> bucketOfCounters = null;
@@ -110,6 +114,10 @@ namespace statsd.net.System
         });
       var intervalHandle = Utility.SetInterval(flushPeriod, () =>
         {
+          if (gauges.Count == 0)
+          {
+            return;
+          }
           var epoch = Utility.GetEpoch();
           bool gotLock = false;
           Dictionary<string, int> bucketOfGauges = null;
@@ -176,6 +184,10 @@ namespace statsd.net.System
         });
       var intervalHandle = Utility.SetInterval(flushPeriod, () =>
         {
+          if (latencies.Count == 0)
+          {
+            return;
+          }
           var epoch = Utility.GetEpoch();
           bool gotLock = false;
           Dictionary<string, List<int>> bucketOfLatencies = null;

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace statsd.net_Tests
@@ -40,6 +41,10 @@ namespace statsd.net_Tests
       _statsd.AddAggregator(MessageType.Counter, AggregatorFactory.CreateTimedCountersBlock("", new TimeSpan(0, 0, 0, 0, 100)));
       var stat = StatsBuilder.Counter.foo.bar.baz + 1;
       _listener.Send(stat);
+      _listener.Send(stat);
+      Thread.Sleep(500);
+      Assert.IsNotNull(_backend.LastMessage);
+      Assert.AreEqual(5, _backend.LastMessage[0].Count);
     }
   }
 }
