@@ -58,12 +58,14 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="StatsdTestSuite.cs" />
     <Compile Include="CounterTests.cs" />
     <Compile Include="Infrastructure\InAppBackend.cs" />
     <Compile Include="Infrastructure\InAppListener.cs" />
     <Compile Include="Infrastructure\StatsBuilder.cs" />
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="Infrastructure\TestUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TimerTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\statsd.net\statsd.net.csproj">

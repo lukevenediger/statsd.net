@@ -81,7 +81,6 @@
     <Compile Include="System\MessageParserBlockFactory.cs" />
     <Compile Include="System\Percentile.cs" />
     <Compile Include="System\StatsdMessageRouterBlock.cs" />
-    <Compile Include="System\TimedDataBlockFactory.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Writers\GraphiteWriter.cs" />
     <Compile Include="Writers\SQLWriter.cs" />

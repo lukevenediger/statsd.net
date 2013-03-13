@@ -14,10 +14,10 @@ namespace statsd.net
 {
   public class Statsd
   {
-    private ActionBlock<string> _messageParser;
+    private TransformBlock<string, StatsdMessage> _messageParser;
     private StatsdMessageRouterBlock _router;
-    private BroadcastBlock<GraphiteLine[]> _messageBroadcaster;
-    private List<ITargetBlock<GraphiteLine[]>> _backends;
+    private BroadcastBlock<GraphiteLine> _messageBroadcaster;
+    private List<ITargetBlock<GraphiteLine>> _backends;
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
     
@@ -37,18 +37,11 @@ namespace statsd.net
       
       // Initialise the core blocks
       _router = new StatsdMessageRouterBlock();
-      _messageParser = new ActionBlock<String>(p =>
-        {
-          _router.Post(StatsdMessageFactory.ParseMessage(p));
-        },
-        new ExecutionDataflowBlockOptions()
-        {
-          MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded
-        });
-      //_messageParser.LinkTo(_router);
-      _messageBroadcaster = new BroadcastBlock<GraphiteLine[]>(GraphiteLine.CloneMany);
+      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token);
+      _messageParser.LinkTo(_router);
+      _messageBroadcaster = new BroadcastBlock<GraphiteLine>(GraphiteLine.Clone);
 
-      _backends = new List<ITargetBlock<GraphiteLine[]>>();
+      _backends = new List<ITargetBlock<GraphiteLine>>();
       _listeners = new List<IListener>();
     }
 
@@ -58,7 +51,7 @@ namespace statsd.net
       listener.LinkTo(_messageParser); 
     }
 
-    public void AddAggregator(MessageType targetType, IPropagatorBlock<StatsdMessage, GraphiteLine[]> aggregator)
+    public void AddAggregator(MessageType targetType, IPropagatorBlock<StatsdMessage, GraphiteLine> aggregator)
     {
       _router.AddTarget(targetType, aggregator);
       aggregator.LinkTo(_messageBroadcaster);
@@ -69,7 +62,7 @@ namespace statsd.net
       // TimedDataBlockFactory
     }
 
-    public void AddBackend(ITargetBlock<GraphiteLine[]> backend)
+    public void AddBackend(ITargetBlock<GraphiteLine> backend)
     {
       _backends.Add(backend);
       _messageBroadcaster.LinkTo(backend);

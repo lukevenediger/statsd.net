@@ -12,6 +12,9 @@ namespace statsd.net.Messages
     private int _quantity;
     private long _epoc;
 
+    public string Name { get { return _name; } }
+    public int Quantity { get { return _quantity; } }
+
     public GraphiteLine(string name, int quantity)
     {
       _name = name;

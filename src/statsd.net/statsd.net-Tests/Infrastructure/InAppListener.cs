@@ -8,7 +8,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net_Tests.Infrastructure
 {
-  class InAppListener : IListener
+  public class InAppListener : IListener
   {
     private ITargetBlock<string> _target;
 

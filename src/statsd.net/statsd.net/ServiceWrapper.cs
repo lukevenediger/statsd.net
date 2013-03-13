@@ -21,11 +21,6 @@ namespace statsd.net
 
     public bool Start(HostControl hostControl)
     {
-      var udpListener = new UdpStatsListener(12000, _tokenSource.Token);
-      var messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token);
-      var dataAggregator = TimedDataBlockFactory.CreateTimedBlock(new TimeSpan(0,0,10));
-      udpListener.LinkTo(messageParser);
-      messageParser.LinkTo(dataAggregator, new DataflowLinkOptions());
       return true;
     }
 

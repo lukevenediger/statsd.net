@@ -8,13 +8,29 @@ using System.Threading.Tasks;
 
 namespace statsd.net_Tests.Infrastructure
 {
-  public class StatsBuilder
+  public class _
   {
-    public static dynamic Counter
+    public static dynamic count
     {
       get
       {
         return new StatsBuilderInternal(MessageType.Counter, 1);
+      }
+    }
+
+    public static dynamic timing
+    {
+      get
+      {
+        return new StatsBuilderInternal(MessageType.Timing);
+      } 
+    }
+
+    public static dynamic gauge
+    {
+      get
+      {
+        return new StatsBuilderInternal(MessageType.Gauge);
       }
     }
 

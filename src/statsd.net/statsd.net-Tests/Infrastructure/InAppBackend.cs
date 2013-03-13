@@ -8,12 +8,18 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net_Tests.Infrastructure
 {
-  public class InAppBackend : ITargetBlock<GraphiteLine[]>
+  public class InAppBackend : ITargetBlock<GraphiteLine>
   {
-    public GraphiteLine[] LastMessage { get; set; }
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine[] messageValue, ISourceBlock<GraphiteLine[]> source, bool consumeToAccept)
+    public List<GraphiteLine> Messages { get; private set; }
+
+    public InAppBackend()
     {
-      LastMessage = messageValue;
+      Messages = new List<GraphiteLine>();
+    }
+    
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
+    {
+      Messages.Add(messageValue);
       return DataflowMessageStatus.Accepted;
     }
 

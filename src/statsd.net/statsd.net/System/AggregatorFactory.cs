@@ -11,12 +11,12 @@ namespace statsd.net.System
 {
   public class AggregatorFactory
   {
-    public static IPropagatorBlock<StatsdMessage, GraphiteLine[]> CreateTimedCountersBlock(string rootNamespace, TimeSpan flushPeriod)
+    public static IPropagatorBlock<StatsdMessage, GraphiteLine> CreateTimedCountersBlock(string rootNamespace, TimeSpan flushPeriod)
     {
       var counters = new Dictionary<string, int>();
       var root = rootNamespace;
       var spinLock = new SpinLock();
-      var outgoing = new BufferBlock<GraphiteLine[]>();
+      var outgoing = new BufferBlock<GraphiteLine>();
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
 
       var incoming = new ActionBlock<StatsdMessage>(p =>
@@ -64,9 +64,9 @@ namespace statsd.net.System
             }
           }
           var lines = bucketOfCounters.Select(q => new GraphiteLine(ns + q.Key, q.Value, epoch)).ToArray();
-          if (lines.Length > 0)
+          for (int i = 0; i < lines.Length; i++)
           {
-            outgoing.Post(lines);
+            outgoing.Post(lines[i]);
           }
         });
       incoming.Completion.ContinueWith(p =>
@@ -81,12 +81,12 @@ namespace statsd.net.System
       return DataflowBlock.Encapsulate(incoming, outgoing);
     }
 
-    public static IPropagatorBlock<StatsdMessage, GraphiteLine[]> CreateTimedGaugesBlock(string rootNamespace, TimeSpan flushPeriod)
+    public static IPropagatorBlock<StatsdMessage, GraphiteLine> CreateTimedGaugesBlock(string rootNamespace, TimeSpan flushPeriod)
     {
       var gauges = new Dictionary<string, int>();
       var root = rootNamespace;
       var spinLock = new SpinLock();
-      var outgoing = new BufferBlock<GraphiteLine[]>();
+      var outgoing = new BufferBlock<GraphiteLine>();
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
 
       var incoming = new ActionBlock<StatsdMessage>(p =>
@@ -134,9 +134,9 @@ namespace statsd.net.System
             }
           }
           var lines = bucketOfGauges.Select(q => new GraphiteLine(ns + q.Key, q.Value, epoch)).ToArray();
-          if (lines.Length > 0)
+          for (int i = 0; i < lines.Length; i++)
           {
-            outgoing.Post(lines);
+            outgoing.Post(lines[i]);
           }
         });
       incoming.Completion.ContinueWith(p =>
@@ -151,12 +151,12 @@ namespace statsd.net.System
       return DataflowBlock.Encapsulate(incoming, outgoing);
     }
 
-    public static IPropagatorBlock<StatsdMessage, GraphiteLine[]> CreateTimedLatencyBlock(string rootNamespace, TimeSpan flushPeriod, List<int> percentiles)
+    public static IPropagatorBlock<StatsdMessage, GraphiteLine> CreateTimedLatencyBlock(string rootNamespace, TimeSpan flushPeriod, List<int> percentiles)
     {
       var latencies = new Dictionary<string, List<int>>();
       var root = rootNamespace;
       var spinLock = new SpinLock();
-      var outgoing = new BufferBlock<GraphiteLine[]>();
+      var outgoing = new BufferBlock<GraphiteLine>();
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
 
       var incoming = new ActionBlock<StatsdMessage>(p =>
@@ -203,27 +203,22 @@ namespace statsd.net.System
               spinLock.Exit(false);
             }
           }
-          List<GraphiteLine> lines = new List<GraphiteLine>();
           int percentileValue;
           foreach( var measurements in bucketOfLatencies )
           {
-            lines.Add(new GraphiteLine(measurements.Key + ".count", measurements.Value.Count));
-            lines.Add(new GraphiteLine(measurements.Key + ".min", measurements.Value.Min()));
-            lines.Add(new GraphiteLine(measurements.Key + ".max", measurements.Value.Max()));
-            lines.Add(new GraphiteLine(measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average())));
-            lines.Add(new GraphiteLine(measurements.Key + ".sum", measurements.Value.Sum()));
+            outgoing.Post(new GraphiteLine(ns + measurements.Key + ".count", measurements.Value.Count));
+            outgoing.Post(new GraphiteLine(ns + measurements.Key + ".min", measurements.Value.Min()));
+            outgoing.Post(new GraphiteLine(ns + measurements.Key + ".max", measurements.Value.Max()));
+            outgoing.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average())));
+            outgoing.Post(new GraphiteLine(ns + measurements.Key + ".sum", measurements.Value.Sum()));
             // Now do percentiles
             foreach (var percentile in percentiles)
             {
               if (Percentile.TryCompute(measurements.Value, percentile, out percentileValue))
               {
-                lines.Add(new GraphiteLine(ns + measurements.Key + ".p" + percentile.ToString(), percentileValue));
+                outgoing.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue));
               }
             }
-          }
-          if (lines.Count > 0)
-          {
-            outgoing.Post(lines.ToArray());
           }
         });
       incoming.Completion.ContinueWith(p =>

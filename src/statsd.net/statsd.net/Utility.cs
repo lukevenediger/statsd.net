@@ -14,6 +14,7 @@ namespace statsd.net
       var timer = new Timer(delay.TotalMilliseconds);
       timer.Elapsed += (sender, e) =>
         {
+          timer.Stop();
           callback();
           timer.Start();
         };
