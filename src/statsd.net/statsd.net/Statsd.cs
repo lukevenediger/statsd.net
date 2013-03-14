@@ -1,4 +1,5 @@
-﻿using statsd.net.Listeners;
+﻿using statsd.net.Backends;
+using statsd.net.Listeners;
 using statsd.net.Messages;
 using statsd.net.System;
 using System;
@@ -43,6 +44,37 @@ namespace statsd.net
 
       _backends = new List<ITargetBlock<GraphiteLine>>();
       _listeners = new List<IListener>();
+    }
+
+    public Statsd(dynamic config, CancellationTokenSource tokenSource) 
+      : this()
+    {
+      _tokenSource = tokenSource;
+      // Load listeners
+      if (config.listeners.udp.enabled)
+      {
+        AddListener(new UdpStatsListener(config.listeners.udp.port, _tokenSource.Token));
+      }
+
+      // Load backends
+      if (config.backends.console.enabled)
+      {
+        AddBackend(new ConsoleBackend());
+      }
+
+      // Load Aggregators
+      AddAggregator(MessageType.Counter,
+        AggregatorFactory.CreateTimedCountersBlock(config.calc.countersNamespace, new TimeSpan(0, 0, config.calc.flushIntervalSeconds)));
+      AddAggregator(MessageType.Gauge,
+        AggregatorFactory.CreateTimedGaugesBlock(config.calc.gaugesNamespace, new TimeSpan(0, 0, config.calc.flushIntervalSeconds)));
+      foreach (var timer in (IDictionary<string, object>)config.calc.timers)
+      {
+        dynamic theTimer = timer.Value;
+        AddAggregator(MessageType.Timing,
+          AggregatorFactory.CreateTimedLatencyBlock(config.calc.timersNamespace + "." + timer.Key, 
+            new TimeSpan(0, 0, theTimer.flushIntervalSeconds), 
+            theTimer.percentile ));
+      }
     }
 
     public void AddListener(IListener listener)

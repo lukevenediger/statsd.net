@@ -1,0 +1,50 @@
+﻿# statsd.net configuration file.
+# This is a TOML file. Read the spec here: https://github.com/mojombo/toml 
+
+[listeners]
+
+  [listeners.udp]
+  enabled = true
+  port = 12000
+
+  [listeners.http]
+  enabled = false
+  port = 12001
+
+[backends]
+
+  [backends.sqlserver]
+  enabled = false
+  connectionString = ""
+  
+  [backends.graphite]
+  enabled = false
+  host = "127.0.0.1"
+  port = 2003
+
+  [backends.console]
+  enabled = true
+
+[calc]
+  flushIntervalSeconds = 60
+  gaugesNamespace = "stats.gauges"
+  countersNamespace = "stats_counts"
+  timersNamespace = "stats.timers"
+
+  [calc.timers.p90_5min]
+  flushIntervalSeconds = 300
+  percentile = 90
+
+  [calc.timers.p90_1hour]
+  flushIntervalSeconds = 3600
+  percentile = 90
+    
+  [calc.timers.p50_1hour]
+  flushIntervalSeconds = 3600
+  percentile = 50
+
+[console]
+
+  enabled = true
+  localhostOnly = true
+  port = 8080

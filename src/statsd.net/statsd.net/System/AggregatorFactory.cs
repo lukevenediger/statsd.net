@@ -151,7 +151,9 @@ namespace statsd.net.System
       return DataflowBlock.Encapsulate(incoming, outgoing);
     }
 
-    public static IPropagatorBlock<StatsdMessage, GraphiteLine> CreateTimedLatencyBlock(string rootNamespace, TimeSpan flushPeriod, List<int> percentiles)
+    public static IPropagatorBlock<StatsdMessage, GraphiteLine> CreateTimedLatencyBlock(string rootNamespace, 
+      TimeSpan flushPeriod, 
+      int? percentile)
     {
       var latencies = new Dictionary<string, List<int>>();
       var root = rootNamespace;
@@ -212,12 +214,9 @@ namespace statsd.net.System
             outgoing.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average())));
             outgoing.Post(new GraphiteLine(ns + measurements.Key + ".sum", measurements.Value.Sum()));
             // Now do percentiles
-            foreach (var percentile in percentiles)
+            if (percentile.HasValue && Percentile.TryCompute(measurements.Value, percentile.Value, out percentileValue))
             {
-              if (Percentile.TryCompute(measurements.Value, percentile, out percentileValue))
-              {
-                outgoing.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue));
-              }
+              outgoing.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue));
             }
           }
         });

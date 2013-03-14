@@ -20,7 +20,7 @@ namespace statsd.net_Tests
     {
       _statsd.AddAggregator(MessageType.Timing,
         AggregatorFactory.CreateTimedLatencyBlock("stats.timers",
-          new TimeSpan(0, 0, 0, 0, 100), new List<int> { 90 }));
+          new TimeSpan(0, 0, 0, 0, 100), 90));
       _listener.Send(_.timing.foo.bar.baz + 100);
       Thread.Sleep(200);
       var messages = _backend.Messages.ToDictionary(p => p.Name);
@@ -33,7 +33,7 @@ namespace statsd.net_Tests
     {
       _statsd.AddAggregator(MessageType.Timing,
         AggregatorFactory.CreateTimedLatencyBlock("stats.timers",
-          new TimeSpan(0, 0, 0, 0, 100), new List<int> { 90 }));
+          new TimeSpan(0, 0, 0, 0, 100), 90));
       TestUtility.Range(10).ForEach(p =>
         {
           _listener.Send(_.timing.foo.bar.baz + (p * 10));

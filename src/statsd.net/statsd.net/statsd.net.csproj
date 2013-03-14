@@ -44,6 +44,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Toml">
+      <HintPath>..\lib\toml-net\Toml.dll</HintPath>
+    </Reference>
     <Reference Include="Topshelf">
       <HintPath>..\packages\TopShelf.3.1.0\lib\net40-full\Topshelf.dll</HintPath>
     </Reference>
@@ -51,18 +54,6 @@
   <ItemGroup>
     <Compile Include="Backends\ConsoleBackend.cs" />
     <Compile Include="Collator.cs" />
-    <Compile Include="Configuration\Aggregator\AggregatorSection.cs" />
-    <Compile Include="Configuration\Aggregator\PercentileCollection.cs" />
-    <Compile Include="Configuration\Aggregator\PercentileElement.cs" />
-    <Compile Include="Configuration\Aggregator\TimersElement.cs" />
-    <Compile Include="Configuration\Aggregator\CountersElement.cs" />
-    <Compile Include="Configuration\Aggregator\GaugesElement.cs" />
-    <Compile Include="Configuration\BackendElement.cs" />
-    <Compile Include="Configuration\BackendsCollection.cs" />
-    <Compile Include="Configuration\ListenerElement.cs" />
-    <Compile Include="Configuration\ListenersCollection.cs" />
-    <Compile Include="Configuration\StatsdSection.cs" />
-    <Compile Include="Configuration\WebConsoleElement.cs" />
     <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
     <Compile Include="Messages\MessageType.cs" />
@@ -86,13 +77,14 @@
     <Compile Include="Writers\SQLWriter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config" />
+    <None Include="statsd.toml" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>copy /Y "$(ProjectDir)statsd.toml" "$(TargetDir)"</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

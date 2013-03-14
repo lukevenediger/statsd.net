@@ -8,18 +8,15 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net.Backends
 {
-  public class ConsoleBackend : ITargetBlock<GraphiteLine[]>
+  public class ConsoleBackend : ITargetBlock<GraphiteLine>
   {
     public ConsoleBackend()
     {
     }
 
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine[] messageValue, ISourceBlock<GraphiteLine[]> source, bool consumeToAccept)
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
     {
-      foreach (var line in messageValue)
-      {
-        Console.WriteLine(line.ToString());
-      }
+      Console.WriteLine(messageValue);
       return DataflowMessageStatus.Accepted;
     }
 
