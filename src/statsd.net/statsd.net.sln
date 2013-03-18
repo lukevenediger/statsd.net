@@ -5,6 +5,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "statsd.net", "statsd.net\st
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "statsd.net-Tests", "statsd.net-Tests\statsd.net-Tests.csproj", "{347012E3-D17B-44E2-A4C6-C09352E39C57}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsdClient", "StatsdClient\StatsdClient.csproj", "{B8D06AEC-1186-4200-8DF6-BBF65CA11EC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoDataFeeder", "DemoDataFeeder\DemoDataFeeder.csproj", "{89D3FEE2-CB2E-4D7F-AE5A-5BD7F6E5039A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,14 @@ Global
 		{347012E3-D17B-44E2-A4C6-C09352E39C57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{347012E3-D17B-44E2-A4C6-C09352E39C57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{347012E3-D17B-44E2-A4C6-C09352E39C57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8D06AEC-1186-4200-8DF6-BBF65CA11EC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8D06AEC-1186-4200-8DF6-BBF65CA11EC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8D06AEC-1186-4200-8DF6-BBF65CA11EC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8D06AEC-1186-4200-8DF6-BBF65CA11EC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89D3FEE2-CB2E-4D7F-AE5A-5BD7F6E5039A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89D3FEE2-CB2E-4D7F-AE5A-5BD7F6E5039A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89D3FEE2-CB2E-4D7F-AE5A-5BD7F6E5039A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89D3FEE2-CB2E-4D7F-AE5A-5BD7F6E5039A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

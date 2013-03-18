@@ -23,7 +23,6 @@ namespace statsd.net.System
           //MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded,
           CancellationToken = cancellationToken
         });
-      return block;
-    }
+      return block;    }
   }
 }

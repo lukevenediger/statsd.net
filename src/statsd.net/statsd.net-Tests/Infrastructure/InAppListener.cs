@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -12,7 +13,7 @@ namespace statsd.net_Tests.Infrastructure
   {
     private ITargetBlock<string> _target;
 
-    public void LinkTo(ITargetBlock<string> target)
+    public void LinkTo(ITargetBlock<string> target, CancellationToken cancellationToken)
     {
       _target = target;
     }

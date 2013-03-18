@@ -53,7 +53,7 @@ namespace statsd.net
       // Load listeners
       if (config.listeners.udp.enabled)
       {
-        AddListener(new UdpStatsListener(config.listeners.udp.port, _tokenSource.Token));
+        AddListener(new UdpStatsListener(config.listeners.udp.port));
       }
 
       // Load backends
@@ -80,7 +80,7 @@ namespace statsd.net
     public void AddListener(IListener listener)
     {
       _listeners.Add(listener);
-      listener.LinkTo(_messageParser); 
+      listener.LinkTo(_messageParser, _tokenSource.Token); 
     }
 
     public void AddAggregator(MessageType targetType, IPropagatorBlock<StatsdMessage, GraphiteLine> aggregator)
