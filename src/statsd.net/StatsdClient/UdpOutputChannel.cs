@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,10 @@ namespace StatsdClient
 
     public UdpOutputChannel(string host, int port)
     {
-      _udpClient = new UdpClient(host, port);
+      // Convert to ipv4 address
+      var ipv4Address = Dns.GetHostAddresses(host).First(p => p.AddressFamily == AddressFamily.InterNetwork);
+      _udpClient = new UdpClient();
+      _udpClient.Connect(ipv4Address, port);
     }
 
     public void Send(string line)

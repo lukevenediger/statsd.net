@@ -53,7 +53,7 @@ namespace statsd.net
       // Load listeners
       if (config.listeners.udp.enabled)
       {
-        AddListener(new UdpStatsListener(config.listeners.udp.port));
+        AddListener(new UdpStatsListener((int)config.listeners.udp.port));
       }
 
       // Load backends
@@ -64,16 +64,16 @@ namespace statsd.net
 
       // Load Aggregators
       AddAggregator(MessageType.Counter,
-        AggregatorFactory.CreateTimedCountersBlock(config.calc.countersNamespace, new TimeSpan(0, 0, config.calc.flushIntervalSeconds)));
+        AggregatorFactory.CreateTimedCountersBlock(config.calc.countersNamespace, new TimeSpan(0, 0, (int)config.calc.flushIntervalSeconds)));
       AddAggregator(MessageType.Gauge,
-        AggregatorFactory.CreateTimedGaugesBlock(config.calc.gaugesNamespace, new TimeSpan(0, 0, config.calc.flushIntervalSeconds)));
+        AggregatorFactory.CreateTimedGaugesBlock(config.calc.gaugesNamespace, new TimeSpan(0, 0, (int)config.calc.flushIntervalSeconds)));
       foreach (var timer in (IDictionary<string, object>)config.calc.timers)
       {
         dynamic theTimer = timer.Value;
         AddAggregator(MessageType.Timing,
           AggregatorFactory.CreateTimedLatencyBlock(config.calc.timersNamespace + "." + timer.Key, 
-            new TimeSpan(0, 0, theTimer.flushIntervalSeconds), 
-            theTimer.percentile ));
+            new TimeSpan(0, 0, (int)theTimer.flushIntervalSeconds), 
+            (int)theTimer.percentile ));
       }
     }
 

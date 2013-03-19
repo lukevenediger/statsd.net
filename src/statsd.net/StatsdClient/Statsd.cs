@@ -52,7 +52,7 @@ namespace StatsdClient
 
     protected virtual string PrepareMetric(string metricType, string name, string prefix, int value)
     {
-      return (prefix == null ? (prefix + "." + name) : name) + ":" + value + "|" + metricType;
+      return (prefix != null ? (prefix + "." + name) : name) + ":" + value + "|" + metricType;
     }
   }
 }

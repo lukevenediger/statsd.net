@@ -26,10 +26,10 @@
   enabled = true
 
 [calc]
-  flushIntervalSeconds = 60
-  gaugesNamespace = "stats.gauges"
-  countersNamespace = "stats_counts"
-  timersNamespace = "stats.timers"
+flushIntervalSeconds = 10
+gaugesNamespace = "stats.gauges"
+countersNamespace = "stats_counts"
+timersNamespace = "stats.timers"
 
   [calc.timers.p90_5min]
   flushIntervalSeconds = 300

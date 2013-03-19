@@ -21,24 +21,33 @@ namespace statsd.net.Listeners
       _port = port;
     }
 
-    public async void LinkTo(ITargetBlock<string> target, CancellationToken cancellationToken)
+    public void LinkTo(ITargetBlock<string> target, CancellationToken cancellationToken)
     {
       _cancellationToken = cancellationToken;
-      var udpClient = new UdpClient(_port);
-      while (true)
-      {
-        if (_cancellationToken.IsCancellationRequested)
+      Task.Factory.StartNew(() =>
         {
-          return;
-        }
-        var data = await udpClient.ReceiveAsync();
-        string rawPacket = Encoding.UTF8.GetString(data.Buffer);
-        string[] lines = rawPacket.Remove('\r').Split('\n');
-        for (int index = 0; index < lines.Length; index++)
-        {
-          target.Post(lines[index]);
-        }
-      }
+          try
+          {
+            var endpoint = new IPEndPoint(IPAddress.Any, _port);
+            var udpClient = new UdpClient(endpoint);
+            while (true)
+            {
+              if (_cancellationToken.IsCancellationRequested)
+              {
+                return;
+              }
+              byte[] data = udpClient.Receive(ref endpoint);
+              string rawPacket = Encoding.UTF8.GetString(data);
+              string[] lines = rawPacket.Replace("\r", "").Split('\n');
+              for (int index = 0; index < lines.Length; index++)
+              {
+                target.Post(lines[index]);
+              }
+            }
+          }
+          catch (ObjectDisposedException) { /* Eat it, socket was closed */ }
+        },
+        cancellationToken);
     }
   }
 }
