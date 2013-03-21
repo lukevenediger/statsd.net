@@ -10,6 +10,20 @@ namespace statsd.net.Messages
   {
     private static char[] splitter = new char[] { '|' };
 
+    public static bool TryParseMessage(string line, out StatsdMessage message)
+    {
+      try
+      {
+        message = ParseMessage(line);
+        return true;
+      }
+      catch (Exception ex)
+      {
+        message = null;
+        return false;
+      }
+    }
+
     public static StatsdMessage ParseMessage(string line)
     {
       string[] nameAndValue = line.Split(':');

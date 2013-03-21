@@ -1,20 +1,19 @@
-﻿using statsd.net.Messages;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net_Tests.Infrastructure
+namespace StatsdClient
 {
-  public class _
+  public class StatsBuilder
   {
     public static dynamic count
     {
       get
       {
-        return new StatsBuilderInternal(MessageType.Counter, 1);
+        return new StatsBuilderInternal(MetricType.COUNT, 1);
       }
     }
 
@@ -22,7 +21,7 @@ namespace statsd.net_Tests.Infrastructure
     {
       get
       {
-        return new StatsBuilderInternal(MessageType.Timing);
+        return new StatsBuilderInternal(MetricType.TIMING);
       } 
     }
 
@@ -30,7 +29,7 @@ namespace statsd.net_Tests.Infrastructure
     {
       get
       {
-        return new StatsBuilderInternal(MessageType.Gauge);
+        return new StatsBuilderInternal(MetricType.GAUGE);
       }
     }
 
@@ -38,19 +37,13 @@ namespace statsd.net_Tests.Infrastructure
     {
       private List<string> _parts;
       private int? _quantity;
-      private string _messageTypeCode;
+      private string _metricType;
 
-      public StatsBuilderInternal(MessageType messageType, int? defaultQuantity = null)
+      public StatsBuilderInternal(string metricType, int? defaultQuantity = null)
       {
         _parts = new List<string>();
-        switch (messageType)
-        {
-          case MessageType.Counter: _messageTypeCode = "c"; break;
-          case MessageType.Gauge: _messageTypeCode = "g"; break;
-          case MessageType.Set: _messageTypeCode = "s"; break;
-          case MessageType.Timing: _messageTypeCode = "ms"; break;
-        }
         _quantity = defaultQuantity;
+        _metricType = metricType;
       }
 
       public override bool TryGetMember(GetMemberBinder binder, out object result)
@@ -90,7 +83,7 @@ namespace statsd.net_Tests.Infrastructure
         {
           throw new InvalidOperationException("Must specify a quantity.");
         }
-        return String.Join(".", _parts) + ":" + _quantity + "|" + _messageTypeCode;
+        return String.Join(".", _parts) + ":" + _quantity + "|" + _metricType;
       }
     }
   }

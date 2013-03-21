@@ -11,6 +11,7 @@ namespace statsd.net.Messages
     Counter,
     Timing,
     Set,
-    Gauge
+    Gauge,
+    Invalid
   }
 }

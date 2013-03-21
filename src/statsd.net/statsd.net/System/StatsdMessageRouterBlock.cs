@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -45,13 +46,17 @@ namespace statsd.net.System
             _timings.ForEach(p => p.Post(messageValue as Timing));
           }
           break;
+        default:
+          throw new ArgumentOutOfRangeException("StatsdMessage.MessageType", messageValue.MessageType.ToString()); 
       }
       return DataflowMessageStatus.Accepted;
     }
 
     public void Complete()
     {
-      throw new NotImplementedException();
+      _gauges.Complete();
+      _counters.Complete();
+      _timings.ForEach(p => p.Complete());
     }
 
     public Task Completion

@@ -18,13 +18,17 @@ namespace statsd.net
     private TransformBlock<string, StatsdMessage> _messageParser;
     private StatsdMessageRouterBlock _router;
     private BroadcastBlock<GraphiteLine> _messageBroadcaster;
-    private List<ITargetBlock<GraphiteLine>> _backends;
+    private List<IBackend> _backends;
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
+    private ManualResetEvent _shutdownComplete;
+    private SystemEventListener _systemEvents;
     
     public Statsd()
     {
       _tokenSource = new CancellationTokenSource();
+      _shutdownComplete = new ManualResetEvent(false);
+      _systemEvents = new SystemEventListener();
 
       /**
        * The flow is:
@@ -38,18 +42,28 @@ namespace statsd.net
       
       // Initialise the core blocks
       _router = new StatsdMessageRouterBlock();
-      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token);
+      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, _systemEvents);
       _messageParser.LinkTo(_router);
+      _messageParser.Completion.ContinueWith(_ =>
+        {
+          _messageBroadcaster.Complete();
+        });
       _messageBroadcaster = new BroadcastBlock<GraphiteLine>(GraphiteLine.Clone);
+      _messageBroadcaster.Completion.ContinueWith(_ =>
+        {
+          _backends.ForEach(q => q.Complete());
+        });
 
-      _backends = new List<ITargetBlock<GraphiteLine>>();
+      _backends = new List<IBackend>();
       _listeners = new List<IListener>();
+
+      // Add the system events listener
+      AddListener(_systemEvents);
     }
 
-    public Statsd(dynamic config, CancellationTokenSource tokenSource) 
+    public Statsd(dynamic config) 
       : this()
     {
-      _tokenSource = tokenSource;
       // Load listeners
       if (config.listeners.udp.enabled)
       {
@@ -89,20 +103,23 @@ namespace statsd.net
       aggregator.LinkTo(_messageBroadcaster);
     }
 
-    public void ConfigureCounters(string rootNamespace = "stats_counts", int flushIntervalSeconds = 60)
-    {
-      // TimedDataBlockFactory
-    }
-
-    public void AddBackend(ITargetBlock<GraphiteLine> backend)
+    public void AddBackend(IBackend backend)
     {
       _backends.Add(backend);
       _messageBroadcaster.LinkTo(backend);
+      backend.Completion.ContinueWith(p =>
+        {
+          if (_backends.All(q => !q.IsActive))
+          {
+            _shutdownComplete.Set();
+          }
+        });
     }
 
     public void Stop()
     {
       _tokenSource.Cancel();
+      _shutdownComplete.WaitOne();
     }
   }
 }

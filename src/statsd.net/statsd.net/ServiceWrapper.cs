@@ -15,7 +15,6 @@ namespace statsd.net
 {
   public class ServiceWrapper : ServiceControl
   {
-    private CancellationTokenSource _tokenSource;
     private Statsd _statsd;
 
     public ServiceWrapper()
@@ -28,14 +27,14 @@ namespace statsd.net
       var contents = File.ReadAllText(configFile);
       var config = Toml.Toml.Parse(contents);
 
-      _tokenSource = new CancellationTokenSource();
-      _statsd = new Statsd(config, _tokenSource);
+      _statsd = new Statsd(config);
       return true;
     }
 
     public bool Stop(HostControl hostControl)
     {
-      return false;
+      _statsd.Stop();
+      return true;
     }
   }
 }

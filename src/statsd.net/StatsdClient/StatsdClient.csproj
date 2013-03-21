@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IStatsdClient.cs" />
+    <Compile Include="StatsBuilder.cs" />
     <Compile Include="Statsd.cs" />
     <Compile Include="IOutputChannel.cs" />
     <Compile Include="MetricType.cs" />
@@ -48,6 +49,7 @@
     <Compile Include="StatsdClientExtensions.cs" />
     <Compile Include="TimingToken.cs" />
     <Compile Include="UdpOutputChannel.cs" />
+    <Compile Include="_.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

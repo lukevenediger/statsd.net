@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net
+namespace StatsdClient
 {
-  public class Collator
+  public class _ : StatsBuilder
   {
   }
 }

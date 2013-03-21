@@ -53,9 +53,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backends\ConsoleBackend.cs" />
-    <Compile Include="Collator.cs" />
+    <Compile Include="Backends\IBackend.cs" />
     <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
+    <Compile Include="Messages\InvalidMessage.cs" />
     <Compile Include="Messages\MessageType.cs" />
     <Compile Include="Messages\Set.cs" />
     <Compile Include="Messages\Counter.cs" />
@@ -72,15 +73,19 @@
     <Compile Include="System\MessageParserBlockFactory.cs" />
     <Compile Include="System\Percentile.cs" />
     <Compile Include="System\StatsdMessageRouterBlock.cs" />
+    <Compile Include="System\SystemEventListener.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="Writers\GraphiteWriter.cs" />
-    <Compile Include="Writers\SQLWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="statsd.toml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\StatsdClient\StatsdClient.csproj">
+      <Project>{b8d06aec-1186-4200-8df6-bbf65ca11ec2}</Project>
+      <Name>StatsdClient</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>copy /Y "$(ProjectDir)statsd.toml" "$(TargetDir)"</PreBuildEvent>

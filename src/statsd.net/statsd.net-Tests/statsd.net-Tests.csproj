@@ -58,19 +58,24 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="GaugeTests.cs" />
     <Compile Include="StatsdTestSuite.cs" />
     <Compile Include="CounterTests.cs" />
     <Compile Include="Infrastructure\InAppBackend.cs" />
     <Compile Include="Infrastructure\InAppListener.cs" />
-    <Compile Include="Infrastructure\StatsBuilder.cs" />
     <Compile Include="Infrastructure\TestUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SystemTests.cs" />
     <Compile Include="TimerTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\statsd.net\statsd.net.csproj">
       <Project>{e2212771-d19d-4ca9-92ed-e254da99fd84}</Project>
       <Name>statsd.net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\StatsdClient\StatsdClient.csproj">
+      <Project>{b8d06aec-1186-4200-8df6-bbf65ca11ec2}</Project>
+      <Name>StatsdClient</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

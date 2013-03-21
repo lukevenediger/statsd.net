@@ -8,10 +8,15 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net.Backends
 {
-  public class ConsoleBackend : ITargetBlock<GraphiteLine>
+  public class ConsoleBackend : IBackend
   {
+    private bool _isActive;
+    private Task _completionTask;
+
     public ConsoleBackend()
     {
+      _isActive = true;
+      _completionTask = new Task(() => { _isActive = false; });
     }
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
@@ -23,16 +28,22 @@ namespace statsd.net.Backends
     public void Complete()
     {
       Console.WriteLine("Done");
+      _completionTask.Start();
     }
 
     public Task Completion
     {
-      get { throw new NotImplementedException(); }
+      get { return _completionTask; } 
     }
 
     public void Fault(Exception exception)
     {
       throw new NotImplementedException();
+    }
+
+    public bool IsActive
+    {
+      get { return _isActive; }
     }
   }
 }

@@ -1,4 +1,6 @@
-﻿using statsd.net.Messages;
+﻿using statsd.net.Listeners;
+using statsd.net.Messages;
+using StatsdClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,16 +13,26 @@ namespace statsd.net.System
 {
   public static class MessageParserBlockFactory
   {
-    public static TransformBlock<String, StatsdMessage> CreateMessageParserBlock(CancellationToken cancellationToken)
+    public static TransformBlock<String, StatsdMessage> CreateMessageParserBlock(CancellationToken cancellationToken,
+      SystemEventListener systemEvents)
     {
       var block = new TransformBlock<String, StatsdMessage>(
         (line) =>
         {
-          return StatsdMessageFactory.ParseMessage(line);
+          StatsdMessage message;
+          if (StatsdMessageFactory.TryParseMessage(line, out message))
+          {
+            return message;
+          }
+          else
+          {
+            systemEvents.Send(_.count.statsdnet.badlines + 1);
+            return InvalidMessage.Instance;
+          }
         },
         new ExecutionDataflowBlockOptions()
         {
-          //MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded,
+          MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded,
           CancellationToken = cancellationToken
         });
       return block;    }
