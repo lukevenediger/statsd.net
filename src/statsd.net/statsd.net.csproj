@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -53,7 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backends\ConsoleBackend.cs" />
+    <Compile Include="Backends\GraphiteBackend.cs" />
     <Compile Include="Backends\IBackend.cs" />
+    <Compile Include="Backends\SqlServerBackend.cs" />
     <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
     <Compile Include="Messages\InvalidMessage.cs" />
@@ -70,13 +75,17 @@
     <Compile Include="ServiceWrapper.cs" />
     <Compile Include="Statsd.cs" />
     <Compile Include="System\AggregatorFactory.cs" />
+    <Compile Include="System\LoggingBootstrap.cs" />
     <Compile Include="System\MessageParserBlockFactory.cs" />
     <Compile Include="System\Percentile.cs" />
     <Compile Include="System\StatsdMessageRouterBlock.cs" />
-    <Compile Include="System\SystemEventListener.cs" />
+    <Compile Include="Listeners\SystemEventListener.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="statsd.toml" />
   </ItemGroup>

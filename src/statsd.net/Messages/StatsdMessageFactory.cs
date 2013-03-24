@@ -17,7 +17,7 @@ namespace statsd.net.Messages
         message = ParseMessage(line);
         return true;
       }
-      catch (Exception ex)
+      catch (Exception)
       {
         message = null;
         return false;

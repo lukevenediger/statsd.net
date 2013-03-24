@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace statsd.net.System
+namespace statsd.net.Listeners
 {
   public sealed class SystemEventListener : IListener
   {

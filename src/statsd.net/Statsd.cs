@@ -26,6 +26,7 @@ namespace statsd.net
     
     public Statsd()
     {
+      LoggingBootstrap.Configure();
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent(false);
       _systemEvents = new SystemEventListener();
@@ -74,6 +75,14 @@ namespace statsd.net
       if (config.backends.console.enabled)
       {
         AddBackend(new ConsoleBackend());
+      }
+      if (config.backends.graphite.enabled)
+      {
+        AddBackend(new GraphiteBackend(config.backends.graphite.host, config.backends.graphite.port));
+      }
+      if (config.backends.sqlserver.enabled)
+      {
+        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, _systemEvents));
       }
 
       // Load Aggregators

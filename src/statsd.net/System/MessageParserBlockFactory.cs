@@ -22,6 +22,7 @@ namespace statsd.net.System
           StatsdMessage message;
           if (StatsdMessageFactory.TryParseMessage(line, out message))
           {
+            systemEvents.Send(_.count.statsdnet.lines + 1);
             return message;
           }
           else
@@ -35,6 +36,7 @@ namespace statsd.net.System
           MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded,
           CancellationToken = cancellationToken
         });
-      return block;    }
+      return block;
+    }
   }
 }

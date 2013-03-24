@@ -1,6 +1,9 @@
 ﻿# statsd.net configuration file.
 # This is a TOML file. Read the spec here: https://github.com/mojombo/toml 
 
+[general]
+name = "foocollector"
+
 [listeners]
 
   [listeners.udp]
