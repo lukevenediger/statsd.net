@@ -23,6 +23,14 @@ namespace statsd.net
     private CancellationTokenSource _tokenSource;
     private ManualResetEvent _shutdownComplete;
     private SystemEventListener _systemEvents;
+
+    public WaitHandle ShutdownWaitHandle
+    {
+      get
+      {
+        return _shutdownComplete;
+      }
+    }
     
     public Statsd()
     {
