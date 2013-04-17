@@ -5,7 +5,6 @@
 name = "foocollector"
 
 [listeners]
-
   [listeners.udp]
   enabled = true
   port = 12000
@@ -15,14 +14,13 @@ name = "foocollector"
   port = 12001
 
 [backends]
-
   [backends.sqlserver]
-  enabled = false
-  connectionString = ""
+  enabled = true
+  connectionString = "server=gamingdb2;database=lvtest;uid=sa;password=!@#$%A1"
   
   [backends.graphite]
-  enabled = false
-  host = "127.0.0.1"
+  enabled = true
+  host = "metricsas1"
   port = 2003
 
   [backends.console]
@@ -47,7 +45,6 @@ timersNamespace = "stats.timers"
   percentile = 50
 
 [console]
-
   enabled = true
   localhostOnly = true
   port = 8080

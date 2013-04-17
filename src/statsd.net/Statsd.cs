@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.Services;
 
 namespace statsd.net
 {
@@ -39,6 +40,9 @@ namespace statsd.net
       _shutdownComplete = new ManualResetEvent(false);
       _systemEvents = new SystemEventListener();
 
+      SuperCheapIOC.Add( _systemEvents );
+      SuperCheapIOC.Add( new SystemMetricsService( _tokenSource.Token ) as ISystemMetricsService );
+      
       /**
        * The flow is:
        *  Listeners ->
@@ -86,7 +90,7 @@ namespace statsd.net
       }
       if (config.backends.graphite.enabled)
       {
-        AddBackend(new GraphiteBackend(config.backends.graphite.host, config.backends.graphite.port));
+        AddBackend(new GraphiteBackend(config.backends.graphite.host, (int)config.backends.graphite.port));
       }
       if (config.backends.sqlserver.enabled)
       {

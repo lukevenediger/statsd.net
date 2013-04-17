@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.Services;
 
 namespace statsd.net.System
 {
@@ -16,18 +17,20 @@ namespace statsd.net.System
     public static TransformBlock<String, StatsdMessage> CreateMessageParserBlock(CancellationToken cancellationToken,
       SystemEventListener systemEvents)
     {
+      var systemMetricsService = SuperCheapIOC.Resolve<ISystemMetricsService>();
+
       var block = new TransformBlock<String, StatsdMessage>(
         (line) =>
         {
           StatsdMessage message;
           if (StatsdMessageFactory.TryParseMessage(line, out message))
           {
-            systemEvents.Send(_.count.statsdnet.lines + 1);
+            systemMetricsService.ProcessedALine();
             return message;
           }
           else
           {
-            systemEvents.Send(_.count.statsdnet.badlines + 1);
+            systemMetricsService.SawBadLine();
             return InvalidMessage.Instance;
           }
         },

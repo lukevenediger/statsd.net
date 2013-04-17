@@ -71,6 +71,7 @@
     <Compile Include="Messages\Timing.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\SystemMetricsService.cs" />
     <Compile Include="ServiceWrapper.cs">
       <SubType>Component</SubType>
     </Compile>

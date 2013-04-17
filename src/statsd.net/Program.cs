@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace statsd.net
 {
-  class Program
+  public class Program
   {
     static void Main(string[] args)
     {
@@ -37,6 +37,12 @@ namespace statsd.net
             PrintHelp();
             break;
           default:
+#if DEBUG
+            if ( global::System.Diagnostics.Debugger.IsAttached )
+            {
+              RunConsoleMode();
+            }
+#endif
             PrintHelp(action);
             Environment.Exit(1);
             break;

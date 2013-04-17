@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.Services;
+using statsd.net.System;
 
 namespace statsd.net.Backends
 {
@@ -23,6 +25,7 @@ namespace statsd.net.Backends
     private ActionBlock<GraphiteLine[]> _actionBlock;
     private static SqlMetaData[] statsdTable = { new SqlMetaData("measure", SqlDbType.VarChar, 255) };
     private SystemEventListener _systemEventListener;
+    private ISystemMetricsService _systemMetricsService;
 
     public SqlServerBackend(string connectionString, 
       string collectorName,
@@ -31,6 +34,7 @@ namespace statsd.net.Backends
       _connectionString = connectionString;
       _collectorName = collectorName;
       _systemEventListener = systemEventListener;
+      _systemMetricsService = SuperCheapIOC.Resolve<ISystemMetricsService>();
       _batchBlock = new BatchBlock<GraphiteLine>(50);
       _actionBlock = new ActionBlock<GraphiteLine[]>(p => SendToDB(p));
       _batchBlock.LinkTo(_actionBlock);
@@ -63,7 +67,7 @@ namespace statsd.net.Backends
 
     public Task Completion
     {
-      get { throw new NotImplementedException(); }
+      get { return _completionTask; }
     }
 
     public void Fault(Exception exception)
@@ -92,7 +96,7 @@ namespace statsd.net.Backends
         cmd.Parameters["@metrics"].TypeName = "MetricEntriesTableType";
         cmd.Parameters["@metrics"].Value = tableData;
         int rows = cmd.ExecuteNonQuery();
-        _systemEventListener.Send(_.count.backends.sqlserver.rows + rows);
+        _systemMetricsService.SentLinesToSqlBackend( rows );
       }
     }
   }

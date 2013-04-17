@@ -11,6 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoDataFeeder", "DemoDataF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLineStatsClient", "CommandLineStatsClient\CommandLineStatsClient.csproj", "{08B2396F-7BEE-4048-A172-CFCC01B82FFF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sql Backend Scripts", "Sql Backend Scripts", "{22D69892-EF16-4EA5-AD0D-1D02490C6571}"
+	ProjectSection(SolutionItems) = preProject
+		Install DB Objects.sql = Install DB Objects.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
