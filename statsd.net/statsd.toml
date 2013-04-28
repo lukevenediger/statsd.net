@@ -30,6 +30,7 @@ name = "foocollector"
 flushIntervalSeconds = 10
 gaugesNamespace = "stats.gauges"
 countersNamespace = "stats_counts"
+setsNamespace = "sets"
 timersNamespace = "stats.timers"
 
   [calc.percentiles.p90_5min]

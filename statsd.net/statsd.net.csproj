@@ -58,6 +58,7 @@
     <Compile Include="Backends\GraphiteBackend.cs" />
     <Compile Include="Backends\IBackend.cs" />
     <Compile Include="Backends\SqlServerBackend.cs" />
+    <Compile Include="Framework\TimedSetAggregatorBlockFactory.cs" />
     <Compile Include="Framework\TimedLatencyPercentileAggregatorBlockFactory.cs" />
     <Compile Include="Framework\TimedCounterAggregatorBlockFactory.cs" />
     <Compile Include="Framework\TimedLatencyAggregatorBlockFactory.cs" />

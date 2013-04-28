@@ -76,6 +76,7 @@
     <Compile Include="TimedGaugeAggregatorBlockTests.cs" />
     <Compile Include="TimedLatencyAggregatorBlockTests.cs" />
     <Compile Include="TimedLatencyPercentileAggregatorBlockTests.cs" />
+    <Compile Include="TimedSetAggregatorBlockTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\statsd.net\statsd.net.csproj">
