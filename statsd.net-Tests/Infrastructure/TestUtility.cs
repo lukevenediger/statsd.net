@@ -8,14 +8,22 @@ namespace statsd.net_Tests.Infrastructure
 {
   class TestUtility
   {
-    public static List<int> Range(int max)
+    public static List<int> Range(int max, bool zeroBased = true)
     {
       var items = new List<int>();
       for (int i = 0; i < max; i++)
       {
-        items.Add(i);
+        items.Add((zeroBased ? i : i + 1));
       }
       return items;
+    }
+
+    public static TimeSpan OneSecondTimeout
+    {
+      get
+      {
+        return new TimeSpan(0, 0, 1);
+      }
     }
   }
 }

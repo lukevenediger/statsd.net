@@ -13,6 +13,11 @@ namespace statsd.net.Messages
 
     public Counter(string name, int value)
     {
+      if (value < 0)
+      {
+        throw new ArgumentOutOfRangeException("value");
+      }
+
       Name = name;
       Value = value;
       MessageType = MessageType.Counter;
@@ -20,6 +25,11 @@ namespace statsd.net.Messages
 
     public Counter(string name, int value, float sampleRate)
     {
+      if (value < 0)
+      {
+        throw new ArgumentOutOfRangeException("value");
+      }
+
       Name = name;
       Value = value;
       SampleRate = sampleRate;

@@ -1,7 +1,7 @@
 ﻿using statsd.net.Backends;
 using statsd.net.Listeners;
 using statsd.net.Messages;
-using statsd.net.System;
+using statsd.net.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +23,6 @@ namespace statsd.net
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
     private ManualResetEvent _shutdownComplete;
-    private SystemEventListener _systemEvents;
 
     public WaitHandle ShutdownWaitHandle
     {
@@ -38,9 +37,7 @@ namespace statsd.net
       LoggingBootstrap.Configure();
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent(false);
-      _systemEvents = new SystemEventListener();
 
-      SuperCheapIOC.Add( _systemEvents );
       SuperCheapIOC.Add( new SystemMetricsService( _tokenSource.Token ) as ISystemMetricsService );
       
       /**
@@ -55,7 +52,8 @@ namespace statsd.net
       
       // Initialise the core blocks
       _router = new StatsdMessageRouterBlock();
-      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, _systemEvents);
+      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, 
+        SuperCheapIOC.Resolve<ISystemMetricsService>() );
       _messageParser.LinkTo(_router);
       _messageParser.Completion.ContinueWith(_ =>
         {
@@ -67,11 +65,11 @@ namespace statsd.net
           _backends.ForEach(q => q.Complete());
         });
 
+      // Add the broadcaster to the IOC container
+      SuperCheapIOC.Add<ITargetBlock<GraphiteLine>>(_messageBroadcaster);
+
       _backends = new List<IBackend>();
       _listeners = new List<IListener>();
-
-      // Add the system events listener
-      AddListener(_systemEvents);
     }
 
     public Statsd(dynamic config) 
@@ -94,21 +92,24 @@ namespace statsd.net
       }
       if (config.backends.sqlserver.enabled)
       {
-        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, _systemEvents));
+        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, SuperCheapIOC.Resolve<ISystemMetricsService>()));
       }
 
       // Load Aggregators
       AddAggregator(MessageType.Counter,
-        AggregatorFactory.CreateTimedCountersBlock(config.calc.countersNamespace, new TimeSpan(0, 0, (int)config.calc.flushIntervalSeconds)));
+        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, new IntervalService((int)config.calc.flushIntervalSeconds)));
       AddAggregator(MessageType.Gauge,
-        AggregatorFactory.CreateTimedGaugesBlock(config.calc.gaugesNamespace, new TimeSpan(0, 0, (int)config.calc.flushIntervalSeconds)));
-      foreach (var timer in (IDictionary<string, object>)config.calc.timers)
+        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, new IntervalService((int)config.calc.flushIntervalSeconds)));
+      AddAggregator(MessageType.Timing,
+        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamepace, new IntervalService((int)config.calc.flushIntervalSeconds)));
+      // Load Latency Percentile Aggregators
+      foreach (var percentile in (IDictionary<string, object>)config.calc.percentiles)
       {
-        dynamic theTimer = timer.Value;
+        dynamic thePercentile = percentile.Value;
         AddAggregator(MessageType.Timing,
-          AggregatorFactory.CreateTimedLatencyBlock(config.calc.timersNamespace + "." + timer.Key, 
-            new TimeSpan(0, 0, (int)theTimer.flushIntervalSeconds), 
-            (int)theTimer.percentile ));
+          TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace + "." + percentile.Key,
+            new IntervalService((int)thePercentile.flushIntervalSeconds),
+            (int)thePercentile.percentile ));
       }
     }
 
@@ -118,10 +119,9 @@ namespace statsd.net
       listener.LinkTo(_messageParser, _tokenSource.Token); 
     }
 
-    public void AddAggregator(MessageType targetType, IPropagatorBlock<StatsdMessage, GraphiteLine> aggregator)
+    public void AddAggregator(MessageType targetType, ActionBlock<StatsdMessage> aggregator)
     {
       _router.AddTarget(targetType, aggregator);
-      aggregator.LinkTo(_messageBroadcaster);
     }
 
     public void AddBackend(IBackend backend)

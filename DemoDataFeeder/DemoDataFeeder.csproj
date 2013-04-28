@@ -37,7 +37,7 @@
     </Reference>
     <Reference Include="StatsdClient, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\statsd-csharp-client\StatsdClient.dll</HintPath>
+      <HintPath>..\packages\StatsdCsharpClient.1.0.0.0\lib\net45\StatsdClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

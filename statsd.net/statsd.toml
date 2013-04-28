@@ -32,15 +32,15 @@ gaugesNamespace = "stats.gauges"
 countersNamespace = "stats_counts"
 timersNamespace = "stats.timers"
 
-  [calc.timers.p90_5min]
+  [calc.percentiles.p90_5min]
   flushIntervalSeconds = 300
   percentile = 90
 
-  [calc.timers.p90_1hour]
+  [calc.percentiles.p90_1hour]
   flushIntervalSeconds = 3600
   percentile = 90
     
-  [calc.timers.p50_1hour]
+  [calc.percentiles.p50_1hour]
   flushIntervalSeconds = 3600
   percentile = 50
 

@@ -16,7 +16,7 @@ namespace DemoDataFeeder
       var options = new Options();
       if (CommandLine.Parser.Default.ParseArgumentsStrict(args, options))
       {
-        var client = new StatsdClient.StatsdClient(options.Host, options.Port);
+        var client = new Statsd(options.Host, options.Port);
         var tokenSource = new System.Threading.CancellationTokenSource();
         var stopwatch = Stopwatch.StartNew();
         var totalMetricsSent = 0;

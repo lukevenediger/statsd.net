@@ -43,5 +43,30 @@ namespace statsd.net.Messages
     {
       return line.Select(p => GraphiteLine.Clone(p)).ToArray();
     }
+
+    public override int GetHashCode()
+    {
+      return _name.GetHashCode() ^ _quantity.GetHashCode() ^ _epoc.GetHashCode();
+    }
+
+    public override bool Equals(object obj)
+    {
+      if (obj == null)
+      {
+        return false;
+      }
+      if (!(obj is GraphiteLine))
+      {
+        return false;
+      }
+      return Equals(obj as GraphiteLine);
+    }
+
+    public bool Equals(GraphiteLine line)
+    {
+      return line._name == this._name &&
+        line._quantity == this._quantity &&
+        line._epoc == this._epoc;
+    }
   }
 }

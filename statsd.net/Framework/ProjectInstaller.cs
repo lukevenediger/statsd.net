@@ -7,7 +7,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.System
+namespace statsd.net.Framework
 {
   [RunInstaller(true)]
   public partial class ProjectInstaller : Installer

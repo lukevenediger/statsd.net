@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.System
+namespace statsd.net.Framework
 {
   internal class EventLogLogger : ILogger
   {

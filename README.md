@@ -1,5 +1,4 @@
 # statsd.net
-
 A high-performance stats collection service based on [etsy's](http://etsy.com/) [statsd service](https://github.com/etsy/statsd/) and written in c#.net.
 
 ## Key Features
@@ -10,10 +9,12 @@ A high-performance stats collection service based on [etsy's](http://etsy.com/) 
 * [App Fabric](http://msdn.com/appfabric) and [memcached](http://memcached.org/) support to allow horizontal scaling, with load balancing and storage re
 * More backends
 * Web-based management console with a RESTful API
+* Histogram stats
 
 ## About the Codebase
 
 ### Maintainers
 Luke Venediger - lukev@lukev.net
 
-### Contributors
+### Licence
+MIT Licence.

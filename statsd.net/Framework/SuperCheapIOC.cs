@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.System
+namespace statsd.net.Framework
 {
   public class SuperCheapIOC
   {
@@ -32,6 +32,11 @@ namespace statsd.net.System
     public static void Add<T>(T instance)
     {
       _instance._items.Add(typeof(T).Name, instance);
+    }
+
+    public static void Reset()
+    {
+      _instance._items.Clear();
     }
   }
 }

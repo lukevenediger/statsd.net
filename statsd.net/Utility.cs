@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using System.Timers;
 
 namespace statsd.net
@@ -52,11 +53,34 @@ namespace statsd.net
       return (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
     }
 
+    public static long ToEpoch(this DateTime dateTime)
+    {
+      return (dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
+    }
+
     public static IPAddress HostToIPv4Address(string host)
     {
       return Dns
         .GetHostAddresses(host)
         .First(p => p.AddressFamily == AddressFamily.InterNetwork);
+    }
+
+    public static void CompleteAndWait(this IDataflowBlock block)
+    {
+      block.Complete();
+      block.Completion.Wait();
+    }
+
+    public static void WaitUntilAllItemsProcessed<T>(this ActionBlock<T> block, int sleepTimeMS = 100)
+    {
+      while (true)
+      {
+        if (block.InputCount == 0)
+        {
+          return;
+        }
+        System.Threading.Thread.Sleep(sleepTimeMS);
+      }
     }
   }
 }

@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using StatsdClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace CommandLineStatsClient
       var options = new Options();
       if (Parser.Default.ParseArgumentsStrict(args, options))
       {
-        var client = new StatsdClient.StatsdClient(options.Host, options.Port, rethrowOnError : true);
+        var client = new Statsd(options.Host, options.Port, rethrowOnError : true);
         if (options.Count)
         {
           client.LogCount(options.Name, options.Value);

@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using statsd.net;
+using statsd.net.Framework;
+using statsd.net.Messages;
 using statsd.net_Tests.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -15,13 +17,20 @@ namespace statsd.net_Tests
     protected Statsd _statsd;
     protected InAppListener _listener;
     protected InAppBackend _backend;
+    protected StatsdClient.Statsd _client;
+    protected ControllableIntervalService _intervalService;
+    protected OutputBufferBlock<GraphiteLine> _outputBlock;
 
     [TestInitialize]
     public void Setup()
     {
+      SuperCheapIOC.Reset();
       _statsd = new Statsd();
       _listener = new InAppListener();
       _backend = new InAppBackend();
+      _intervalService = new ControllableIntervalService();
+      _outputBlock = new OutputBufferBlock<GraphiteLine>();
+      _client = new StatsdClient.Statsd("", 0, outputChannel : new InAppListenerOutputChannel(_listener));
       _statsd.AddListener(_listener);
       _statsd.AddBackend(_backend);
     }
