@@ -15,12 +15,12 @@ name = "foocollector"
 
 [backends]
   [backends.sqlserver]
-  enabled = true
-  connectionString = "server=gamingdb2;database=lvtest;uid=sa;password=!@#$%A1"
+  enabled = false
+  connectionString = "server=localhost;database=lvtest;uid=sa;password=!@#$%A1"
   
   [backends.graphite]
   enabled = true
-  host = "metricsas1"
+  host = "localhost"
   port = 2003
 
   [backends.console]

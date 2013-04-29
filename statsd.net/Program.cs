@@ -75,8 +75,6 @@ namespace statsd.net
       try
       {
         ManagedInstallerClass.InstallHelper(new[] { Assembly.GetExecutingAssembly().Location });
-        var eventLog = new EventLogLogger();
-        eventLog.CheckEventSource();
         Console.WriteLine("Service installed successfully (don't forget to start it!)");
       }
       catch (Exception ex)
@@ -91,7 +89,6 @@ namespace statsd.net
       try
       {
         ManagedInstallerClass.InstallHelper(new[] { "/u", Assembly.GetExecutingAssembly().Location });
-        new EventLogLogger().DiscardEventSource();
         Console.WriteLine("Service uninstalled successfully.");
       }
       catch (Exception ex)

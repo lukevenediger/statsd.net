@@ -71,11 +71,21 @@ namespace statsd.net
       block.Completion.Wait();
     }
 
+    public static void WaitUntilAllItemsProcessed<TIn, TOut>(this TransformBlock<TIn, TOut> block, int sleepTimeMS = 100)
+    {
+      WaitUntilPredicate(p => p.InputCount == 0, block, sleepTimeMS);
+    }
+
     public static void WaitUntilAllItemsProcessed<T>(this ActionBlock<T> block, int sleepTimeMS = 100)
     {
-      while (true)
+      WaitUntilPredicate(p => p.InputCount == 0, block, sleepTimeMS);
+    }
+
+    private static void WaitUntilPredicate<T>(Predicate<T> predicate, T target, int sleepTimeMS)
+    {
+      while(true)
       {
-        if (block.InputCount == 0)
+        if (predicate(target))
         {
           return;
         }

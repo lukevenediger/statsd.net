@@ -104,7 +104,7 @@ namespace statsd.net
       AddAggregator(MessageType.Set,
         TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, new IntervalService(flushPeriod)));
       AddAggregator(MessageType.Timing,
-        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamepace, new IntervalService(flushPeriod)));
+        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, new IntervalService(flushPeriod)));
       // Load Latency Percentile Aggregators
       foreach (var percentile in (IDictionary<string, object>)config.calc.percentiles)
       {

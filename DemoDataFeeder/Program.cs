@@ -35,7 +35,7 @@ namespace DemoDataFeeder
               while ( true )
               {
                 client.LogCount( "test.count.one." + rnd.Next( 5 ) );
-                client.LogCount( "test.count.bigValue.", rnd.Next( 50 ) );
+                client.LogCount( "test.count.bigValue", rnd.Next( 50 ) );
                 client.LogTiming( "test.timing." + rnd.Next( 5 ), rnd.Next( 100, 2000 ) );
                 client.LogGauge( "test.gauge." + rnd.Next( 5 ), rnd.Next( 100 ) );
                 Thread.Sleep( options.Delay );

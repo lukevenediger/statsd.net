@@ -66,6 +66,7 @@
     <Compile Include="Infrastructure\InAppListenerOutputChannel.cs" />
     <Compile Include="Infrastructure\OutputBufferBlock.cs" />
     <Compile Include="Infrastructure\GraphiteLineOutputBlock.cs" />
+    <Compile Include="MessageParserBlockTests.cs" />
     <Compile Include="StatsdTestSuite.cs" />
     <Compile Include="Infrastructure\InAppBackend.cs" />
     <Compile Include="Infrastructure\InAppListener.cs" />

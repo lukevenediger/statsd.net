@@ -83,7 +83,6 @@
     <Compile Include="Statsd.cs" />
     <Compile Include="Framework\TimedGaugeAggregatorBlockFactory.cs" />
     <Compile Include="Framework\ConsoleLogger.cs" />
-    <Compile Include="Framework\EventLogLogger.cs" />
     <Compile Include="Framework\ILogger.cs" />
     <Compile Include="Framework\LoggingBootstrap.cs" />
     <Compile Include="Framework\MessageParserBlockFactory.cs" />
