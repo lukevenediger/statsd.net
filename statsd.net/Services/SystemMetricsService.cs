@@ -12,10 +12,13 @@ namespace statsd.net.Services
 {
   public interface ISystemMetricsService
   {
+    void ReceivedUDPCall();
+    void ReceivedUDPBytes(int numBytesReceived);
     void ProcessedALine ();
     void SawBadLine ();
 
-    void SentLinesToSqlBackend ( int rows );
+    void SentLinesToGraphite(int numLines);
+    void SentLinesToSqlBackend ( int numLines );
     void SubmitForProcessing();
   }
 
@@ -24,15 +27,25 @@ namespace statsd.net.Services
   /// </summary>
   public class SystemMetricsService : ISystemMetricsService
   {
+    private long _receivedUDPCalls;
+    private long _receivedUDPBytes;
     private long _linesProcessed;
     private long _badLinesSeen;
-    private long _sqlBackendLines;
-    private CancellationToken _cancellationToken;
+    private long _sentToSQL;
+    private long _sentToGraphite;
 
-    public SystemMetricsService (CancellationToken cancellationToken)
+    public SystemMetricsService ()
     {
-      _linesProcessed = _badLinesSeen = _sqlBackendLines = 0;
-      _cancellationToken = cancellationToken;
+    }
+
+    public void ReceivedUDPCall()
+    {
+      Interlocked.Increment(ref _receivedUDPCalls);
+    }
+
+    public void ReceivedUDPBytes(int numBytesReceived)
+    {
+      Interlocked.Add(ref _receivedUDPBytes, numBytesReceived);
     }
 
     public void ProcessedALine ()
@@ -45,22 +58,33 @@ namespace statsd.net.Services
       Interlocked.Increment( ref _badLinesSeen );
     }
 
-    public void SentLinesToSqlBackend ( int numberOfLines )
+    public void SentLinesToSqlBackend ( int numLines )
     {
-      Interlocked.Add( ref _sqlBackendLines, numberOfLines );
+      Interlocked.Add( ref _sentToSQL, numLines );
+    }
+
+    public void SentLinesToGraphite(int numLines)
+    {
+      Interlocked.Add(ref _sentToGraphite, numLines);
     }
 
     public void SubmitForProcessing()
     {
       var target = SuperCheapIOC.Resolve<ITargetBlock<GraphiteLine>>();
 
+      long bytesUDP = Interlocked.Exchange(ref _receivedUDPBytes, 0);
+      long callsUDP = Interlocked.Exchange(ref _receivedUDPCalls, 0);
       long badLines = Interlocked.Exchange(ref _badLinesSeen, 0);
       long linesProcessed = Interlocked.Exchange(ref _linesProcessed, 0);
-      long sqlBackendLines = Interlocked.Exchange(ref _sqlBackendLines, 0);
+      long sentToSql = Interlocked.Exchange(ref _sentToSQL, 0);
+      long sentToGraphite = Interlocked.Exchange(ref _sentToGraphite, 0);
 
-      target.Post(new GraphiteLine("statsdnet.badLinesSeen", (int)_badLinesSeen));
-      target.Post(new GraphiteLine("statsdnet.linesSeen", (int)_linesProcessed));
-      target.Post(new GraphiteLine("statsdnet.backends.sqlBackend.linesProcessed", (int)_sqlBackendLines));
+      target.Post(new GraphiteLine("statsdnet.listeners.udp.calls", (int)callsUDP));
+      target.Post(new GraphiteLine("statsdnet.listeners.udp.bytes", (int)bytesUDP));
+      target.Post(new GraphiteLine("statsdnet.lines.badLines", (int)badLines));
+      target.Post(new GraphiteLine("statsdnet.lines.processed", (int)linesProcessed));
+      target.Post(new GraphiteLine("statsdnet.backends.sql.linesProcessed", (int)sentToSql));
+      target.Post(new GraphiteLine("statsdnet.backends.graphite.linesProcessed", (int)sentToGraphite));
     }
   }
 }

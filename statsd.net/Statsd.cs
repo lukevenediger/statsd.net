@@ -38,7 +38,7 @@ namespace statsd.net
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent(false);
 
-      SuperCheapIOC.Add( new SystemMetricsService( _tokenSource.Token ) as ISystemMetricsService );
+      SuperCheapIOC.Add( new SystemMetricsService() as ISystemMetricsService );
       
       /**
        * The flow is:
@@ -78,7 +78,7 @@ namespace statsd.net
       // Load listeners
       if (config.listeners.udp.enabled)
       {
-        AddListener(new UdpStatsListener((int)config.listeners.udp.port));
+        AddListener(new UdpStatsListener((int)config.listeners.udp.port, SuperCheapIOC.Resolve<ISystemMetricsService>()));
       }
 
       // Load backends

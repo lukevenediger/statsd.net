@@ -1,4 +1,5 @@
 ﻿using statsd.net.Messages;
+using statsd.net.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace statsd.net.Listeners
   {
     private int _port;
     private CancellationToken _cancellationToken;
+    private ISystemMetricsService _systemMetrics;
 
-    public UdpStatsListener(int port)
+    public UdpStatsListener(int port, ISystemMetricsService systemMetrics)
     {
       _port = port;
+      _systemMetrics = systemMetrics;
     }
 
     public void LinkTo(ITargetBlock<string> target, CancellationToken cancellationToken)
@@ -37,6 +40,8 @@ namespace statsd.net.Listeners
                 return;
               }
               byte[] data = udpClient.Receive(ref endpoint);
+              _systemMetrics.ReceivedUDPCall();
+              _systemMetrics.ReceivedUDPBytes(data.Length);
               string rawPacket = Encoding.UTF8.GetString(data);
               string[] lines = rawPacket.Replace("\r", "").Split('\n');
               for (int index = 0; index < lines.Length; index++)
