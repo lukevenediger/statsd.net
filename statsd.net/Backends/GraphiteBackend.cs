@@ -1,4 +1,5 @@
 ﻿using statsd.net.Messages;
+using statsd.net.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +15,14 @@ namespace statsd.net.Backends
     private UdpClient _client;
     private Task _completionTask;
     private bool _isActive;
+    private ISystemMetricsService _systemMetrics;
     
-    public GraphiteBackend(string host, int port)
+    public GraphiteBackend(string host, int port, ISystemMetricsService systemMetrics)
     {
       var ipAddress = Utility.HostToIPv4Address(host);
       _client = new UdpClient();
       _client.Connect(ipAddress, port);
+      _systemMetrics = systemMetrics;
       _completionTask = new Task(() => { _isActive = false; });
     }
 
@@ -32,6 +35,8 @@ namespace statsd.net.Backends
     {
       byte[] data = Encoding.ASCII.GetBytes(messageValue.ToString());
       _client.Send(data, data.Length);
+      _systemMetrics.SentLinesToGraphite();
+      _systemMetrics.SentBytesToGraphite(data.Length);
       return DataflowMessageStatus.Accepted;
     }
 

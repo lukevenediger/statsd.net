@@ -95,6 +95,8 @@ namespace statsd.net.Backends
         int rows = cmd.ExecuteNonQuery();
         _systemMetrics.SentLinesToSqlBackend( rows );
       }
+
+      _systemMetrics.SentLinesToSqlBackend(lines.Length);
     }
   }
 }

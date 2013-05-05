@@ -75,10 +75,12 @@ namespace statsd.net
     public Statsd(dynamic config) 
       : this()
     {
+      var systemMetrics = SuperCheapIOC.Resolve<ISystemMetricsService>();
+
       // Load listeners
       if (config.listeners.udp.enabled)
       {
-        AddListener(new UdpStatsListener((int)config.listeners.udp.port, SuperCheapIOC.Resolve<ISystemMetricsService>()));
+        AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
       }
 
       // Load backends
@@ -88,11 +90,11 @@ namespace statsd.net
       }
       if (config.backends.graphite.enabled)
       {
-        AddBackend(new GraphiteBackend(config.backends.graphite.host, (int)config.backends.graphite.port));
+        AddBackend(new GraphiteBackend(config.backends.graphite.host, (int)config.backends.graphite.port, systemMetrics));
       }
       if (config.backends.sqlserver.enabled)
       {
-        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, SuperCheapIOC.Resolve<ISystemMetricsService>()));
+        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, systemMetrics));
       }
 
       // Load Aggregators
