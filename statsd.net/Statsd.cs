@@ -77,12 +77,6 @@ namespace statsd.net
     {
       var systemMetrics = SuperCheapIOC.Resolve<ISystemMetricsService>();
 
-      // Load listeners
-      if (config.listeners.udp.enabled)
-      {
-        AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
-      }
-
       // Load backends
       if (config.backends.console.enabled)
       {
@@ -116,6 +110,13 @@ namespace statsd.net
             new IntervalService((int)thePercentile.flushIntervalSeconds),
             (int)thePercentile.percentile ));
       }
+
+      // Load listeners - done last and once the rest of the chain is in place
+      if (config.listeners.udp.enabled)
+      {
+        AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
+      }
+
     }
 
     public void AddListener(IListener listener)

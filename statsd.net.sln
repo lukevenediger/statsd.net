@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sql Backend Scripts", "Sql Backend Scripts", "{22D69892-EF16-4EA5-AD0D-1D02490C6571}"
 	ProjectSection(SolutionItems) = preProject
 		Install DB Objects.sql = Install DB Objects.sql
+		Install SQL Tables.sql = Install SQL Tables.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{CF42D423-DE3F-4966-9A2E-2CC2583AB2FD}"

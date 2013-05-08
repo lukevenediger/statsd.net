@@ -74,29 +74,32 @@ namespace statsd.net.Backends
 
     private void SendToDB(GraphiteLine[] lines)
     {
-      var tableData = lines.Select(p =>
-        {
-          var entry = new SqlDataRecord(statsdTable);
-          entry.SetString(0, p.ToString());
-          return entry;
-        });
-      
-      using (var conn = new SqlConnection(_connectionString))
+      DataRow row;
+      DataTable tableData = CreateEmptyTable();
+      foreach (var line in lines)
       {
-        conn.Open();
-        var cmd = conn.CreateCommand();
-        cmd.CommandText = "dbo.pr_Metrics_AddMetrics";
-        cmd.CommandType = CommandType.StoredProcedure;
-        cmd.Parameters.Add("@metrics", SqlDbType.Structured);
-        cmd.Parameters.AddWithValue("@source", _collectorName);
-        cmd.Parameters["@metrics"].Direction = ParameterDirection.Input;
-        cmd.Parameters["@metrics"].TypeName = "MetricEntriesTableType";
-        cmd.Parameters["@metrics"].Value = tableData;
-        int rows = cmd.ExecuteNonQuery();
-        _systemMetrics.SentLinesToSqlBackend( rows );
+        row = tableData.NewRow();
+        row["rowid"] = System.DBNull.Value;
+        row["source"] = this._collectorName;
+        row["metric"] = line.ToString();
+        tableData.Rows.Add(row);
       }
 
-      _systemMetrics.SentLinesToSqlBackend(lines.Length);
+      using (var bulk = new SqlBulkCopy(_connectionString))
+      {
+        bulk.DestinationTableName = "tb_Metrics";
+        bulk.WriteToServer(tableData);
+      }
+      _systemMetrics.SentLinesToSqlBackend(tableData.Rows.Count);
+    }
+
+    public DataTable CreateEmptyTable()
+    {
+      DataTable outputTable = new DataTable();
+      outputTable.Columns.Add("rowid", typeof(int));
+      outputTable.Columns.Add("source", typeof(string));
+      outputTable.Columns.Add("metric", typeof(string));
+      return outputTable;
     }
   }
 }

@@ -15,8 +15,8 @@ name = "foocollector"
 
 [backends]
   [backends.sqlserver]
-  enabled = false
-  connectionString = "server=localhost;database=lvtest;uid=sa;password=!@#$%A1"
+  enabled = true
+  connectionString = "server=localhost;database=metrics;uid=metricsuser;password=metricsuser"
   
   [backends.graphite]
   enabled = true

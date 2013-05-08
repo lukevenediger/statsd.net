@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backends\ConsoleBackend.cs" />
+    <None Include="Backends\Copy of SqlServerBackend.cs.off" />
     <Compile Include="Backends\GraphiteBackend.cs" />
     <Compile Include="Backends\IBackend.cs" />
     <Compile Include="Backends\SqlServerBackend.cs" />
