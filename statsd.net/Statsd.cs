@@ -11,11 +11,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net.Services;
+using log4net;
+using statsd.net.Backends.SqlServer;
 
 namespace statsd.net
 {
   public class Statsd
   {
+
     private TransformBlock<string, StatsdMessage> _messageParser;
     private StatsdMessageRouterBlock _router;
     private BroadcastBlock<GraphiteLine> _messageBroadcaster;
@@ -23,6 +26,7 @@ namespace statsd.net
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
     private ManualResetEvent _shutdownComplete;
+    private static readonly ILog _log = LogManager.GetLogger("statsd.net");
 
     public WaitHandle ShutdownWaitHandle
     {
@@ -35,9 +39,11 @@ namespace statsd.net
     public Statsd()
     {
       LoggingBootstrap.Configure();
+      _log.Info("statsd.net starting.");
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent(false);
 
+      SuperCheapIOC.Add(_log);
       SuperCheapIOC.Add( new SystemMetricsService() as ISystemMetricsService );
       
       /**
@@ -116,7 +122,6 @@ namespace statsd.net
       {
         AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
       }
-
     }
 
     public void AddListener(IListener listener)

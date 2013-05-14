@@ -17,7 +17,6 @@ namespace statsd.net
     {
       if (Environment.UserInteractive)
       {
-        SuperCheapIOC.Add(new ConsoleLogger());
         string action = String.Concat(args);
         switch (action)
         {

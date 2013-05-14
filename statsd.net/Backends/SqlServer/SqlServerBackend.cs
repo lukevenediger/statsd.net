@@ -11,8 +11,10 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net.Services;
 using statsd.net.Framework;
+using Microsoft.Practices.TransientFaultHandling;
+using log4net;
 
-namespace statsd.net.Backends
+namespace statsd.net.Backends.SqlServer
 {
   public class SqlServerBackend : IBackend
   {
@@ -24,16 +26,26 @@ namespace statsd.net.Backends
     private ActionBlock<GraphiteLine[]> _actionBlock;
     private static SqlMetaData[] statsdTable = { new SqlMetaData("measure", SqlDbType.VarChar, 255) };
     private ISystemMetricsService _systemMetrics;
+    private int _retries;
+    private Incremental _retryStrategy;
+    private RetryPolicy<SqlServerErrorDetectionStrategy> _retryPolicy;
+    private ILog _log;
 
     public SqlServerBackend(string connectionString, 
       string collectorName,
-      ISystemMetricsService systemMetrics)
+      ISystemMetricsService systemMetrics,
+      int retries = 3)
     {
+      _log = SuperCheapIOC.Resolve<ILog>();
       _connectionString = connectionString;
       _collectorName = collectorName;
       _systemMetrics = systemMetrics;
+      _retries = retries;
+
+      InitialiseRetryHandling();
+
       _batchBlock = new BatchBlock<GraphiteLine>(50);
-      _actionBlock = new ActionBlock<GraphiteLine[]>(p => SendToDB(p));
+      _actionBlock = new ActionBlock<GraphiteLine[]>(p => SendToDB(p), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
       _batchBlock.LinkTo(_actionBlock);
 
       _batchBlock.Completion.ContinueWith(p => _actionBlock.Complete());
@@ -72,25 +84,45 @@ namespace statsd.net.Backends
       throw new NotImplementedException();
     }
 
+    private void InitialiseRetryHandling()
+    {
+      _retryStrategy = new Incremental(_retries, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+      _retryPolicy = new RetryPolicy<SqlServerErrorDetectionStrategy>(_retries);
+      _retryPolicy.Retrying += (sender, args) =>
+        {
+          _log.Error(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
+        };
+    }
+
     private void SendToDB(GraphiteLine[] lines)
     {
-      DataRow row;
-      DataTable tableData = CreateEmptyTable();
-      foreach (var line in lines)
+      try
       {
-        row = tableData.NewRow();
-        row["rowid"] = System.DBNull.Value;
-        row["source"] = this._collectorName;
-        row["metric"] = line.ToString();
-        tableData.Rows.Add(row);
-      }
+        DataRow row;
+        DataTable tableData = CreateEmptyTable();
+        foreach (var line in lines)
+        {
+          row = tableData.NewRow();
+          row["rowid"] = System.DBNull.Value;
+          row["source"] = this._collectorName;
+          row["metric"] = line.ToString();
+          tableData.Rows.Add(row);
+        }
 
-      using (var bulk = new SqlBulkCopy(_connectionString))
-      {
-        bulk.DestinationTableName = "tb_Metrics";
-        bulk.WriteToServer(tableData);
+        _retryPolicy.ExecuteAction(() =>
+          {
+            using (var bulk = new SqlBulkCopy(_connectionString))
+            {
+              bulk.DestinationTableName = "tb_Metrics";
+              bulk.WriteToServer(tableData);
+            }
+            _systemMetrics.SentLinesToSqlBackend(tableData.Rows.Count);
+          });
       }
-      _systemMetrics.SentLinesToSqlBackend(tableData.Rows.Count);
+      catch (Exception ex)
+      {
+        _log.Error("SqlServerBackend: All retries failed.", ex);
+      }
     }
 
     public DataTable CreateEmptyTable()
