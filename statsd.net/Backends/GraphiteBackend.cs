@@ -31,12 +31,17 @@ namespace statsd.net.Backends
       get { return _isActive; }
     }
 
+    public int OutputCount
+    {
+      get { return 0; }
+    }
+
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
     {
       byte[] data = Encoding.ASCII.GetBytes(messageValue.ToString());
       _client.Send(data, data.Length);
-      _systemMetrics.SentLinesToGraphite();
-      _systemMetrics.SentBytesToGraphite(data.Length);
+      _systemMetrics.Log("backends.graphite.lines");
+      _systemMetrics.Log("backends.graphite.bytes", data.Length);
       return DataflowMessageStatus.Accepted;
     }
 

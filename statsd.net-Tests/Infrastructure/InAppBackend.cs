@@ -48,5 +48,10 @@ namespace statsd.net_Tests.Infrastructure
     {
       get { return _isActive; }
     }
+
+    public int OutputCount
+    {
+      get { return Messages.Count; }
+    }
   }
 }

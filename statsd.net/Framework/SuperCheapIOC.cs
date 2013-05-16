@@ -29,9 +29,26 @@ namespace statsd.net.Framework
       return (T)_instance._items[typeof(T).Name];
     }
 
+    public static IEnumerable<T> ResolveAll<T>()
+    {
+      foreach(var key in _instance._items.Keys)
+      {
+        var reducedKey = key.Split('_')[0];
+        if (reducedKey == typeof(T).Name)
+        {
+          yield return (T)_instance._items[reducedKey];
+        }
+      }
+    }
+
     public static void Add<T>(T instance)
     {
       _instance._items.Add(typeof(T).Name, instance);
+    }
+
+    public static void Add<T>(T instance, string name)
+    {
+      _instance._items.Add(typeof(T).Name + "_" + name, instance);
     }
 
     public static void Reset()

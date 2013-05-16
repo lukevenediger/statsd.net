@@ -20,14 +20,14 @@ namespace statsd.net.Framework
         (line) =>
         {
           StatsdMessage message;
+          systemMetrics.Log("parser.linesSeen");
           if (StatsdMessageFactory.TryParseMessage(line, out message))
           {
-            systemMetrics.ProcessedALine();
             return message;
           }
           else
           {
-            systemMetrics.SawBadLine();
+            systemMetrics.Log("parser.badLinesSeen");
             return InvalidMessage.Instance;
           }
         },

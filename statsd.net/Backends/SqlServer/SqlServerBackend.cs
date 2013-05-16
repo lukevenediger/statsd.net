@@ -34,7 +34,8 @@ namespace statsd.net.Backends.SqlServer
     public SqlServerBackend(string connectionString, 
       string collectorName,
       ISystemMetricsService systemMetrics,
-      int retries = 3)
+      int retries = 3,
+      int batchSize = 2000)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
       _connectionString = connectionString;
@@ -44,7 +45,7 @@ namespace statsd.net.Backends.SqlServer
 
       InitialiseRetryHandling();
 
-      _batchBlock = new BatchBlock<GraphiteLine>(50);
+      _batchBlock = new BatchBlock<GraphiteLine>(batchSize);
       _actionBlock = new ActionBlock<GraphiteLine[]>(p => SendToDB(p), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
       _batchBlock.LinkTo(_actionBlock);
 
@@ -61,6 +62,11 @@ namespace statsd.net.Backends.SqlServer
     public bool IsActive
     {
       get { return _isActive; }
+    }
+
+    public int OutputCount
+    {
+      get { return _batchBlock.OutputCount; }
     }
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
@@ -91,6 +97,7 @@ namespace statsd.net.Backends.SqlServer
       _retryPolicy.Retrying += (sender, args) =>
         {
           _log.Error(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
+          _systemMetrics.Log("backends.sqlserver.retry");
         };
     }
 
@@ -116,12 +123,13 @@ namespace statsd.net.Backends.SqlServer
               bulk.DestinationTableName = "tb_Metrics";
               bulk.WriteToServer(tableData);
             }
-            _systemMetrics.SentLinesToSqlBackend(tableData.Rows.Count);
+            _systemMetrics.Log("backends.sqlserver.lines", tableData.Rows.Count);
           });
       }
       catch (Exception ex)
       {
         _log.Error("SqlServerBackend: All retries failed.", ex);
+        _systemMetrics.Log("backends.sqlserver.droppedData");
       }
     }
 

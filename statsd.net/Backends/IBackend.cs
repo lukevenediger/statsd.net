@@ -11,5 +11,6 @@ namespace statsd.net.Backends
   public interface IBackend : ITargetBlock<GraphiteLine>
   {
     bool IsActive { get; }
+    int OutputCount { get; }
   }
 }

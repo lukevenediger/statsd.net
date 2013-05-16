@@ -2,26 +2,21 @@
 using statsd.net.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.Listeners;
+using statsd.net.Backends;
 
 namespace statsd.net.Services
 {
   public interface ISystemMetricsService
   {
-    void ReceivedUDPCall();
-    void ReceivedUDPBytes(int numBytesReceived);
-    void ProcessedALine();
-    void SawBadLine();
-
-    void SentLinesToGraphite(int numLines = 1);
-    void SentBytesToGraphite(int numBytes);
-    void SentLinesToSqlBackend(int numLines = 1);
-    void SentBytesToSqlBackend(int numBytes);
-    void SubmitForProcessing();
+    void Log(string name, int quantity = 1);
+    void SetTarget(ITargetBlock<GraphiteLine> target);
   }
 
   /// <summary>
@@ -29,80 +24,48 @@ namespace statsd.net.Services
   /// </summary>
   public class SystemMetricsService : ISystemMetricsService
   {
-    private long _receivedUDPCalls;
-    private long _receivedUDPBytes;
-    private long _linesProcessed;
-    private long _badLinesSeen;
-    private long _sentToSQL;
-    private long _sentToSQLBytes;
-    private long _sentToGraphite;
-    private long _sentToGraphiteBytes;
+    private string _prefix;
+    private ITargetBlock<GraphiteLine> _target;
+    private ConcurrentDictionary<string, int> _metrics;
 
-    public SystemMetricsService()
+    public SystemMetricsService(string prefix = null, IIntervalService intervalService = null)
     {
+      if (intervalService == null)
+      {
+        intervalService = new IntervalService(30);
+      }
+      _prefix = (prefix + ".") ?? String.Empty;
+      _metrics = new ConcurrentDictionary<string, int>();
+      intervalService.Elapsed = SendMetrics;
     }
 
-    public void ReceivedUDPCall()
+    public void Log(string name, int quantity = 1)
     {
-      Interlocked.Increment(ref _receivedUDPCalls);
+      _metrics.AddOrUpdate(name, quantity, (key, input) => { return input + quantity; });
     }
 
-    public void ReceivedUDPBytes(int numBytesReceived)
+    public void SetTarget(ITargetBlock<GraphiteLine> target)
     {
-      Interlocked.Add(ref _receivedUDPBytes, numBytesReceived);
+      _target = target;
     }
 
-    public void ProcessedALine()
+    private void SendMetrics(long ticksSinceLastUpdate)
     {
-      Interlocked.Increment(ref _linesProcessed);
-    }
+      if (_target == null)
+      {
+        return;
+      }
 
-    public void SawBadLine()
-    {
-      Interlocked.Increment(ref _badLinesSeen);
-    }
+      // Get a count of metrics waiting to be sent out
+      var outputBufferCount = SuperCheapIOC.ResolveAll<IBackend>().Sum(p => p.OutputCount);
+      _target.Post(new GraphiteLine("outputBuffer", outputBufferCount));
 
-    public void SentLinesToSqlBackend(int numLines = 1)
-    {
-      Interlocked.Add(ref _sentToSQL, numLines);
-    }
-
-    public void SentBytesToSqlBackend(int numByes)
-    {
-      Interlocked.Add(ref _sentToSQLBytes, numByes);
-    }
-
-    public void SentLinesToGraphite(int numLines = 1)
-    {
-      Interlocked.Add(ref _sentToGraphite, numLines);
-    }
-
-    public void SentBytesToGraphite(int numBytes)
-    {
-      Interlocked.Add(ref _sentToGraphiteBytes, numBytes);
-    }
-
-    public void SubmitForProcessing()
-    {
-      var target = SuperCheapIOC.Resolve<ITargetBlock<GraphiteLine>>();
-
-      long bytesUDP = Interlocked.Exchange(ref _receivedUDPBytes, 0);
-      long callsUDP = Interlocked.Exchange(ref _receivedUDPCalls, 0);
-      long badLines = Interlocked.Exchange(ref _badLinesSeen, 0);
-      long linesProcessed = Interlocked.Exchange(ref _linesProcessed, 0);
-      long sentToSql = Interlocked.Exchange(ref _sentToSQL, 0);
-      long sentToSqlBytes = Interlocked.Exchange(ref _sentToSQLBytes, 0);
-      long sentToGraphite = Interlocked.Exchange(ref _sentToGraphite, 0);
-      long sentToGraphiteBytes = Interlocked.Exchange(ref _sentToGraphiteBytes, 0);
-
-      target.Post(new GraphiteLine("statsdnet.listeners.udp.calls", (int)callsUDP));
-      target.Post(new GraphiteLine("statsdnet.listeners.udp.bytes", (int)bytesUDP));
-      target.Post(new GraphiteLine("statsdnet.lines.badLines", (int)badLines));
-      target.Post(new GraphiteLine("statsdnet.lines.processed", (int)linesProcessed));
-      target.Post(new GraphiteLine("statsdnet.backends.sql.linesProcessed", (int)sentToSql));
-      target.Post(new GraphiteLine("statsdnet.backends.sql.bytes", (int)sentToSqlBytes));
-      target.Post(new GraphiteLine("statsdnet.backends.graphite.linesProcessed", (int)sentToGraphite));
-      target.Post(new GraphiteLine("statsdnet.backends.graphite.bytes", (int)sentToGraphiteBytes));
+      var pairs = _metrics.ToArray();
+      _metrics.Clear();
+      foreach (var pair in pairs)
+      {
+        _target.Post(new GraphiteLine(pair.Key, pair.Value));
+      }
     }
   }
 }

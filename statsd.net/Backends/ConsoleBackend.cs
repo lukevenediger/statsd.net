@@ -45,5 +45,10 @@ namespace statsd.net.Backends
     {
       get { return _isActive; }
     }
+
+    public int OutputCount
+    {
+      get { return 0; }
+    }
   }
 }

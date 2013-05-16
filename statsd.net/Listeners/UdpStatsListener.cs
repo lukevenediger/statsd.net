@@ -40,8 +40,8 @@ namespace statsd.net.Listeners
                 return;
               }
               byte[] data = udpClient.Receive(ref endpoint);
-              _systemMetrics.ReceivedUDPCall();
-              _systemMetrics.ReceivedUDPBytes(data.Length);
+              _systemMetrics.Log("listeners.udp.incoming");
+              _systemMetrics.Log("listeners.udp.bytes", data.Length);
               string rawPacket = Encoding.UTF8.GetString(data);
               string[] lines = rawPacket.Replace("\r", "").Split('\n');
               for (int index = 0; index < lines.Length; index++)

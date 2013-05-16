@@ -30,7 +30,7 @@ namespace statsd.net_Tests
     [TestMethod]
     public void ProcessedALine_IncrementedCounter()
     {
-      _systemMetrics.Setup(p => p.ProcessedALine()).Verifiable();
+      _systemMetrics.Setup(p => p.Log("parser.linesSeen", 1)).Verifiable();
 
       _block.Post(new Counter("foo", 1).ToString());
       _block.WaitUntilAllItemsProcessed();
@@ -41,7 +41,7 @@ namespace statsd.net_Tests
     [TestMethod]
     public void ProcessedABadLine_IncrementedBadLineCounter()
     {
-      _systemMetrics.Setup(p => p.SawBadLine()).Verifiable();
+      _systemMetrics.Setup(p => p.Log("parser.badLinesSeen", 1)).Verifiable();
 
       _block.Post("a bad line");
       _block.WaitUntilAllItemsProcessed();

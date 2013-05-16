@@ -44,7 +44,9 @@ namespace statsd.net
       _shutdownComplete = new ManualResetEvent(false);
 
       SuperCheapIOC.Add(_log);
-      SuperCheapIOC.Add( new SystemMetricsService() as ISystemMetricsService );
+      var systemInfoService = new SystemInfoService();
+      SuperCheapIOC.Add(systemInfoService as ISystemInfoService);
+      SuperCheapIOC.Add( new SystemMetricsService(systemInfoService.HostName) as ISystemMetricsService );
       
       /**
        * The flow is:
@@ -72,7 +74,8 @@ namespace statsd.net
         });
 
       // Add the broadcaster to the IOC container
-      SuperCheapIOC.Add<ITargetBlock<GraphiteLine>>(_messageBroadcaster);
+      SuperCheapIOC.Add<BroadcastBlock<GraphiteLine>>(_messageBroadcaster);
+      SuperCheapIOC.Resolve<ISystemMetricsService>().SetTarget(_messageBroadcaster);
 
       _backends = new List<IBackend>();
       _listeners = new List<IListener>();
@@ -86,15 +89,15 @@ namespace statsd.net
       // Load backends
       if (config.backends.console.enabled)
       {
-        AddBackend(new ConsoleBackend());
+        AddBackend(new ConsoleBackend(), "console");
       }
       if (config.backends.graphite.enabled)
       {
-        AddBackend(new GraphiteBackend(config.backends.graphite.host, (int)config.backends.graphite.port, systemMetrics));
+        AddBackend(new GraphiteBackend(config.backends.graphite.host, (int)config.backends.graphite.port, systemMetrics), "graphite");
       }
       if (config.backends.sqlserver.enabled)
       {
-        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, systemMetrics));
+        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, systemMetrics), "sqlserver");
       }
 
       // Load Aggregators
@@ -135,9 +138,10 @@ namespace statsd.net
       _router.AddTarget(targetType, aggregator);
     }
 
-    public void AddBackend(IBackend backend)
+    public void AddBackend(IBackend backend, string name = "")
     {
       _backends.Add(backend);
+      SuperCheapIOC.Add(backend, name);
       _messageBroadcaster.LinkTo(backend);
       backend.Completion.ContinueWith(p =>
         {

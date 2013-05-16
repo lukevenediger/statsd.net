@@ -44,7 +44,7 @@ namespace statsd.net.Framework
             }
           }
         },
-        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
+        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
       intervalService.Elapsed = (epoch) =>
         {
           if (gauges.Count == 0)
