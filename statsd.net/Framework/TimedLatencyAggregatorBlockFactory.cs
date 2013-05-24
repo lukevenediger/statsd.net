@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using System.Collections.Concurrent;
 
 namespace statsd.net.Framework
 {
@@ -17,68 +18,44 @@ namespace statsd.net.Framework
       string rootNamespace, 
       IIntervalService intervalService)
     {
-      var latencies = new Dictionary<string, List<int>>();
+      var latencies = new ConcurrentDictionary<string, ConcurrentBag<int>>();
       var root = rootNamespace;
-      var spinLock = new SpinLock();
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
-      var blockOptions = new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 };
-      var busyProcessingTimerHandle = new ManualResetEvent(false);
 
-      var incoming = new ActionBlock<StatsdMessage>(p =>
+      var incoming = new ActionBlock<StatsdMessage>( p =>
         {
-          bool gotLock = false;
           var latency = p as Timing;
-          try
-          {
-            spinLock.Enter(ref gotLock);
-            if (latencies.ContainsKey(latency.Name))
-            {
-              latencies[latency.Name].Add(latency.ValueMS);
-            }
-            else
-            {
-              latencies.Add(latency.Name, new List<int>() { latency.ValueMS });
-            }
-          }
-          finally
-          {
-            if (gotLock)
-            {
-              spinLock.Exit(false);
-            }
-          }
+          latencies.AddOrUpdate( latency.Name,
+              ( key ) =>
+              {
+                return new ConcurrentBag<int>( new int [] { latency.ValueMS } );
+              },
+              ( key, bag ) =>
+              {
+                bag.Add( latency.ValueMS );
+                return bag;
+              } );
         },
-        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
+        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded } );
+
       intervalService.Elapsed += (sender, e) =>
         {
           if (latencies.Count == 0)
           {
             return;
           }
-          bool gotLock = false;
-          Dictionary<string, List<int>> bucketOfLatencies = null;
-          try
+          var measurements = latencies.ToArray();
+          latencies.Clear();
+          foreach (var measurement in measurements)
           {
-            spinLock.Enter(ref gotLock);
-            bucketOfLatencies = latencies;
-            latencies = new Dictionary<string, List<int>>();
-          }
-          finally
-          {
-            if (gotLock)
-            {
-              spinLock.Exit(false);
-            }
-          }
-          foreach (var measurements in bucketOfLatencies)
-          {
-            target.Post(new GraphiteLine(ns + measurements.Key + ".count", measurements.Value.Count, e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".min", measurements.Value.Min(), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".max", measurements.Value.Max(), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average()), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".sum", measurements.Value.Sum(), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurement.Key + ".count", measurement.Value.Count, e.Epoch));
+            target.Post(new GraphiteLine(ns + measurement.Key + ".min", measurement.Value.Min(), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurement.Key + ".max", measurement.Value.Max(), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurement.Key + ".mean", Convert.ToInt32(measurement.Value.Average()), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurement.Key + ".sum", measurement.Value.Sum(), e.Epoch));
           }
         };
+
       incoming.Completion.ContinueWith(p =>
         {
           // Stop the timer
