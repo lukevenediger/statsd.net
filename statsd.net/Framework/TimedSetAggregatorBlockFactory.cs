@@ -52,7 +52,7 @@ namespace statsd.net.Framework
           }
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
-      intervalService.Elapsed = (epoch) =>
+      intervalService.Elapsed += (sender, e) =>
         {
           if (sets.Count == 0)
           {
@@ -75,7 +75,7 @@ namespace statsd.net.Framework
           }
           foreach (var measurements in bucketOfSets)
           {
-            target.Post(new GraphiteLine(ns + measurements.Key, measurements.Value.Count));
+            target.Post( new GraphiteLine( ns + measurements.Key, measurements.Value.Count, e.Epoch ) );
           }
         };
       incoming.Completion.ContinueWith(p =>

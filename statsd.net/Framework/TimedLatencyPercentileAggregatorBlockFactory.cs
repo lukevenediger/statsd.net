@@ -50,7 +50,7 @@ namespace statsd.net.Framework
           }
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
-      intervalService.Elapsed = (epoch) =>
+      intervalService.Elapsed += (sender, e) =>
         {
           if (latencies.Count == 0)
           {
@@ -76,7 +76,7 @@ namespace statsd.net.Framework
           {
             if (Percentile.TryCompute(measurements.Value, percentile, out percentileValue))
             {
-              target.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue, epoch));
+              target.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue, e.Epoch));
             }
           }
         };

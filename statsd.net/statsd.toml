@@ -20,7 +20,7 @@ name = "foocollector"
   
   [backends.graphite]
   enabled = true
-  host = "localhost"
+  host = "metricsas1"
   port = 2003
 
   [backends.console]

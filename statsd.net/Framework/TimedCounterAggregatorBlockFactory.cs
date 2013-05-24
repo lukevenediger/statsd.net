@@ -46,7 +46,7 @@ namespace statsd.net.Framework
           }
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
-      intervalService.Elapsed = (epoch) =>
+      intervalService.Elapsed += (sender, e) =>
         {
           if (counters.Count == 0)
           {
@@ -67,7 +67,7 @@ namespace statsd.net.Framework
               spinLock.Exit(false);
             }
           }
-          var lines = bucketOfCounters.Select(q => new GraphiteLine(ns + q.Key, q.Value, epoch)).ToArray();
+          var lines = bucketOfCounters.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
           for (int i = 0; i < lines.Length; i++)
           {
             target.Post(lines[i]);

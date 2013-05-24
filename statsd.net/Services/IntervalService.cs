@@ -6,20 +6,21 @@ using System.Threading.Tasks;
 using statsd.net;
 using System.Timers;
 using System.Threading;
+using System.Diagnostics;
 
 namespace statsd.net.Services
 {
   public interface IIntervalService
   {
-    Action<long> Elapsed { set; }
+    event EventHandler<IntervalFiredEventArgs> Elapsed;
     void Start();
     void Cancel();
     void RunOnce();
   }
 
+  [DebuggerDisplay("Fires every {_timer.Interval} milliseconds.")]
   public class IntervalService : IIntervalService
   {
-    private Action<long> _handler;
     private System.Timers.Timer _timer;
     private ManualResetEvent _callbackComplete;
 
@@ -30,12 +31,10 @@ namespace statsd.net.Services
       _timer.Elapsed += (sender, e) =>
         {
           _callbackComplete.Reset();
-          _timer.Stop();
-          _handler(e.SignalTime.ToEpoch());
-          _timer.Start();
+          FireEvent( e.SignalTime.ToEpoch() );
           _callbackComplete.Set();           
         };
-      _timer.AutoReset = false;
+      _timer.AutoReset = true;
     }
 
     public IntervalService(int delayInSeconds)
@@ -57,12 +56,28 @@ namespace statsd.net.Services
 
     public void RunOnce()
     {
-      _handler(DateTime.Now.ToEpoch());
+      FireEvent(DateTime.Now.ToEpoch());
     }
 
-    public Action<long> Elapsed
+    private void FireEvent ( long epoch )
     {
-      set { _handler = value; }
+      if ( Elapsed != null )
+      {
+        Elapsed( this, new IntervalFiredEventArgs( epoch ) );
+      }
+    }
+
+    public event EventHandler<IntervalFiredEventArgs> Elapsed;
+  }
+
+  [DebuggerDisplay("{Epoch}")]
+  public class IntervalFiredEventArgs : EventArgs
+  {
+    public long Epoch { get; private set; } 
+
+    public IntervalFiredEventArgs(long epoch)
+    {
+      Epoch = epoch;
     }
   }
 }

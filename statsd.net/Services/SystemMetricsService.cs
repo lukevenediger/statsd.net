@@ -36,7 +36,7 @@ namespace statsd.net.Services
       }
       _prefix = (prefix + ".") ?? String.Empty;
       _metrics = new ConcurrentDictionary<string, int>();
-      intervalService.Elapsed = SendMetrics;
+      intervalService.Elapsed += SendMetrics;
     }
 
     public void Log(string name, int quantity = 1)
@@ -49,7 +49,7 @@ namespace statsd.net.Services
       _target = target;
     }
 
-    private void SendMetrics(long ticksSinceLastUpdate)
+    private void SendMetrics(object sender, IntervalFiredEventArgs args)
     {
       if (_target == null)
       {

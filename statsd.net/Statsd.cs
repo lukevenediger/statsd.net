@@ -101,15 +101,15 @@ namespace statsd.net
       }
 
       // Load Aggregators
-      int flushPeriod = (int)config.calc.flushIntervalSeconds;
+      var coreIntervalService = new IntervalService( ( int )config.calc.flushIntervalSeconds );
       AddAggregator(MessageType.Counter,
-        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, new IntervalService(flushPeriod)));
+        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, coreIntervalService));
       AddAggregator(MessageType.Gauge,
-        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, new IntervalService(flushPeriod)));
+        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, coreIntervalService));
       AddAggregator(MessageType.Set,
-        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, new IntervalService(flushPeriod)));
+        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, coreIntervalService));
       AddAggregator(MessageType.Timing,
-        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, new IntervalService(flushPeriod)));
+        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, coreIntervalService));
       // Load Latency Percentile Aggregators
       foreach (var percentile in (IDictionary<string, object>)config.calc.percentiles)
       {

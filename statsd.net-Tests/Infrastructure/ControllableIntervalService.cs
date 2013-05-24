@@ -11,18 +11,11 @@ namespace statsd.net_Tests.Infrastructure
 {
   public class ControllableIntervalService : IIntervalService
   {
-    private Action<long> _handler;
-
     public bool StartCalled { get; private set; }
     public bool CancelCalled { get; private set; }
     public bool RunOnceCalled { get; private set; }
     public DateTime RunOnceDateTime { get; set; }
     
-    public Action<long> Elapsed
-    {
-      set { _handler = value; }
-    }
-
     public void Start()
     {
       StartCalled = true;
@@ -35,7 +28,7 @@ namespace statsd.net_Tests.Infrastructure
 
     public void RunOnce()
     {
-      _handler(RunOnceDateTime.ToEpoch());
+      FireEvent( RunOnceDateTime.ToEpoch() );
       RunOnceCalled = true;
     }
 
@@ -47,8 +40,16 @@ namespace statsd.net_Tests.Infrastructure
     public DateTime Pulse(DateTime? pulseDateTime = null)
     {
       pulseDateTime = pulseDateTime ?? DateTime.Now;
-      _handler(pulseDateTime.Value.ToEpoch());
+      FireEvent( RunOnceDateTime.ToEpoch() );
       return pulseDateTime.Value;
+    }
+
+    private void FireEvent ( long epoch )
+    {
+      if ( Elapsed != null )
+      {
+        Elapsed( this, new IntervalFiredEventArgs( epoch ) );
+      }
     }
 
     public void Reset()
@@ -58,5 +59,7 @@ namespace statsd.net_Tests.Infrastructure
       StartCalled = false;
       RunOnceDateTime = DateTime.MinValue;
     }
+
+    public event EventHandler<IntervalFiredEventArgs> Elapsed;
   }
 }

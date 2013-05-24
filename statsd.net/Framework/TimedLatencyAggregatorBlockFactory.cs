@@ -49,7 +49,7 @@ namespace statsd.net.Framework
           }
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
-      intervalService.Elapsed = (epoch) =>
+      intervalService.Elapsed += (sender, e) =>
         {
           if (latencies.Count == 0)
           {
@@ -72,11 +72,11 @@ namespace statsd.net.Framework
           }
           foreach (var measurements in bucketOfLatencies)
           {
-            target.Post(new GraphiteLine(ns + measurements.Key + ".count", measurements.Value.Count, epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".min", measurements.Value.Min(), epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".max", measurements.Value.Max(), epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average()), epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".sum", measurements.Value.Sum(), epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".count", measurements.Value.Count, e.Epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".min", measurements.Value.Min(), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".max", measurements.Value.Max(), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(measurements.Value.Average()), e.Epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".sum", measurements.Value.Sum(), e.Epoch));
           }
         };
       incoming.Completion.ContinueWith(p =>
