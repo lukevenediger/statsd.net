@@ -4,22 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.Messages
+namespace statsd.net.shared.Messages
 {
-  public sealed class Set : StatsdMessage
+  public sealed class Gauge : StatsdMessage
   {
     public int Value { get; set; }
 
-    public Set(string name, int value)
+    public Gauge(string name, int value)
     {
       Name = name;
       Value = value;
-      MessageType = MessageType.Set;
+      MessageType = MessageType.Gauge;
     }
 
     public override string ToString()
     {
-      return String.Format("{0}:{1}|s", Name, Value);
+      return String.Format("{0}:{1}|g", Name, Value);
     }
   }
 }

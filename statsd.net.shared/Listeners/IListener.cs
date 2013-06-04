@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace statsd.net.Listeners
+namespace statsd.net.shared.Listeners
 {
   public interface IListener
   {

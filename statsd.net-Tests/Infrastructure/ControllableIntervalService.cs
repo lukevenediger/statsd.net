@@ -1,4 +1,4 @@
-﻿using statsd.net.Services;
+﻿using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;

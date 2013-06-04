@@ -1,0 +1,18 @@
+﻿# statsd-relay service configuration file.
+# For help on configuring this file, please see [missing]()
+
+[general]
+name = "statsd-relay"
+
+[listeners]
+  [listeners.tcp]
+  enabled = true
+  port = 8000
+
+  [listeners.http]
+  enabled = true
+  port = 8001
+
+[target]
+host = "localhost"
+port = 12000

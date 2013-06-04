@@ -1,5 +1,5 @@
-﻿using statsd.net.Listeners;
-using statsd.net.Messages;
+﻿using statsd.net.shared.Listeners;
+using statsd.net.shared.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using statsd.net.Services;
+using statsd.net.shared.Services;
 
 namespace statsd.net.Framework
 {

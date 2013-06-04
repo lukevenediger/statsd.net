@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using statsd.net.Framework;
-using statsd.net.Messages;
+using statsd.net.shared.Messages;
 using statsd.net_Tests.Infrastructure;
 using System;
 using System.Collections.Generic;

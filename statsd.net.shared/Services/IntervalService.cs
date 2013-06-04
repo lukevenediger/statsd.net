@@ -8,7 +8,7 @@ using System.Timers;
 using System.Threading;
 using System.Diagnostics;
 
-namespace statsd.net.Services
+namespace statsd.net.shared.Services
 {
   public interface IIntervalService
   {

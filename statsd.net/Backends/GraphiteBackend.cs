@@ -1,5 +1,5 @@
-﻿using statsd.net.Messages;
-using statsd.net.Services;
+﻿using statsd.net.shared.Messages;
+using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.shared;
+using statsd.net.shared.Backends;
 
 namespace statsd.net.Backends
 {

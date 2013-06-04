@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.Messages
+namespace statsd.net.shared.Messages
 {
   public class GraphiteLine
   {

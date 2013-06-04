@@ -1,4 +1,5 @@
-﻿using statsd.net.Messages;
+﻿using statsd.net.shared.Backends;
+using statsd.net.shared.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;

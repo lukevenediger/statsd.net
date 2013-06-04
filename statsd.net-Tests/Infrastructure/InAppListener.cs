@@ -1,4 +1,4 @@
-﻿using statsd.net.Listeners;
+﻿using statsd.net.shared.Listeners;
 using System;
 using System.Collections.Generic;
 using System.Linq;

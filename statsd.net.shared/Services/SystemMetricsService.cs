@@ -1,6 +1,4 @@
-﻿using statsd.net.Messages;
-using statsd.net.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -8,10 +6,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using statsd.net.Listeners;
-using statsd.net.Backends;
+using statsd.net.shared.Listeners;
+using statsd.net.shared.Backends;
+using statsd.net.shared.Messages;
 
-namespace statsd.net.Services
+namespace statsd.net.shared.Services
 {
   public interface ISystemMetricsService
   {

@@ -1,6 +1,6 @@
 ﻿using statsd.net.Backends;
-using statsd.net.Listeners;
-using statsd.net.Messages;
+using statsd.net.shared.Listeners;
+using statsd.net.shared.Messages;
 using statsd.net.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,9 +10,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using statsd.net.Services;
+using statsd.net.shared.Services;
 using log4net;
 using statsd.net.Backends.SqlServer;
+using statsd.net.shared.Backends;
+using statsd.net.shared;
 
 namespace statsd.net
 {
@@ -124,6 +126,10 @@ namespace statsd.net
       if (config.listeners.udp.enabled)
       {
         AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
+      }
+      if (config.listeners.http.enabled)
+      {
+        AddListener(new HttpStatsListener((int)config.listeners.http.port, systemMetrics));
       }
     }
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Timers;
 
-namespace statsd.net
+namespace statsd.net.shared
 {
   public static class Utility
   {
@@ -53,11 +53,6 @@ namespace statsd.net
       return (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
     }
 
-    public static long ToEpoch(this DateTime dateTime)
-    {
-      return (dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
-    }
-
     public static IPAddress HostToIPv4Address(string host)
     {
       return Dns
@@ -65,32 +60,5 @@ namespace statsd.net
         .First(p => p.AddressFamily == AddressFamily.InterNetwork);
     }
 
-    public static void CompleteAndWait(this IDataflowBlock block)
-    {
-      block.Complete();
-      block.Completion.Wait();
-    }
-
-    public static void WaitUntilAllItemsProcessed<TIn, TOut>(this TransformBlock<TIn, TOut> block, int sleepTimeMS = 100)
-    {
-      WaitUntilPredicate(p => p.InputCount == 0, block, sleepTimeMS);
-    }
-
-    public static void WaitUntilAllItemsProcessed<T>(this ActionBlock<T> block, int sleepTimeMS = 100)
-    {
-      WaitUntilPredicate(p => p.InputCount == 0, block, sleepTimeMS);
-    }
-
-    private static void WaitUntilPredicate<T>(Predicate<T> predicate, T target, int sleepTimeMS)
-    {
-      while(true)
-      {
-        if (predicate(target))
-        {
-          return;
-        }
-        System.Threading.Thread.Sleep(sleepTimeMS);
-      }
-    }
   }
 }

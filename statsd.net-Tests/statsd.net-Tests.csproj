@@ -82,6 +82,10 @@
     <Compile Include="TimedSetAggregatorBlockTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
+      <Project>{be150548-d5eb-4289-8706-3ea475175592}</Project>
+      <Name>statsd.net.shared</Name>
+    </ProjectReference>
     <ProjectReference Include="..\statsd.net\statsd.net.csproj">
       <Project>{e2212771-d19d-4ca9-92ed-e254da99fd84}</Project>
       <Name>statsd.net</Name>

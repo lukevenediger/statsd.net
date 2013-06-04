@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.Framework
+namespace statsd.net.shared
 {
   public class SuperCheapIOC
   {

@@ -27,6 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{189634
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "statsd-relay", "statsd-relay\statsd-relay.csproj", "{C4E67EBA-0440-4EFB-835E-17CE6AFC3DBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "statsd.net.shared", "statsd.net.shared\statsd.net.shared.csproj", "{BE150548-D5EB-4289-8706-3EA475175592}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +53,14 @@ Global
 		{08B2396F-7BEE-4048-A172-CFCC01B82FFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08B2396F-7BEE-4048-A172-CFCC01B82FFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08B2396F-7BEE-4048-A172-CFCC01B82FFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4E67EBA-0440-4EFB-835E-17CE6AFC3DBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4E67EBA-0440-4EFB-835E-17CE6AFC3DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4E67EBA-0440-4EFB-835E-17CE6AFC3DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4E67EBA-0440-4EFB-835E-17CE6AFC3DBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE150548-D5EB-4289-8706-3EA475175592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE150548-D5EB-4289-8706-3EA475175592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE150548-D5EB-4289-8706-3EA475175592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE150548-D5EB-4289-8706-3EA475175592}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

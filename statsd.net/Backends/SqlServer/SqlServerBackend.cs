@@ -1,6 +1,6 @@
 ﻿using Microsoft.SqlServer.Server;
-using statsd.net.Listeners;
-using statsd.net.Messages;
+using statsd.net.shared.Listeners;
+using statsd.net.shared.Messages;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,10 +9,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using statsd.net.Services;
+using statsd.net.shared.Services;
 using statsd.net.Framework;
 using Microsoft.Practices.TransientFaultHandling;
 using log4net;
+using statsd.net.shared.Backends;
+using statsd.net.shared;
 
 namespace statsd.net.Backends.SqlServer
 {

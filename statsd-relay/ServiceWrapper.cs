@@ -1,5 +1,4 @@
-﻿using statsd.net.shared.Listeners;
-using statsd.net.Framework;
+﻿using statsd.relay;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,11 +10,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace statsd.net
+namespace statsd.relay
 {
   public class ServiceWrapper : ServiceBase
   {
-    private Statsd _statsd;
+    private Relay _statsd;
 
     public ServiceWrapper()
     {
@@ -34,11 +33,11 @@ namespace statsd.net
 
     public void Start(bool waitForCompletion = true)
     {
-      var configFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "statsd.toml");
+      var configFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "statsd-relay.toml");
       var contents = File.ReadAllText(configFile);
       var config = Toml.Toml.Parse(contents);
 
-      _statsd = new Statsd(config);
+      _statsd = new Relay(config);
       if (waitForCompletion)
       {
         _statsd.ShutdownWaitHandle.WaitOne();

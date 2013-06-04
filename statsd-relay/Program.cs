@@ -1,6 +1,4 @@
-﻿using statsd.net.shared.Listeners;
-using statsd.net.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration.Install;
 using System.Linq;
@@ -9,7 +7,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net
+namespace statsd.relay
 {
   public class Program
   {
@@ -61,11 +59,11 @@ namespace statsd.net
       {
         C("Error - unknown option: " + action);
       }
-      C("Usage: statsd.net.exe [ --install | --uninstall | --console | --version | --help ]");
-      C("  --install     Install statsd.net as a Windows Service.");
-      C("  --uninstall   Uninstall statsd.net");
-      C("  --console     Run statsd.net in console mode (does not need to be installed first)");
-      C("  --version     Prints the service version");
+      C("Usage: stats-relay.exe [ --install | --uninstall | --console | --version | --help ]");
+      C("  --install     Install statsd-relay as a Windows Service.");
+      C("  --uninstall   Uninstall statsd-relay.");
+      C("  --console     Run statsd-relay in console mode (does not need to be installed first).");
+      C("  --version     Prints the service version.");
       C("  --help        Prints this help information.");
     }
 
@@ -99,7 +97,7 @@ namespace statsd.net
 
     private static void PrintVersion()
     {
-      Console.WriteLine("Statsd.net v" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
+      Console.WriteLine("Statsd-Relay v" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
     }
 
     private static void RunConsoleMode()

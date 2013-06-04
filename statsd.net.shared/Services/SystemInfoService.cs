@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.Services
+namespace statsd.net.shared.Services
 {
   public interface ISystemInfoService
   {

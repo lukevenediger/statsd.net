@@ -1,5 +1,5 @@
-﻿using statsd.net.Messages;
-using statsd.net.Services;
+﻿using statsd.net.shared.Messages;
+using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace statsd.net.Listeners
+namespace statsd.net.shared.Listeners
 {
   public class UdpStatsListener : IListener
   {
@@ -42,7 +42,7 @@ namespace statsd.net.Listeners
               byte[] data = udpClient.Receive(ref endpoint);
               _systemMetrics.Log("listeners.udp.bytes", data.Length);
               string rawPacket = Encoding.UTF8.GetString(data);
-              string[] lines = rawPacket.Replace("\r", "").Split('\n');
+              string[] lines = rawPacket.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
               for (int index = 0; index < lines.Length; index++)
               {
                 target.Post(lines[index]);
