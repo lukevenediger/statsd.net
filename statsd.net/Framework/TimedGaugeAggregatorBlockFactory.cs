@@ -1,6 +1,7 @@
 ﻿using statsd.net.Messages;
 using statsd.net.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,7 @@ namespace statsd.net.Framework
       var incoming = new ActionBlock<StatsdMessage>(p =>
         {
           var gauge = p as Gauge;
-          gauges.AddOrUpdate( gauge.Name, gauge.Value, ( key, oldValue ) => gauge.Value );
+          gauges.AddOrUpdate(gauge.Name, gauge.Value, (key, oldValue) => gauge.Value);
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
 
@@ -33,9 +34,9 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var bucketOfGauges = gauges.ToArray();
+          var bucket = gauges.ToArray();
           gauges.Clear();
-          var lines = bucketOfGauges.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
+          var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, epoch)).ToArray();
           for (int i = 0; i < lines.Length; i++)
           {
             target.Post(lines[i]);

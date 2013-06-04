@@ -1,6 +1,7 @@
 ﻿using statsd.net.Messages;
 using statsd.net.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -26,29 +27,29 @@ namespace statsd.net.Framework
       var incoming = new ActionBlock<StatsdMessage>( p =>
         {
           var latency = p as Timing;
-          latencies.AddOrUpdate( latency.Name,
-            ( key ) =>
-            {
-              return new ConcurrentBag<int>( new int [] { latency.ValueMS } );
-            },
-            ( key, bag ) =>
-            {
-              bag.Add( latency.ValueMS );
-              return bag;
-            } );
+          latencies.AddOrUpdate(latency.Name,
+              (key) =>
+              {
+                return new ConcurrentBag<int>(new int[] { latency.ValueMS });
+              },
+              (key, bag) =>
+              {
+                bag.Add(latency.ValueMS);
+                return bag;
+              });
         },
-        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded } );
+        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
 
-      intervalService.Elapsed += (sender, e) =>
+      intervalService.Elapsed = (epoch) =>
         {
           if (latencies.Count == 0)
           {
             return;
           }
-          var bucketOfLatencies = latencies.ToArray();
+          var bucket = latencies.ToArray();
           latencies.Clear();
           int percentileValue;
-          foreach (var measurements in bucketOfLatencies)
+          foreach (var measurements in bucket)
           {
             if (Percentile.TryCompute(measurements.Value.ToList(), percentile, out percentileValue))
             {

@@ -32,12 +32,13 @@ namespace statsd.net.Services
     {
       if (intervalService == null)
       {
-        intervalService = new IntervalService(30);
+        intervalService = new IntervalService(10);
       }
-      _prefix = (prefix + ".") ?? String.Empty;
+      _prefix = "statsd." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
       _metrics = new ConcurrentDictionary<string, int>();
-      intervalService.Elapsed += SendMetrics;
-    }
+      intervalService.Elapsed = SendMetrics;
+      intervalService.Start();
+   }
 
     public void Log(string name, int quantity = 1)
     {
@@ -58,13 +59,14 @@ namespace statsd.net.Services
 
       // Get a count of metrics waiting to be sent out
       var outputBufferCount = SuperCheapIOC.ResolveAll<IBackend>().Sum(p => p.OutputCount);
-      _target.Post(new GraphiteLine("outputBuffer", outputBufferCount));
+      _target.Post(new GraphiteLine(_prefix + "outputBuffer", outputBufferCount));
+      _target.Post(new GraphiteLine(_prefix + "up", 1));
 
       var pairs = _metrics.ToArray();
       _metrics.Clear();
       foreach (var pair in pairs)
       {
-        _target.Post(new GraphiteLine(pair.Key, pair.Value));
+        _target.Post(new GraphiteLine(_prefix + pair.Key, pair.Value));
       }
     }
   }

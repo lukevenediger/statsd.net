@@ -36,7 +36,7 @@ namespace statsd.net.Framework
         var reducedKey = key.Split('_')[0];
         if (reducedKey == typeof(T).Name)
         {
-          yield return (T)_instance._items[reducedKey];
+          yield return (T)_instance._items[key];
         }
       }
     }

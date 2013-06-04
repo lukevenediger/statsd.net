@@ -100,7 +100,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Framework\StatsdMessageRouterBlock.cs" />
-    <Compile Include="Listeners\SystemEventListener.cs" />
     <Compile Include="Framework\SuperCheapIOC.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

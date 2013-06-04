@@ -110,8 +110,8 @@ namespace statsd.net
           Console.WriteLine("CTRL^C pressed, shutting down...");
           service.Stop();
         };
-      Console.WriteLine("Press CTRL^C to shut down.");
       service.Start();
+      Console.WriteLine("Press CTRL^C to shut down.");
     }
   }
 }

@@ -1,8 +1,8 @@
 ﻿# statsd.net configuration file.
-# This is a TOML file. Read the spec here: https://github.com/mojombo/toml 
+# For help on configuring this file, please see https://github.com/lukevenediger/statsd.net/wiki/Statsd.net-Configuration-File
 
 [general]
-name = "foocollector"
+name = "statsd"
 
 [listeners]
   [listeners.udp]
@@ -15,12 +15,12 @@ name = "foocollector"
 
 [backends]
   [backends.sqlserver]
-  enabled = true
+  enabled = false
   connectionString = "server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
   
   [backends.graphite]
   enabled = true
-  host = "metricsas1"
+  host = "graphite"
   port = 2003
 
   [backends.console]
@@ -28,10 +28,10 @@ name = "foocollector"
 
 [calc]
 flushIntervalSeconds = 10
-gaugesNamespace = "stats.gauges"
-countersNamespace = "stats_counts"
+gaugesNamespace = "gauges"
+countersNamespace = "counts"
 setsNamespace = "sets"
-timersNamespace = "stats.timers"
+timersNamespace = "timers"
 
   [calc.percentiles.p90_5min]
   flushIntervalSeconds = 300
@@ -46,6 +46,6 @@ timersNamespace = "stats.timers"
   percentile = 50
 
 [console]
-  enabled = true
-  localhostOnly = true
-  port = 8080
+enabled = true
+localhostOnly = true
+port = 8080

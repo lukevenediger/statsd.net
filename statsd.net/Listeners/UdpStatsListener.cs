@@ -40,7 +40,6 @@ namespace statsd.net.Listeners
                 return;
               }
               byte[] data = udpClient.Receive(ref endpoint);
-              _systemMetrics.Log("listeners.udp.incoming");
               _systemMetrics.Log("listeners.udp.bytes", data.Length);
               string rawPacket = Encoding.UTF8.GetString(data);
               string[] lines = rawPacket.Replace("\r", "").Split('\n');
@@ -48,6 +47,7 @@ namespace statsd.net.Listeners
               {
                 target.Post(lines[index]);
               }
+              _systemMetrics.Log("listeners.udp.lines", lines.Length);
             }
           }
           catch (ObjectDisposedException) { /* Eat it, socket was closed */ }

@@ -1,6 +1,7 @@
 ﻿using statsd.net.Messages;
 using statsd.net.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,15 +29,16 @@ namespace statsd.net.Framework
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
 
-      intervalService.Elapsed += (sender, e) =>
+      intervalService.Elapsed = (epoch) =>
         {
           if (counters.Count == 0)
           {
             return;
           }
-          var bucketOfCounters = counters.ToArray();
+
+          var bucket = counters.ToArray();
           counters.Clear();
-          var lines = bucketOfCounters.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
+          var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, epoch)).ToArray();
           for (int i = 0; i < lines.Length; i++)
           {
             target.Post(lines[i]);

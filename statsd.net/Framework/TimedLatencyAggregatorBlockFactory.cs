@@ -1,6 +1,7 @@
 ﻿using statsd.net.Messages;
 using statsd.net.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -21,38 +22,42 @@ namespace statsd.net.Framework
       var latencies = new ConcurrentDictionary<string, ConcurrentBag<int>>();
       var root = rootNamespace;
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
-
+	  
       var incoming = new ActionBlock<StatsdMessage>( p =>
         {
           var latency = p as Timing;
-          latencies.AddOrUpdate( latency.Name,
-              ( key ) =>
-              {
-                return new ConcurrentBag<int>( new int [] { latency.ValueMS } );
-              },
-              ( key, bag ) =>
-              {
-                bag.Add( latency.ValueMS );
-                return bag;
-              } );
-        },
-        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded } );
 
-      intervalService.Elapsed += (sender, e) =>
+          latencies.AddOrUpdate(latency.Name,
+              (key) =>
+              {
+                return new ConcurrentBag<int>(new int[] { latency.ValueMS });
+              },
+              (key, bag) =>
+              {
+                bag.Add(latency.ValueMS);
+                return bag;
+              });
+        },
+        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
+      
+      intervalService.Elapsed = (epoch) =>
         {
           if (latencies.Count == 0)
           {
             return;
           }
-          var measurements = latencies.ToArray();
+
+          var bucket = latencies.ToArray();
           latencies.Clear();
-          foreach (var measurement in measurements)
+
+          foreach (var measurements in bucket)
           {
-            target.Post(new GraphiteLine(ns + measurement.Key + ".count", measurement.Value.Count, e.Epoch));
-            target.Post(new GraphiteLine(ns + measurement.Key + ".min", measurement.Value.Min(), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurement.Key + ".max", measurement.Value.Max(), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurement.Key + ".mean", Convert.ToInt32(measurement.Value.Average()), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurement.Key + ".sum", measurement.Value.Sum(), e.Epoch));
+            var values = measurements.Value.ToArray();
+            target.Post(new GraphiteLine(ns + measurements.Key + ".count", values.Length, epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".min", values.Min(), epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".max", values.Max(), epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(values.Average()), epoch));
+            target.Post(new GraphiteLine(ns + measurements.Key + ".sum", values.Sum(), epoch));
           }
         };
 
