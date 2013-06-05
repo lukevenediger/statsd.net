@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using System.Collections.Concurrent;
 
 namespace statsd.net.Framework
 {
@@ -36,7 +35,7 @@ namespace statsd.net.Framework
           }
           var bucket = gauges.ToArray();
           gauges.Clear();
-          var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, epoch)).ToArray();
+          var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
           for (int i = 0; i < lines.Length; i++)
           {
             target.Post(lines[i]);

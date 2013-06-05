@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using System.Collections.Concurrent;
 
 namespace statsd.net.Framework
 {
@@ -40,7 +39,7 @@ namespace statsd.net.Framework
         },
         new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
 
-      intervalService.Elapsed = (epoch) =>
+      intervalService.Elapsed += (sender, e) =>
         {
           if (latencies.Count == 0)
           {

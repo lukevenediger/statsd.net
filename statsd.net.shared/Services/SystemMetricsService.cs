@@ -35,7 +35,7 @@ namespace statsd.net.shared.Services
       }
       _prefix = "statsd." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
       _metrics = new ConcurrentDictionary<string, int>();
-      intervalService.Elapsed = SendMetrics;
+      intervalService.Elapsed += SendMetrics;
       intervalService.Start();
    }
 
