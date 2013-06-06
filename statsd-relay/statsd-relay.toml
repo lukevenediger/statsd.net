@@ -5,13 +5,17 @@
 name = "statsd-relay"
 
 [listeners]
-  [listeners.tcp]
+  [listeners.udp]
   enabled = true
   port = 8000
 
-  [listeners.http]
+  [listeners.tcp]
   enabled = true
   port = 8001
+
+  [listeners.http]
+  enabled = true
+  port = 8002
 
 [target]
 host = "localhost"

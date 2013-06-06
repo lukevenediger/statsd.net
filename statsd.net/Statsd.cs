@@ -48,7 +48,7 @@ namespace statsd.net
       SuperCheapIOC.Add(_log);
       var systemInfoService = new SystemInfoService();
       SuperCheapIOC.Add(systemInfoService as ISystemInfoService);
-      SuperCheapIOC.Add( new SystemMetricsService(systemInfoService.HostName) as ISystemMetricsService );
+      SuperCheapIOC.Add( new SystemMetricsService("statsd", systemInfoService.HostName) as ISystemMetricsService );
       
       /**
        * The flow is:

@@ -58,5 +58,13 @@ namespace statsd.net.shared.Messages
           throw new ArgumentOutOfRangeException("Unknown message type: " + statProperties[1]);
       }
     }
+
+    public static bool IsProbablyAValidMessage(string line)
+    {
+      if (String.IsNullOrWhiteSpace(line)) return false;
+      string[] nameAndValue = line.Split(':');
+      if (nameAndValue[0].Length == 0) return false;
+      return true;
+    }
   }
 }

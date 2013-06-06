@@ -27,13 +27,13 @@ namespace statsd.net.shared.Services
     private ITargetBlock<GraphiteLine> _target;
     private ConcurrentDictionary<string, int> _metrics;
 
-    public SystemMetricsService(string prefix = null, IIntervalService intervalService = null)
+    public SystemMetricsService(string serviceName, string prefix = null, IIntervalService intervalService = null)
     {
       if (intervalService == null)
       {
         intervalService = new IntervalService(10);
       }
-      _prefix = "statsd." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
+      _prefix = serviceName + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
       _metrics = new ConcurrentDictionary<string, int>();
       intervalService.Elapsed += SendMetrics;
       intervalService.Start();

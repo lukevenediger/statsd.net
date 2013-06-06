@@ -11,6 +11,8 @@
     <AssemblyName>statsd-relay</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,8 +34,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Sprache">
       <HintPath>..\packages\Sprache.1.10.0.28\lib\net40\Sprache.dll</HintPath>
+    </Reference>
+    <Reference Include="StatsdClient">
+      <HintPath>..\packages\StatsdCsharpClient.1.0.1.0\lib\net45\StatsdClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -60,6 +68,7 @@
     <Compile Include="ServiceWrapper.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="UDPRawStatsSender.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -68,7 +77,14 @@
     <None Include="README.md" />
     <None Include="statsd-relay.toml" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
+      <Project>{be150548-d5eb-4289-8706-3ea475175592}</Project>
+      <Name>statsd.net.shared</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
