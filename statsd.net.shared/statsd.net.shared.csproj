@@ -64,6 +64,8 @@
     <Compile Include="Services\IntervalService.cs" />
     <Compile Include="Services\SystemInfoService.cs" />
     <Compile Include="Services\SystemMetricsService.cs" />
+    <Compile Include="Structures\DatapointBox.cs" />
+    <Compile Include="Structures\LatencyBucket.cs" />
     <Compile Include="SuperCheapIOC.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

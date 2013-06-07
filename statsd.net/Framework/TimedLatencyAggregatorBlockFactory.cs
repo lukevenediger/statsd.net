@@ -1,5 +1,6 @@
 ﻿using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
+using statsd.net.shared.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,9 +17,10 @@ namespace statsd.net.Framework
   {
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
       string rootNamespace, 
-      IIntervalService intervalService)
+      IIntervalService intervalService,
+      int maxItemsPerBucket = 1000)
     {
-      var latencies = new ConcurrentDictionary<string, ConcurrentBag<int>>();
+      var latencies = new ConcurrentDictionary<string, LatencyBucket>();
       var root = rootNamespace;
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
 	  
@@ -29,7 +31,7 @@ namespace statsd.net.Framework
           latencies.AddOrUpdate(latency.Name,
               (key) =>
               {
-                return new ConcurrentBag<int>(new int[] { latency.ValueMS });
+                return new LatencyBucket(maxItemsPerBucket, latency.ValueMS);
               },
               (key, bag) =>
               {
@@ -46,17 +48,16 @@ namespace statsd.net.Framework
             return;
           }
 
-          var bucket = latencies.ToArray();
+          var buckets = latencies.ToArray();
           latencies.Clear();
 
-          foreach (var measurements in bucket)
+          foreach (var bucket in buckets)
           {
-            var values = measurements.Value.ToArray();
-            target.Post(new GraphiteLine(ns + measurements.Key + ".count", values.Length, e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".min", values.Min(), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".max", values.Max(), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".mean", Convert.ToInt32(values.Average()), e.Epoch));
-            target.Post(new GraphiteLine(ns + measurements.Key + ".sum", values.Sum(), e.Epoch));
+            target.Post(new GraphiteLine(ns + bucket.Key + ".count", bucket.Value.Count, e.Epoch));
+            target.Post(new GraphiteLine(ns + bucket.Key + ".min", bucket.Value.Min, e.Epoch));
+            target.Post(new GraphiteLine(ns + bucket.Key + ".max", bucket.Value.Max, e.Epoch));
+            target.Post(new GraphiteLine(ns + bucket.Key + ".mean", bucket.Value.Mean, e.Epoch));
+            target.Post(new GraphiteLine(ns + bucket.Key + ".sum", bucket.Value.Sum, e.Epoch));
           }
         };
 

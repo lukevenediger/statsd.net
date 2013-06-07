@@ -1,5 +1,6 @@
 ﻿using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
+using statsd.net.shared.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,11 +18,13 @@ namespace statsd.net.Framework
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
       string rootNamespace, 
       IIntervalService intervalService,
-      int percentile)
+      int percentile,
+      int maxItemsPerBucket = 1000)
     {
-      var latencies = new ConcurrentDictionary<string, ConcurrentBag<int>>();
+      var latencies = new ConcurrentDictionary<string, DatapointBox>();
       var root = rootNamespace;
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
+      var random = new Random();
 
       var incoming = new ActionBlock<StatsdMessage>( p =>
         {
@@ -29,7 +32,7 @@ namespace statsd.net.Framework
           latencies.AddOrUpdate(latency.Name,
               (key) =>
               {
-                return new ConcurrentBag<int>(new int[] { latency.ValueMS });
+                return new DatapointBox(maxItemsPerBucket, latency.ValueMS); 
               },
               (key, bag) =>
               {
@@ -45,12 +48,12 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var bucket = latencies.ToArray();
+          var buckets = latencies.ToArray();
           latencies.Clear();
           int percentileValue;
-          foreach (var measurements in bucket)
+          foreach (var measurements in buckets)
           {
-            if (Percentile.TryCompute(measurements.Value.ToList(), percentile, out percentileValue))
+            if (Percentile.TryCompute(measurements.Value.ToArray().ToList(), percentile, out percentileValue))
             {
               target.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue, e.Epoch));
             }
