@@ -25,23 +25,30 @@ namespace statsd.net.shared.Listeners
       _systemMetrics = systemMetrics;
     }
 
-    public void LinkTo(ITargetBlock<string> target, CancellationToken token)
+    public async void LinkTo(ITargetBlock<string> target, CancellationToken token)
     {
       _target = target;
       _token = token;
       _listener.Start();
-      _listener.BeginGetContext(ProcessRequest, null);
+      await Listen();
     }
 
-    private void ProcessRequest(IAsyncResult result)
+    private async Task Listen()
     {
-      if (_token.IsCancellationRequested)
+      while(!_token.IsCancellationRequested)
       {
-        _listener.Stop();
+        var context = await _listener.GetContextAsync();
+#pragma warning disable 4014
+        Task.Factory.StartNew(() => { ProcessRequest(context); }, _token);
+#pragma warning restore 4014
       }
+      _listener.Close();
+    }
 
-      var context = _listener.EndGetContext(result);
+    private void ProcessRequest(HttpListenerContext context)
+    {
       context.Response.Headers.Add("Server", "statsd.net");
+      System.Threading.Thread.Sleep(10000);
 
       if (context.Request.HttpMethod.ToUpper() != "POST")
       {
@@ -70,9 +77,6 @@ namespace statsd.net.shared.Listeners
         }
       }
       context.Response.Close();
-
-      // I'm sure I'm not doing this right - just feels dirty
-      _listener.BeginGetContext(ProcessRequest, null);
     }
   }
 }

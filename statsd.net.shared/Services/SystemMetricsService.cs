@@ -33,7 +33,7 @@ namespace statsd.net.shared.Services
       {
         intervalService = new IntervalService(10);
       }
-      _prefix = serviceName + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
+      _prefix = serviceName + "." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
       _metrics = new ConcurrentDictionary<string, int>();
       intervalService.Elapsed += SendMetrics;
       intervalService.Start();
