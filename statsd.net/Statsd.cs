@@ -86,6 +86,7 @@ namespace statsd.net
     public Statsd(dynamic config) 
       : this()
     {
+      _log.Info("statsd.net loading config.");
       var systemMetrics = SuperCheapIOC.Resolve<ISystemMetricsService>();
 
       // Load backends
@@ -135,6 +136,7 @@ namespace statsd.net
 
     public void AddListener(IListener listener)
     {
+      _log.InfoFormat("Adding listener {0}", listener.GetType().Name);
       _listeners.Add(listener);
       listener.LinkTo(_messageParser, _tokenSource.Token); 
     }
@@ -146,6 +148,7 @@ namespace statsd.net
 
     public void AddBackend(IBackend backend, string name = "")
     {
+      _log.InfoFormat("Adding backend {0} named '{1}'", backend.GetType().Name, name);
       _backends.Add(backend);
       SuperCheapIOC.Add(backend, name);
       _messageBroadcaster.LinkTo(backend);

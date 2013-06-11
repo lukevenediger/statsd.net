@@ -89,7 +89,19 @@
   <ItemGroup>
     <None Include="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+      <TransformOnBuild>true</TransformOnBuild>
     </None>
+    <None Include="log4net.Debug.config">
+      <DependentUpon>log4net.config</DependentUpon>
+      <IsTransformFile>True</IsTransformFile>
+    </None>
+    <None Include="log4net.Release.config">
+      <DependentUpon>log4net.config</DependentUpon>
+      <IsTransformFile>True</IsTransformFile>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packageRestore.proj" />
     <None Include="packages.config" />
     <None Include="statsd.toml" />
   </ItemGroup>
@@ -106,7 +118,13 @@
   <PropertyGroup>
     <PreBuildEvent>copy /Y "$(ProjectDir)statsd.toml" "$(TargetDir)"</PreBuildEvent>
   </PropertyGroup>
+  <PropertyGroup Label="SlowCheetah">
+    <SlowCheetah_EnableImportFromNuGet Condition=" '$(SC_EnableImportFromNuGet)'=='' ">true</SlowCheetah_EnableImportFromNuGet>
+    <SlowCheetah_NuGetImportPath Condition=" '$(SlowCheetah_NuGetImportPath)'=='' ">$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\..\packages\SlowCheetah.2.5.5\tools\SlowCheetah.Transforms.targets ))</SlowCheetah_NuGetImportPath>
+    <SlowCheetahTargets Condition=" '$(SlowCheetah_EnableImportFromNuGet)'=='true' and Exists('$(SlowCheetah_NuGetImportPath)') ">$(SlowCheetah_NuGetImportPath)</SlowCheetahTargets>
+  </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <Import Project="$(SlowCheetahTargets)" Condition="Exists('$(SlowCheetahTargets)')" Label="SlowCheetah" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
