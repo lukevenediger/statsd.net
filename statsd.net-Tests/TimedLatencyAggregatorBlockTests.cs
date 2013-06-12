@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net;
 using System.Threading;
+using log4net;
+using Moq;
 
 namespace statsd.net_Tests
 {
@@ -20,12 +22,14 @@ namespace statsd.net_Tests
     private ActionBlock<StatsdMessage> _block;
     private ControllableIntervalService _intervalService;
     private GraphiteLineOutputBlock _outputBuffer;
+    private Mock<ILog> _log;
 
     [TestInitialize]
     public void Initialise()
     {
       _intervalService = new ControllableIntervalService();
       _outputBuffer = new GraphiteLineOutputBlock();
+      _log = new Mock<ILog>();
     }
 
     [TestMethod]
@@ -33,7 +37,8 @@ namespace statsd.net_Tests
     {
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
-        _intervalService);
+        _intervalService,
+        _log.Object);
       var pulseDate = DateTime.Now;
 
       _block.Post(new Timing("foo.bar.baz", 100));
@@ -57,7 +62,8 @@ namespace statsd.net_Tests
     {
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
-        _intervalService);
+        _intervalService,
+        _log.Object);
       var pulseDate = DateTime.Now;
 
       _block.Post(new Timing("foo", 5));
@@ -77,7 +83,8 @@ namespace statsd.net_Tests
     {
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
-        _intervalService);
+        _intervalService,
+        _log.Object);
       var pulseDate = DateTime.Now;
 
       // Bucket one

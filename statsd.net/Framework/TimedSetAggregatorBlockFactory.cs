@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Collections.Concurrent;
+using log4net;
 
 namespace statsd.net.Framework
 {
@@ -16,7 +17,8 @@ namespace statsd.net.Framework
   {
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
       string rootNamespace, 
-      IIntervalService intervalService)
+      IIntervalService intervalService,
+      ILog log)
     {
       var sets = new ConcurrentDictionary<string, ConcurrentDictionary<int, bool>>();
       var root = rootNamespace;
@@ -48,22 +50,22 @@ namespace statsd.net.Framework
           }
           var bucketOfSets = sets.ToArray();
           sets.Clear();
+          int numLinesPosted = 0;
           foreach (var bucket in bucketOfSets)
           {
             foreach ( var set in bucket.Value )
             {
               target.Post( new GraphiteLine( ns + bucket.Key + "." + set.Key.ToString(), 1, e.Epoch ) );
+              numLinesPosted++;
             }
           }
+          log.InfoFormat("TimedSetAggregatorBlock - Posted {0} buckets and {1} lines.", bucketOfSets.Length, numLinesPosted);
         };
       incoming.Completion.ContinueWith(p =>
         {
-          // Stop the timer
-          intervalService.Cancel();
           // Tell the upstream block that we're done
           target.Complete();
         });
-      intervalService.Start();
       return incoming;
     }
   }

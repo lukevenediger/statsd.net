@@ -21,7 +21,6 @@ namespace statsd.net
 {
   public class Statsd
   {
-
     private TransformBlock<string, StatsdMessage> _messageParser;
     private StatsdMessageRouterBlock _router;
     private BroadcastBlock<GraphiteLine> _messageBroadcaster;
@@ -29,6 +28,7 @@ namespace statsd.net
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
     private ManualResetEvent _shutdownComplete;
+    private IIntervalService _intervalService;
     private static readonly ILog _log = LogManager.GetLogger("statsd.net");
 
     public WaitHandle ShutdownWaitHandle
@@ -106,15 +106,15 @@ namespace statsd.net
       }
 
       // Load Aggregators
-      var coreIntervalService = new IntervalService( ( int )config.calc.flushIntervalSeconds );
+      _intervalService = new IntervalService( ( int )config.calc.flushIntervalSeconds );
       AddAggregator(MessageType.Counter,
-        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, coreIntervalService));
+        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, _intervalService, _log));
       AddAggregator(MessageType.Gauge,
-        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, coreIntervalService));
+        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, _intervalService, _log));
       AddAggregator(MessageType.Set,
-        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, coreIntervalService));
+        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, _intervalService, _log));
       AddAggregator(MessageType.Timing,
-        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, coreIntervalService));
+        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, _intervalService, _log));
       // Load Latency Percentile Aggregators
       foreach (var percentile in (IDictionary<string, object>)config.calc.percentiles)
       {
@@ -122,7 +122,8 @@ namespace statsd.net
         AddAggregator(MessageType.Timing,
           TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace + "." + percentile.Key,
             new IntervalService((int)thePercentile.flushIntervalSeconds),
-            (int)thePercentile.percentile ));
+            (int)thePercentile.percentile,
+            _log));
       }
 
       // Load listeners - done last and once the rest of the chain is in place
@@ -134,6 +135,9 @@ namespace statsd.net
       {
         AddListener(new HttpStatsListener((int)config.listeners.http.port, systemMetrics));
       }
+
+      // Now start the interval service
+      _intervalService.Start();
     }
 
     public void AddListener(IListener listener)

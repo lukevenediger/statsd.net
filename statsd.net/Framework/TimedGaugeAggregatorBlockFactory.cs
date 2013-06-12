@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Messages;
+﻿using log4net;
+using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using System;
 using System.Collections.Concurrent;
@@ -14,7 +15,9 @@ namespace statsd.net.Framework
   public class TimedGaugeAggregatorBlockFactory
   {
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
-      string rootNamespace, IIntervalService intervalService)
+      string rootNamespace, 
+      IIntervalService intervalService,
+      ILog log)
     {
       var gauges = new ConcurrentDictionary<string, int>();
       var root = rootNamespace;
@@ -40,18 +43,14 @@ namespace statsd.net.Framework
           {
             target.Post(lines[i]);
           }
+          log.InfoFormat("TimedGaugeAggregatorBlock - Posted {0} lines.", lines.Length);
         };
 
       incoming.Completion.ContinueWith(p =>
         {
-          // Stop the timer
-          intervalService.Cancel();
-          // Send the last counters through
-          intervalService.RunOnce();
           // Tell the upstream block that we're done
           target.Complete();
         });
-      intervalService.Start();
       return incoming;
     }
 

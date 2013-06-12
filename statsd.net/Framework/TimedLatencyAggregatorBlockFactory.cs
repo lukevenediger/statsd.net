@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Messages;
+﻿using log4net;
+using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
 using System;
@@ -18,6 +19,7 @@ namespace statsd.net.Framework
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
       string rootNamespace, 
       IIntervalService intervalService,
+      ILog log,
       int maxItemsPerBucket = 1000)
     {
       var latencies = new ConcurrentDictionary<string, LatencyBucket>();
@@ -59,16 +61,14 @@ namespace statsd.net.Framework
             target.Post(new GraphiteLine(ns + bucket.Key + ".mean", bucket.Value.Mean, e.Epoch));
             target.Post(new GraphiteLine(ns + bucket.Key + ".sum", bucket.Value.Sum, e.Epoch));
           }
+          log.InfoFormat("TimedLatencyAggregatorBlock - Posted {0} buckets and {1} lines.", buckets.Length, buckets.Length * 5);
         };
 
       incoming.Completion.ContinueWith(p =>
         {
-          // Stop the timer
-          intervalService.Cancel();
           // Tell the upstream block that we're done
           target.Complete();
         });
-      intervalService.Start();
       return incoming;
     }
   }

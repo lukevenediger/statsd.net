@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net;
+using log4net;
+using Moq;
 
 namespace statsd.net_Tests
 {
@@ -18,15 +20,18 @@ namespace statsd.net_Tests
     private ActionBlock<StatsdMessage> _block;
     private ControllableIntervalService _intervalService;
     private GraphiteLineOutputBlock _outputBuffer;
+    private Mock<ILog> _log;
     
     [TestInitialize]
     public void Initialise()
     {
       _intervalService = new ControllableIntervalService();
       _outputBuffer = new GraphiteLineOutputBlock();
+      _log = new Mock<ILog>();
       _block = TimedGaugeAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
-        _intervalService);
+        _intervalService,
+        _log.Object);
     }
 
     [TestMethod]

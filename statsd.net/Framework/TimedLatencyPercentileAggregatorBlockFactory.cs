@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Messages;
+﻿using log4net;
+using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
 using System;
@@ -19,6 +20,7 @@ namespace statsd.net.Framework
       string rootNamespace, 
       IIntervalService intervalService,
       int percentile,
+      ILog log,
       int maxItemsPerBucket = 1000)
     {
       var latencies = new ConcurrentDictionary<string, DatapointBox>();
@@ -51,23 +53,23 @@ namespace statsd.net.Framework
           var buckets = latencies.ToArray();
           latencies.Clear();
           int percentileValue;
+          int numLinesPosted = 0;
           foreach (var measurements in buckets)
           {
             if (Percentile.TryCompute(measurements.Value.ToArray().ToList(), percentile, out percentileValue))
             {
               target.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue, e.Epoch));
+              numLinesPosted++;
             }
           }
+          log.InfoFormat("TimedLatencyPercentileAggregatorBlock - Posted {0} buckets and {1} lines.", buckets.Length, numLinesPosted);
         };
 
       incoming.Completion.ContinueWith(p =>
         {
-          // Stop the timer
-          intervalService.Cancel();
           // Tell the upstream block that we're done
           target.Complete();
         });
-      intervalService.Start();
       return incoming;
     }
   }

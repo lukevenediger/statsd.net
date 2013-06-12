@@ -56,6 +56,7 @@ namespace statsd.net.Backends.SqlServer
 
       _completionTask = new Task(() =>
         {
+          _log.Info("SqlServerBackend - Completion has been signaled. Waiting for action block to complete.");
           _batchBlock.Complete();
           _actionBlock.Completion.Wait();
         });
@@ -98,7 +99,7 @@ namespace statsd.net.Backends.SqlServer
       _retryPolicy = new RetryPolicy<SqlServerErrorDetectionStrategy>(_retries);
       _retryPolicy.Retrying += (sender, args) =>
         {
-          _log.Error(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
+          _log.Warn(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
           _systemMetrics.LogCount("backends.sqlserver.retry");
         };
     }
@@ -117,6 +118,7 @@ namespace statsd.net.Backends.SqlServer
           row["metric"] = line.ToString();
           tableData.Rows.Add(row);
         }
+        _log.InfoFormat("Attempting to send {0} lines to tb_Metrics.", tableData.Rows.Count);
 
         _retryPolicy.ExecuteAction(() =>
           {
@@ -126,6 +128,7 @@ namespace statsd.net.Backends.SqlServer
               bulk.WriteToServer(tableData);
             }
             _systemMetrics.LogCount("backends.sqlserver.lines", tableData.Rows.Count);
+            _log.InfoFormat("Wrote {0} lines to tb_Metrics.", tableData.Rows.Count);
           });
       }
       catch (Exception ex)
