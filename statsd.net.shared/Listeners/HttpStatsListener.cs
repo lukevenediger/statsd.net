@@ -17,12 +17,15 @@ namespace statsd.net.shared.Listeners
     private CancellationToken _token;
     private ISystemMetricsService _systemMetrics;
 
+    public bool IsListening { get; private set; }
+
     public HttpStatsListener(int port, ISystemMetricsService systemMetrics)
     {
       _listener = new HttpListener();
       _listener.Prefixes.Add("http://*:" + port + "/");
       _listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
       _systemMetrics = systemMetrics;
+      IsListening = false;
     }
 
     public async void LinkTo(ITargetBlock<string> target, CancellationToken token)
@@ -30,6 +33,7 @@ namespace statsd.net.shared.Listeners
       _target = target;
       _token = token;
       _listener.Start();
+      IsListening = true;
       await Listen();
     }
 
@@ -43,6 +47,7 @@ namespace statsd.net.shared.Listeners
 #pragma warning restore 4014
       }
       _listener.Close();
+      IsListening = false;
     }
 
     private void ProcessRequest(HttpListenerContext context)
@@ -67,13 +72,13 @@ namespace statsd.net.shared.Listeners
         using (var reader = new System.IO.StreamReader(body, context.Request.ContentEncoding))
         {
           var rawPacket = reader.ReadToEnd();
-          _systemMetrics.Log("listeners.http.bytes", (int)context.Request.ContentLength64);
+          _systemMetrics.LogCount("listeners.http.bytes", (int)context.Request.ContentLength64);
           string[] lines = rawPacket.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
           for (int index = 0; index < lines.Length; index++)
           {
             _target.Post(lines[index]);
           }
-          _systemMetrics.Log("listeners.http.lines", lines.Length);
+          _systemMetrics.LogCount("listeners.http.lines", lines.Length);
         }
       }
       context.Response.Close();

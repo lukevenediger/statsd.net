@@ -15,6 +15,7 @@ using log4net;
 using statsd.net.Backends.SqlServer;
 using statsd.net.shared.Backends;
 using statsd.net.shared;
+using statsd.net.shared.Factories;
 
 namespace statsd.net
 {
@@ -48,7 +49,8 @@ namespace statsd.net
       SuperCheapIOC.Add(_log);
       var systemInfoService = new SystemInfoService();
       SuperCheapIOC.Add(systemInfoService as ISystemInfoService);
-      SuperCheapIOC.Add( new SystemMetricsService("statsd", systemInfoService.HostName) as ISystemMetricsService );
+      var systemMetricsService = new SystemMetricsService("statsd", systemInfoService.HostName);
+      SuperCheapIOC.Add(systemMetricsService as ISystemMetricsService );
       
       /**
        * The flow is:
@@ -77,7 +79,7 @@ namespace statsd.net
 
       // Add the broadcaster to the IOC container
       SuperCheapIOC.Add<BroadcastBlock<GraphiteLine>>(_messageBroadcaster);
-      SuperCheapIOC.Resolve<ISystemMetricsService>().SetTarget(_messageBroadcaster);
+      systemMetricsService.SetTarget(_messageBroadcaster);
 
       _backends = new List<IBackend>();
       _listeners = new List<IListener>();

@@ -14,8 +14,7 @@ namespace statsd.net.shared.Services
 {
   public interface ISystemMetricsService
   {
-    void Log(string name, int quantity = 1);
-    void SetTarget(ITargetBlock<GraphiteLine> target);
+    void LogCount(string name, int quantity = 1);
   }
 
   /// <summary>
@@ -39,7 +38,7 @@ namespace statsd.net.shared.Services
       intervalService.Start();
    }
 
-    public void Log(string name, int quantity = 1)
+    public void LogCount(string name, int quantity = 1)
     {
       _metrics.AddOrUpdate(name, quantity, (key, input) => { return input + quantity; });
     }

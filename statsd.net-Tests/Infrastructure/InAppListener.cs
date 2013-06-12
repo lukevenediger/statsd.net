@@ -12,10 +12,12 @@ namespace statsd.net_Tests.Infrastructure
   public class InAppListener : IListener
   {
     private ITargetBlock<string> _target;
+    public bool IsListening { get; set; }
 
     public void LinkTo(ITargetBlock<string> target, CancellationToken cancellationToken)
     {
       _target = target;
+      IsListening = true;
     }
 
     public void Send(string message)

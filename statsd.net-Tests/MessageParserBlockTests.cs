@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net;
+using statsd.net.shared.Factories;
 
 namespace statsd.net_Tests
 {
@@ -30,7 +31,7 @@ namespace statsd.net_Tests
     [TestMethod]
     public void ProcessedALine_IncrementedCounter()
     {
-      _systemMetrics.Setup(p => p.Log("parser.linesSeen", 1)).Verifiable();
+      _systemMetrics.Setup(p => p.LogCount("parser.linesSeen", 1)).Verifiable();
 
       _block.Post(new Counter("foo", 1).ToString());
       _block.WaitUntilAllItemsProcessed();
@@ -41,7 +42,7 @@ namespace statsd.net_Tests
     [TestMethod]
     public void ProcessedABadLine_IncrementedBadLineCounter()
     {
-      _systemMetrics.Setup(p => p.Log("parser.badLinesSeen", 1)).Verifiable();
+      _systemMetrics.Setup(p => p.LogCount("parser.badLinesSeen", 1)).Verifiable();
 
       _block.Post("a bad line");
       _block.WaitUntilAllItemsProcessed();

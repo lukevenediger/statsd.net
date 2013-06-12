@@ -42,8 +42,8 @@ namespace statsd.net.Backends
     {
       byte[] data = Encoding.ASCII.GetBytes(messageValue.ToString());
       _client.Send(data, data.Length);
-      _systemMetrics.Log("backends.graphite.lines");
-      _systemMetrics.Log("backends.graphite.bytes", data.Length);
+      _systemMetrics.LogCount("backends.graphite.lines");
+      _systemMetrics.LogCount("backends.graphite.bytes", data.Length);
       return DataflowMessageStatus.Accepted;
     }
 

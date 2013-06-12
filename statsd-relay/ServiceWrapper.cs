@@ -14,7 +14,7 @@ namespace statsd.relay
 {
   public class ServiceWrapper : ServiceBase
   {
-    private Relay _statsd;
+    private Relay _relay;
 
     public ServiceWrapper()
     {
@@ -27,8 +27,8 @@ namespace statsd.relay
 
     protected override void OnStop()
     {
-      _statsd.Stop();
-      _statsd.ShutdownWaitHandle.WaitOne();
+      _relay.Stop();
+      _relay.ShutdownWaitHandle.WaitOne();
     }
 
     public void Start(bool waitForCompletion = true)
@@ -37,10 +37,10 @@ namespace statsd.relay
       var contents = File.ReadAllText(configFile);
       var config = Toml.Toml.Parse(contents);
 
-      _statsd = new Relay(config);
+      _relay = new Relay(config);
       if (waitForCompletion)
       {
-        _statsd.ShutdownWaitHandle.WaitOne();
+        _relay.ShutdownWaitHandle.WaitOne();
       }
     }
   }

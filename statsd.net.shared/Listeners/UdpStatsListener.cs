@@ -17,6 +17,7 @@ namespace statsd.net.shared.Listeners
     private int _port;
     private CancellationToken _cancellationToken;
     private ISystemMetricsService _systemMetrics;
+    public bool IsListening { get; private set; }
 
     public UdpStatsListener(int port, ISystemMetricsService systemMetrics)
     {
@@ -40,19 +41,21 @@ namespace statsd.net.shared.Listeners
                 return;
               }
               byte[] data = udpClient.Receive(ref endpoint);
-              _systemMetrics.Log("listeners.udp.bytes", data.Length);
+              _systemMetrics.LogCount("listeners.udp.bytes", data.Length);
               string rawPacket = Encoding.UTF8.GetString(data);
               string[] lines = rawPacket.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
               for (int index = 0; index < lines.Length; index++)
               {
                 target.Post(lines[index]);
               }
-              _systemMetrics.Log("listeners.udp.lines", lines.Length);
+              _systemMetrics.LogCount("listeners.udp.lines", lines.Length);
             }
           }
           catch (ObjectDisposedException) { /* Eat it, socket was closed */ }
+          finally { IsListening = false; }
         },
         cancellationToken);
+      IsListening = true;
     }
   }
 }

@@ -99,7 +99,7 @@ namespace statsd.net.Backends.SqlServer
       _retryPolicy.Retrying += (sender, args) =>
         {
           _log.Error(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
-          _systemMetrics.Log("backends.sqlserver.retry");
+          _systemMetrics.LogCount("backends.sqlserver.retry");
         };
     }
 
@@ -125,13 +125,13 @@ namespace statsd.net.Backends.SqlServer
               bulk.DestinationTableName = "tb_Metrics";
               bulk.WriteToServer(tableData);
             }
-            _systemMetrics.Log("backends.sqlserver.lines", tableData.Rows.Count);
+            _systemMetrics.LogCount("backends.sqlserver.lines", tableData.Rows.Count);
           });
       }
       catch (Exception ex)
       {
         _log.Error("SqlServerBackend: All retries failed.", ex);
-        _systemMetrics.Log("backends.sqlserver.droppedData");
+        _systemMetrics.LogCount("backends.sqlserver.droppedData");
       }
     }
 

@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Services;
+﻿using statsd.net.shared.Messages;
+using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,12 +23,13 @@ namespace statsd.relay
       _systemMetrics = systemMetrics;
     }
 
-    public void Send(string[] lines)
+    public void Send(StatsdMessage[] lines)
     {
-      byte[] payload = Encoding.UTF8.GetBytes(String.Join(Environment.NewLine, lines));
+      string[] rawLines = lines.Select(p => p.ToString()).ToArray();
+      byte[] payload = Encoding.UTF8.GetBytes(String.Join(Environment.NewLine, rawLines));
       _client.Send(payload, payload.Length);
-      _systemMetrics.Log("sent.bytes", payload.Length);
-      _systemMetrics.Log("sent.lines", payload.Length); 
+      _systemMetrics.LogCount("sent.bytes", payload.Length);
+      _systemMetrics.LogCount("sent.lines", payload.Length); 
     }
   }
 }

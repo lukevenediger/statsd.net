@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Backends\IBackend.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Factories\MessageParserBlockFactory.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
     <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\TcpStatsListener.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Messages\Timing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\IntervalService.cs" />
+    <Compile Include="Services\RelayMetricsService.cs" />
     <Compile Include="Services\SystemInfoService.cs" />
     <Compile Include="Services\SystemMetricsService.cs" />
     <Compile Include="Structures\DatapointBox.cs" />

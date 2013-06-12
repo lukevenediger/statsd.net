@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net.shared.Services;
 
-namespace statsd.net.Framework
+namespace statsd.net.shared.Factories
 {
   public static class MessageParserBlockFactory
   {
@@ -20,14 +20,14 @@ namespace statsd.net.Framework
         (line) =>
         {
           StatsdMessage message;
-          systemMetrics.Log("parser.linesSeen");
+          systemMetrics.LogCount("parser.linesSeen");
           if (StatsdMessageFactory.TryParseMessage(line, out message))
           {
             return message;
           }
           else
           {
-            systemMetrics.Log("parser.badLinesSeen");
+            systemMetrics.LogCount("parser.badLinesSeen");
             return InvalidMessage.Instance;
           }
         },

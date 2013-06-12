@@ -1,4 +1,5 @@
 ﻿using statsd.net.shared;
+using statsd.net.shared.Factories;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
@@ -14,63 +15,88 @@ namespace statsd.relay
 {
   public class Relay
   {
-    public WaitHandle ShutdownWaitHandle { get; set; }
     private CancellationTokenSource _tokenSource;
+    private ManualResetEvent _shutdownComplete;
+    private List<IListener> _listeners;
+
+    public WaitHandle ShutdownWaitHandle
+    {
+      get { return _shutdownComplete; }
+    }
 
     public Relay(dynamic config)
     {
       _tokenSource = new CancellationTokenSource();
-      var systemInfoService = new SystemInfoService();
-      var systemMetrics = new SystemMetricsService("relay", systemInfoService.HostName);
-      SuperCheapIOC.Add(systemMetrics as ISystemMetricsService);
+      _shutdownComplete = new ManualResetEvent(false);
+      _listeners = new List<IListener>();
 
-      var udpSender = new UDPRawStatsSender(config.target.host, (int)config.target.port, systemMetrics);
-      var outputBlock = new ActionBlock<string[]>((lines) => udpSender.Send(lines), new ExecutionDataflowBlockOptions()
+      var systemInfoService = new SystemInfoService();
+      var relayMetrics = new RelayMetricsService("relay", systemInfoService.HostName);
+      SuperCheapIOC.Add(relayMetrics as ISystemMetricsService);
+
+      /* Pipeline is
+       *  UDPStatsListener
+       *  HTTPStatsListener
+       *  TCPStatsListener
+       *    ->  MessageParserBlock
+       *      ->  BatchBlock
+       *        -> UDPRawStatsSender
+       */
+
+      var udpSender = new UDPRawStatsSender(config.target.host, (int)config.target.port, relayMetrics);
+      var outputBlock = new ActionBlock<StatsdMessage[]>((lines) => udpSender.Send(lines), new ExecutionDataflowBlockOptions()
       {
         BoundedCapacity = ExecutionDataflowBlockOptions.Unbounded,
         CancellationToken = _tokenSource.Token
       });
-      var batchBlock = new BatchBlock<string>(10, new GroupingDataflowBlockOptions()
+      var batchBlock = new BatchBlock<StatsdMessage>(10, new GroupingDataflowBlockOptions()
       {
         CancellationToken = _tokenSource.Token,
         BoundedCapacity = GroupingDataflowBlockOptions.Unbounded
       });
       batchBlock.LinkTo(outputBlock);
-      var filterBlock = new ActionBlock<string>((line) =>
-        {
-          if (StatsdMessageFactory.IsProbablyAValidMessage(line))
-          {
-            batchBlock.Post(line);
-          }
-          systemMetrics.Log("badLinesSeen", 1);
-        },
-        new ExecutionDataflowBlockOptions()
-      {
-        BoundedCapacity = ExecutionDataflowBlockOptions.Unbounded,
-        CancellationToken = _tokenSource.Token
-      });
+      var messageParserBlock = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, relayMetrics);
+      messageParserBlock.LinkTo(batchBlock);
+
+      // Completion chain
+      messageParserBlock.Completion.ContinueWith(x => batchBlock.Complete());
+      batchBlock.Completion.ContinueWith(x => outputBlock.Complete());
+      outputBlock.Completion.ContinueWith(x => { _shutdownComplete.Set(); });
 
       // Listeners
       if (config.listeners.udp.enabled)
       {
-        var udpListener = new UdpStatsListener((int)config.listeners.udp.port, systemMetrics);
-        udpListener.LinkTo(filterBlock, _tokenSource.Token);
+        var udpListener = new UdpStatsListener((int)config.listeners.udp.port, relayMetrics);
+        udpListener.LinkTo(messageParserBlock, _tokenSource.Token);
+        _listeners.Add(udpListener);
       }
       if (config.listeners.http.enabled)
       {
-        var httpListener = new HttpStatsListener((int)config.listeners.http.port, systemMetrics);
-        httpListener.LinkTo(filterBlock, _tokenSource.Token);
+        var httpListener = new HttpStatsListener((int)config.listeners.http.port, relayMetrics);
+        httpListener.LinkTo(messageParserBlock, _tokenSource.Token);
+        _listeners.Add(httpListener);
       }
       if (config.listeners.tcp.enabled)
       {
-        var tcpListener = new TcpStatsListener((int)config.listeners.tcp.port, systemMetrics);
-        tcpListener.LinkTo(filterBlock, _tokenSource.Token);
+        var tcpListener = new TcpStatsListener((int)config.listeners.tcp.port, relayMetrics);
+        tcpListener.LinkTo(messageParserBlock, _tokenSource.Token);
+        _listeners.Add(tcpListener);
       }
+
+      // Set the system metrics target
+      relayMetrics.SetTarget(batchBlock);
     }
 
     public void Stop()
     {
       _tokenSource.Cancel();
+      while (_listeners.Any(x => x.IsListening))
+      {
+        // Probably better to use wait handles on the listener here.
+        Thread.Sleep(100);
+      }
+      // Wait for all the blocks to finish up.
+      _shutdownComplete.WaitOne();
     }
   }
 }

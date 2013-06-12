@@ -14,10 +14,12 @@ namespace statsd.net.shared.Listeners
     private ITargetBlock<string> _target;
     private CancellationToken _token;
     private ISystemMetricsService _systemMetrics;
+    public bool IsListening { get; private set; }
 
     public TcpStatsListener(int port, ISystemMetricsService systemMetrics)
     {
       _systemMetrics = systemMetrics;
+      IsListening = false;
     }
 
     public void LinkTo(ITargetBlock<string> target, CancellationToken token)

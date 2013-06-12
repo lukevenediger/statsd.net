@@ -11,5 +11,6 @@ namespace statsd.net.shared.Listeners
   public interface IListener
   {
     void LinkTo(ITargetBlock<string> target, CancellationToken token);
+    bool IsListening { get; }
   }
 }
