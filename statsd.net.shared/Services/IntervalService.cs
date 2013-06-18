@@ -24,12 +24,17 @@ namespace statsd.net.shared.Services
     private System.Timers.Timer _timer;
     private ManualResetEvent _callbackComplete;
 
-    public IntervalService(TimeSpan delay)
+    public IntervalService(TimeSpan delay, CancellationToken? cancellationToken = null)
     {
       _callbackComplete = new ManualResetEvent(true);
       _timer = new System.Timers.Timer(delay.TotalMilliseconds);
       _timer.Elapsed += (sender, e) =>
         {
+          if (cancellationToken.HasValue && cancellationToken.Value.IsCancellationRequested)
+          {
+            _timer.Stop();
+            return;
+          }
           _callbackComplete.Reset();
           FireEvent( e.SignalTime.ToEpoch() );
           _callbackComplete.Set();           
@@ -37,8 +42,8 @@ namespace statsd.net.shared.Services
       _timer.AutoReset = true;
     }
 
-    public IntervalService(int delayInSeconds)
-      :this (new TimeSpan(0,0,delayInSeconds))
+    public IntervalService(int delayInSeconds, CancellationToken? cancellationToken = null)
+      :this (new TimeSpan(0,0,delayInSeconds), cancellationToken)
     {
     }
 

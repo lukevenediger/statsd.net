@@ -31,7 +31,7 @@ namespace statsd.relay
       _listeners = new List<IListener>();
 
       var systemInfoService = new SystemInfoService();
-      var relayMetrics = new RelayMetricsService("relay", systemInfoService.HostName);
+      var relayMetrics = new RelayMetricsService("relay", _tokenSource.Token, systemInfoService.HostName);
       SuperCheapIOC.Add(relayMetrics as ISystemMetricsService);
 
       /* Pipeline is

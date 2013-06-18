@@ -14,7 +14,7 @@ name = "statsd-relay"
   port = 8001
 
   [listeners.http]
-  enabled = true
+  enabled = false
   port = 8002
 
 [target]
