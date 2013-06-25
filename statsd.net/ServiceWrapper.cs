@@ -28,8 +28,11 @@ namespace statsd.net
 
     protected override void OnStop()
     {
-      _statsd.Stop();
-      _statsd.ShutdownWaitHandle.WaitOne();
+      if ( _statsd != null )
+      {
+        _statsd.Stop();
+        _statsd.ShutdownWaitHandle.WaitOne();
+      }
     }
 
     public void Start(bool waitForCompletion = true)

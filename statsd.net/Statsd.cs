@@ -28,7 +28,6 @@ namespace statsd.net
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
     private ManualResetEvent _shutdownComplete;
-    private IIntervalService _intervalService;
     private static readonly ILog _log = LogManager.GetLogger("statsd.net");
 
     public WaitHandle ShutdownWaitHandle
@@ -38,20 +37,21 @@ namespace statsd.net
         return _shutdownComplete;
       }
     }
-    
-    public Statsd()
+
+    public Statsd ( string serviceName = null )
     {
       LoggingBootstrap.Configure();
-      _log.Info("statsd.net starting.");
+      _log.Info( "statsd.net starting." );
       _tokenSource = new CancellationTokenSource();
-      _shutdownComplete = new ManualResetEvent(false);
+      _shutdownComplete = new ManualResetEvent( false );
 
-      SuperCheapIOC.Add(_log);
+      SuperCheapIOC.Add( _log );
       var systemInfoService = new SystemInfoService();
-      SuperCheapIOC.Add(systemInfoService as ISystemInfoService);
-      var systemMetricsService = new SystemMetricsService("statsd", systemInfoService.HostName);
-      SuperCheapIOC.Add(systemMetricsService as ISystemMetricsService );
-      
+      SuperCheapIOC.Add( systemInfoService as ISystemInfoService );
+      serviceName = serviceName ?? systemInfoService.HostName;
+      var systemMetricsService = new SystemMetricsService( "statsdnet", serviceName );
+      SuperCheapIOC.Add( systemMetricsService as ISystemMetricsService );
+
       /**
        * The flow is:
        *  Listeners ->
@@ -60,33 +60,33 @@ namespace statsd.net
        *        Aggregator ->
        *          Broadcaster ->
        *            Backends
-       */ 
-      
+       */
+
       // Initialise the core blocks
       _router = new StatsdMessageRouterBlock();
-      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, 
+      _messageParser = MessageParserBlockFactory.CreateMessageParserBlock( _tokenSource.Token,
         SuperCheapIOC.Resolve<ISystemMetricsService>() );
-      _messageParser.LinkTo(_router);
-      _messageParser.Completion.ContinueWith(_ =>
+      _messageParser.LinkTo( _router );
+      _messageParser.Completion.ContinueWith( _ =>
         {
           _messageBroadcaster.Complete();
-        });
-      _messageBroadcaster = new BroadcastBlock<GraphiteLine>(GraphiteLine.Clone);
-      _messageBroadcaster.Completion.ContinueWith(_ =>
+        } );
+      _messageBroadcaster = new BroadcastBlock<GraphiteLine>( GraphiteLine.Clone );
+      _messageBroadcaster.Completion.ContinueWith( _ =>
         {
-          _backends.ForEach(q => q.Complete());
-        });
+          _backends.ForEach( q => q.Complete() );
+        } );
 
       // Add the broadcaster to the IOC container
-      SuperCheapIOC.Add<BroadcastBlock<GraphiteLine>>(_messageBroadcaster);
-      systemMetricsService.SetTarget(_messageBroadcaster);
+      SuperCheapIOC.Add<BroadcastBlock<GraphiteLine>>( _messageBroadcaster );
+      systemMetricsService.SetTarget( _messageBroadcaster );
 
       _backends = new List<IBackend>();
       _listeners = new List<IListener>();
     }
 
-    public Statsd(dynamic config) 
-      : this()
+    public Statsd(dynamic config)
+       : this((string)config.general.name)
     {
       _log.Info("statsd.net loading config.");
       var systemMetrics = SuperCheapIOC.Resolve<ISystemMetricsService>();
@@ -102,28 +102,38 @@ namespace statsd.net
       }
       if (config.backends.sqlserver.enabled)
       {
-        AddBackend(new SqlServerBackend(config.backends.sqlserver.connectionString, config.general.name, systemMetrics), "sqlserver");
+        AddBackend(new SqlServerBackend(
+          config.backends.sqlserver.connectionString, 
+          config.general.name, 
+          systemMetrics, 
+          batchSize : (int)config.backends.sqlserver.writeBatchSize), 
+        "sqlserver");
       }
 
       // Load Aggregators
-      _intervalService = new IntervalService( ( int )config.calc.flushIntervalSeconds );
+      var intervalServices = new List<IIntervalService>();
+      var intervalService = new IntervalService( ( int )config.calc.flushIntervalSeconds );
+      intervalServices.Add(intervalService);
       AddAggregator(MessageType.Counter,
-        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, _intervalService, _log));
+        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, intervalService, _log));
       AddAggregator(MessageType.Gauge,
-        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, _intervalService, _log));
+        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, intervalService, _log));
       AddAggregator(MessageType.Set,
-        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, _intervalService, _log));
+        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, intervalService, _log));
       AddAggregator(MessageType.Timing,
-        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, _intervalService, _log));
+        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, intervalService, _log));
+
       // Load Latency Percentile Aggregators
       foreach (var percentile in (IDictionary<string, object>)config.calc.percentiles)
       {
         dynamic thePercentile = percentile.Value;
+        intervalService = new IntervalService((int)thePercentile.flushIntervalSeconds);
         AddAggregator(MessageType.Timing,
           TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace + "." + percentile.Key,
-            new IntervalService((int)thePercentile.flushIntervalSeconds),
+            intervalService,
             (int)thePercentile.percentile,
             _log));
+        intervalServices.Add(intervalService);
       }
 
       // Load listeners - done last and once the rest of the chain is in place
@@ -137,7 +147,7 @@ namespace statsd.net
       }
 
       // Now start the interval service
-      _intervalService.Start();
+      intervalServices.ForEach(p => p.Start());
     }
 
     public void AddListener(IListener listener)
