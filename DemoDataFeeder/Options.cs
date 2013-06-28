@@ -10,6 +10,8 @@ namespace DemoDataFeeder
 {
   class Options
   {
+    private string _namespace;
+
     [Option('h', "host", Required = false, DefaultValue = "localhost", HelpText="Statsd host name")]
     public string Host { get; set; }
     [Option('p', "port", Required = false, DefaultValue = 12000, HelpText="Statsd listen port")]
@@ -18,6 +20,12 @@ namespace DemoDataFeeder
     public int Delay { get; set; }
     [Option( 't', "threads", Required = false, DefaultValue = 1, HelpText = "Number of parallel threads to start." )]
     public int Threads { get; set; }
+    [Option( 'n', "namespace", Required = false, DefaultValue = "(nothing)", HelpText = "The prefix prepended to every metric." )]
+    public string Namespace
+    {
+      get { return _namespace == "(nothing)" ? String.Empty : _namespace; }
+      set { _namespace = value; }
+    }
 
     [HelpOption]
     public string GetUsage()

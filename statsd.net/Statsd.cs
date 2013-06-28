@@ -129,9 +129,10 @@ namespace statsd.net
         dynamic thePercentile = percentile.Value;
         intervalService = new IntervalService((int)thePercentile.flushIntervalSeconds);
         AddAggregator(MessageType.Timing,
-          TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace + "." + percentile.Key,
+          TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace,
             intervalService,
             (int)thePercentile.percentile,
+            percentile.Key,
             _log));
         intervalServices.Add(intervalService);
       }
