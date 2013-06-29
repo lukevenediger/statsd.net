@@ -37,6 +37,7 @@ namespace statsd.net_Tests
         String.Empty,
         _intervalService,
         50,
+        null,
         _log.Object);
 
       TestUtility.Range(100, false).ForEach(p => _block.Post(new Timing("foo", p)));
@@ -53,6 +54,7 @@ namespace statsd.net_Tests
         String.Empty,
         _intervalService,
         90,
+        null,
         _log.Object);
 
       TestUtility.Range(100, false).ForEach(p => _block.Post(new Timing("foo", p)));
@@ -69,6 +71,7 @@ namespace statsd.net_Tests
         String.Empty,
         _intervalService,
         90,
+        null,
         _log.Object);
 
       _block.Post(new Timing("foo", 100));
@@ -89,6 +92,7 @@ namespace statsd.net_Tests
         String.Empty,
         _intervalService,
         80,
+        null,
         _log.Object);
       var pulseDate = DateTime.Now;
 

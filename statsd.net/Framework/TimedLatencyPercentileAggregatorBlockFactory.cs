@@ -20,6 +20,7 @@ namespace statsd.net.Framework
       string rootNamespace, 
       IIntervalService intervalService,
       int percentile,
+      string percentileName,
       ILog log,
       int maxItemsPerBucket = 1000)
     {
@@ -27,6 +28,7 @@ namespace statsd.net.Framework
       var root = rootNamespace;
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
       var random = new Random();
+      percentileName = "." + ( percentileName ?? ( "p" + percentile ) );
 
       var incoming = new ActionBlock<StatsdMessage>( p =>
         {
@@ -58,7 +60,7 @@ namespace statsd.net.Framework
           {
             if (Percentile.TryCompute(measurements.Value.ToArray().ToList(), percentile, out percentileValue))
             {
-              target.Post(new GraphiteLine(ns + measurements.Key + ".p" + percentile, percentileValue, e.Epoch));
+              target.Post(new GraphiteLine(ns + measurements.Key + percentileName, percentileValue, e.Epoch));
               numLinesPosted++;
             }
           }

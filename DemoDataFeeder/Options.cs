@@ -10,6 +10,8 @@ namespace DemoDataFeeder
 {
   class Options
   {
+    private string _namespace;
+
     [Option('h', "host", Required = false, DefaultValue = "localhost", HelpText="Statsd host name")]
     public string Host { get; set; }
     [Option('p', "port", Required = false, DefaultValue = 12000, HelpText="Statsd listen port")]
@@ -22,6 +24,12 @@ namespace DemoDataFeeder
     public bool UseUDP { get; set; }
     [Option('t', "tcp", MutuallyExclusiveSet = "connection-type", DefaultValue = false, HelpText = "Connect using a TCP socket")]
     public bool UseTCP { get; set; }
+    [Option( 'n', "namespace", Required = false, DefaultValue = "(nothing)", HelpText = "The prefix prepended to every metric." )]
+    public string Namespace
+    {
+      get { return _namespace == "(nothing)" ? String.Empty : _namespace; }
+      set { _namespace = value; }
+    }
 
     [HelpOption]
     public string GetUsage()

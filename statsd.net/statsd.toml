@@ -21,6 +21,7 @@ name = "statsd"
   [backends.sqlserver]
   enabled = false
   connectionString = "server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
+  writeBatchSize = 500
   
   [backends.graphite]
   enabled = true

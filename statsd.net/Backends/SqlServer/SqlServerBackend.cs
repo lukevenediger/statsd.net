@@ -37,7 +37,7 @@ namespace statsd.net.Backends.SqlServer
       string collectorName,
       ISystemMetricsService systemMetrics,
       int retries = 3,
-      int batchSize = 2000)
+      int batchSize = 50)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
       _connectionString = connectionString;
