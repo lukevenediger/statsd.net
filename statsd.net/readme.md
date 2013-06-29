@@ -1,38 +1,42 @@
-﻿Thank you for choosing statsd.net! This wiki is here to help you get started, guide you through making the most of your stats collector and to look under the hood at various parts of the system.
+﻿# Statsd.net Metrics Collection Service
+Thank you for choosing statsd.net! This wiki is here to help you get started, guide you through making the most of your stats collector and to look under the hood at various parts of the system.
 
 ## What is Statsd.net?
 Statsd.net is a service that collects and aggregates events, latencies and other statistical data produced by your application, and ships this data off to Graphite.
 
-## Quickstart and Installation Guide
+## Quickstart Guide
 Getting started with statsd.net is easy - you don't need to install anything to start playing around.
-* [[Trying out Statsd.net]]
-* [[Installing Statsd.net]]
+* Trying out Statsd.net
+* Installing Statsd.net
 
 ## Guidance
 
+### Installation
+* [Service Installation](Documentation/installation/service-installation-guide.md)
+
 ### System Configuration
-* [[Common System Configurations]]
-* [[Configuration File Examples]]
-* [[Graphite Configuration Examples]]
-* [[Setting Up Graphite to work with Statsd.net]]
-* [[Scaling Outwards for increased redundancy]]
-* [[Measuring System Health]]
+* Common System Configurations
+* Configuration File Examples
+* Graphite Configuration Examples
+* Setting Up Graphite to work with Statsd.net
+* Scaling Outwards for increased redundancy
+* Measuring System Health
 
 ### Logging Metrics (or Lessons Learned from the Trenches)
-* [[Type of Metrics]]
-* [Metric Anti-Patterns](guidance/metric-anti-patterns.md)
-* [[Logging Transactions]]
+* Types of Metrics
+* [Metric Anti-Patterns](Documentation/guidance/metric-anti-patterns.md)
+* [Logging Transactions](Documentation/guidance/logging-transactions.md)
 
 ## Reference
-* [[Statsd.net Configuration File]]
-* [[Other Statsd-like Collectors]]
-* [[Client Libraries]]
-* [[Statsd.net incoming message format]]
+* [Statsd.net Configuration File](Documentation/reference/statsd-net-configuration-file.md)
+* Other Statsd-like Collectors
+* Client Libraries
+* [Statsd.net incoming message format](Documentation/reference/incoming-message-format.md)
 
 ## Under The Hood
-* [[DataFlowModel|The flow of data as described in TPL Data Blocks]]
-* [[Understanding the Aggregators]]
-* [[List of Libraries Used]]
+* DataFlowModel|The flow of data as described in TPL Data Blocks
+* Understanding the Aggregators
+* List of Libraries Used
 
 ## FAQ
 1. *Why did you create a C# version of [etsy's statsd](https://github.com/etsy/statsd) service?*

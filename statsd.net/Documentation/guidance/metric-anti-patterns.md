@@ -1,4 +1,5 @@
-﻿It can be a bit daunting to get started with metrics, and new users often wrestle with how to build up their metric namespaces. There are lots of approaches that work, which I'll discuss in another article, but this page talks about patterns that you should avoid. One aspect you should always remember when implementing metrics is that it's an ongoing process - you won't get it right the first time (or second, or third). Rather, it's an ever-evolving process of fine-tuning and requires feedback from live usage scenarios to help you improve your metrics in the next release of your software.
+﻿# Metric Anti-Patterns
+It can be a bit daunting to get started with metrics, and new users often wrestle with how to build up their metric namespaces. There are lots of approaches that work, which I'll discuss in another article, but this page talks about patterns that you should avoid. One aspect you should always remember when implementing metrics is that it's an ongoing process - you won't get it right the first time (or second, or third). Rather, it's an ever-evolving process of fine-tuning and requires feedback from live usage scenarios to help you improve your metrics in the next release of your software.
 
 ## Anti-Pattern: Flattened Name-Value Pairs
 A metric where a *name node* is followed by a *value node* to create a flattened key-value pair chain.
