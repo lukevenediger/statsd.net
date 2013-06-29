@@ -102,7 +102,7 @@
     </None>
     <None Include="packageRestore.proj" />
     <None Include="packages.config" />
-    <None Include="statsd.toml" />
+    <None Include="statsdnet.toml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
@@ -115,7 +115,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>copy /Y "$(ProjectDir)statsd.toml" "$(TargetDir)"</PreBuildEvent>
+    <PreBuildEvent>copy /Y "$(ProjectDir)statsdnet.toml" "$(TargetDir)"</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup Label="SlowCheetah">
     <SlowCheetah_EnableImportFromNuGet Condition=" '$(SC_EnableImportFromNuGet)'=='' ">true</SlowCheetah_EnableImportFromNuGet>

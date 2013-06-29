@@ -37,7 +37,15 @@ namespace statsd.net
 
     public void Start(bool waitForCompletion = true)
     {
-      var configFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "statsd.toml");
+      var configFile = ResolveConfigFile("statsdnet.toml");
+      if (!File.Exists(configFile))
+      {
+        configFile = ResolveConfigFile("statsd.toml");
+      }
+      if (!File.Exists(configFile))
+      {
+        throw new FileNotFoundException("Could not find the statsd.net config file. Tried statsdnet.toml and statsd.toml.");
+      }
       var contents = File.ReadAllText(configFile);
       var config = Toml.Toml.Parse(contents);
 
@@ -46,6 +54,11 @@ namespace statsd.net
       {
         _statsd.ShutdownWaitHandle.WaitOne();
       }
+    }
+
+    private static string ResolveConfigFile(string filename)
+    {
+      return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), filename);
     }
   }
 }
