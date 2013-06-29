@@ -40,4 +40,12 @@ public static class ExtensionMethods
       System.Threading.Thread.Sleep(sleepTimeMS);
     }
   }
+
+  public static void PostManyTo<T>(this IEnumerable<T> items, ITargetBlock<T> target)
+  {
+    foreach (T item in items)
+    {
+      target.Post(item);
+    }
+  }
 }

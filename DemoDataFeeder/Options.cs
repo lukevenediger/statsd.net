@@ -16,8 +16,12 @@ namespace DemoDataFeeder
     public int Port { get; set; }
     [Option( 'd', "delay", Required = false, DefaultValue = 500, HelpText = "Delay between sends in Milliseconds." )]
     public int Delay { get; set; }
-    [Option( 't', "threads", Required = false, DefaultValue = 1, HelpText = "Number of parallel threads to start." )]
+    [Option( 'n', "threads", Required = false, DefaultValue = 1, HelpText = "Number of parallel threads to start." )]
     public int Threads { get; set; }
+    [Option('u', "udp", MutuallyExclusiveSet = "connection-type", DefaultValue = true, HelpText = "Connect using a UDP socket")]
+    public bool UseUDP { get; set; }
+    [Option('t', "tcp", MutuallyExclusiveSet = "connection-type", DefaultValue = false, HelpText = "Connect using a TCP socket")]
+    public bool UseTCP { get; set; }
 
     [HelpOption]
     public string GetUsage()

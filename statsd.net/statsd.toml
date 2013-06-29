@@ -10,8 +10,12 @@ name = "statsd"
   port = 12000
 
   [listeners.http]
-  enabled = true
+  enabled = false
   port = 12001
+
+  [listeners.tcp]
+  enabled = true
+  port = 12002
 
 [backends]
   [backends.sqlserver]
@@ -33,15 +37,15 @@ countersNamespace = "counts"
 setsNamespace = "sets"
 timersNamespace = "timers"
 
-  [calc.percentiles.p90_5min]
+  [calc.percentiles.p90-5min]
   flushIntervalSeconds = 300
   percentile = 90
 
-  [calc.percentiles.p90_1hour]
+  [calc.percentiles.p90-1hour]
   flushIntervalSeconds = 3600
   percentile = 90
     
-  [calc.percentiles.p50_1hour]
+  [calc.percentiles.p50-1hour]
   flushIntervalSeconds = 3600
   percentile = 50
 

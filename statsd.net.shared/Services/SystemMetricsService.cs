@@ -15,6 +15,7 @@ namespace statsd.net.shared.Services
   public interface ISystemMetricsService
   {
     void LogCount(string name, int quantity = 1);
+    void LogGauge(string name, int value);
   }
 
   /// <summary>
@@ -41,6 +42,11 @@ namespace statsd.net.shared.Services
     public void LogCount(string name, int quantity = 1)
     {
       _metrics.AddOrUpdate(name, quantity, (key, input) => { return input + quantity; });
+    }
+
+    public void LogGauge(string name, int value)
+    {
+      _metrics.AddOrUpdate(name, value, (key, input) => { return value; });
     }
 
     public void SetTarget(ITargetBlock<GraphiteLine> target)

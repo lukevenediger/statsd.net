@@ -15,6 +15,7 @@ namespace statsd.net.shared.Services
     private string _prefix;
     private ITargetBlock<StatsdMessage> _target;
     private ConcurrentDictionary<string, int> _counts;
+    private ConcurrentDictionary<string, int> _gauges;
     private IIntervalService _intervalService;
 
     public RelayMetricsService(string serviceName, 
@@ -23,6 +24,7 @@ namespace statsd.net.shared.Services
     {
       _prefix = serviceName + "." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
       _counts = new ConcurrentDictionary<string, int>();
+      _gauges = new ConcurrentDictionary<string, int>();
       _intervalService = new IntervalService(60, cancellationToken);
       _intervalService.Elapsed += SendPendingMetrics;
       _intervalService.Start();
@@ -30,9 +32,10 @@ namespace statsd.net.shared.Services
 
     private void SendPendingMetrics(object sender, IntervalFiredEventArgs e)
     {
-      var metrics = _counts.ToArray().Select(x => new Counter(_prefix + x.Key, x.Value)).ToList();
+      _counts.ToArray().Select(p => new Counter(_prefix + p.Key, p.Value)).PostManyTo(_target);
       _counts.Clear();
-      metrics.ForEach(p => _target.Post(p));
+      _gauges.ToArray().Select(p => new Gauge(_prefix + p.Key, p.Value)).PostManyTo(_target);
+      _gauges.Clear();
     }
 
     public void SetTarget(ITargetBlock<StatsdMessage> target)
@@ -43,6 +46,11 @@ namespace statsd.net.shared.Services
     public void LogCount(string name, int count = 1)
     {
       _counts.AddOrUpdate(name, count, (key, current) => current + count);
+    }
+
+    public void LogGauge(string name, int value)
+    {
+      _gauges.AddOrUpdate(name, value, (key, current) => value);
     }
   }
 }

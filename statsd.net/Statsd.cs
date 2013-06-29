@@ -131,6 +131,10 @@ namespace statsd.net
       {
         AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
       }
+      if (config.listeners.tcp.enabled)
+      {
+        AddListener(new TcpStatsListener((int)config.listeners.tcp.port, systemMetrics));
+      }
       if (config.listeners.http.enabled)
       {
         AddListener(new HttpStatsListener((int)config.listeners.http.port, systemMetrics));
