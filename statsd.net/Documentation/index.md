@@ -20,7 +20,7 @@ Getting started with statsd.net is easy - you don't need to install anything to 
 
 ### Logging Metrics (or Lessons Learned from the Trenches)
 * [[Type of Metrics]]
-* [[Metric Anti-Patterns]]
+* [Metric Anti-Patterns](guidance/metric-anti-patterns.md)
 * [[Logging Transactions]]
 
 ## Reference
