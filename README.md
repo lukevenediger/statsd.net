@@ -10,7 +10,7 @@ A high-performance stats collection service based on [etsy's](http://etsy.com/) 
 Statsd.net is actively being used in a high-volume multi-site production environment.
 
 ## Installation, Guidance, Configuration and Reference Information
-* Find all this and more on the **[statsd.net wiki](https://github.com/lukevenediger/statsd.net/wiki)**
+* Find all this and more on the **[statsd.net wiki](https://github.com/lukevenediger/statsd.net/tree/master/statsd.net)**
 
 ## Coming Soon
 * [App Fabric](http://msdn.com/appfabric) and [memcached](http://memcached.org/) support to allow horizontal scaling, with load balancing and storage re
