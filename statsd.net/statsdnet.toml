@@ -10,7 +10,7 @@ name = "statsd"
   port = 12000
 
   [listeners.http]
-  enabled = false
+  enabled = true
   port = 12001
 
   [listeners.tcp]

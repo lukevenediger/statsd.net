@@ -86,6 +86,11 @@
     <Compile Include="Framework\StatsdMessageRouterBlock.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Documentation\guidance\logging-transactions.md" />
+    <None Include="Documentation\guidance\metric-anti-patterns.md" />
+    <None Include="Documentation\installation\service-installation-guide.md" />
+    <None Include="Documentation\reference\incoming-message-format.md" />
+    <None Include="Documentation\reference\statsd-net-configuration-file.md" />
     <None Include="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -102,6 +107,7 @@
     </None>
     <None Include="packageRestore.proj" />
     <None Include="packages.config" />
+    <None Include="readme.md" />
     <None Include="statsdnet.toml" />
   </ItemGroup>
   <ItemGroup>

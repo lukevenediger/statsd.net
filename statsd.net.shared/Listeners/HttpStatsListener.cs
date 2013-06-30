@@ -16,6 +16,7 @@ namespace statsd.net.shared.Listeners
     private ITargetBlock<string> _target;
     private CancellationToken _token;
     private ISystemMetricsService _systemMetrics;
+    private const string FLASH_CROSSDOMAIN = "<?xml version=\"1.0\" ?>\r\n<cross-domain-policy>\r\n  <allow-access-from domain=\"*\" />\r\n</cross-domain-policy>\r\n";
 
     public bool IsListening { get; private set; }
 
@@ -55,7 +56,18 @@ namespace statsd.net.shared.Listeners
       context.Response.Headers.Add("Server", "statsd.net");
       System.Threading.Thread.Sleep(10000);
 
-      if (context.Request.HttpMethod.ToUpper() != "POST")
+      if (context.Request.Url.PathAndQuery.Equals("/crossdomain.xml", StringComparison.OrdinalIgnoreCase))
+      {
+        SendCrossdomainFile(context.Response);
+        return;
+      }
+      else if (context.Request.Url.PathAndQuery.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
+      {
+        context.Response.StatusCode = (int)HttpStatusCode.OK;
+        context.Response.Close();
+        return;
+      }
+      else if (context.Request.HttpMethod.ToUpper() != "POST")
       {
         context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
         context.Response.StatusDescription = "Please use POST.";
@@ -82,6 +94,14 @@ namespace statsd.net.shared.Listeners
         }
       }
       context.Response.Close();
+    }
+
+    private void SendCrossdomainFile(HttpListenerResponse response)
+    {
+      var bytes = System.Text.Encoding.UTF8.GetBytes(FLASH_CROSSDOMAIN);
+      response.ContentLength64 = bytes.Length;
+      response.ContentType = "application/xml";
+      response.OutputStream.Write(bytes, 0, bytes.Length);
     }
   }
 }
