@@ -30,7 +30,7 @@ Getting started with statsd.net is easy - you don't need to install anything to 
 ## Reference
 * [Statsd.net Configuration File](Documentation/reference/statsd-net-configuration-file.md)
 * Other Statsd-like Collectors
-* Client Libraries
+* [Client Libraries](Documentation/reference/client-libraries.md)
 * [Statsd.net incoming message format](Documentation/reference/incoming-message-format.md)
 
 ## Under The Hood
