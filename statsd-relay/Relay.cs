@@ -1,4 +1,5 @@
-﻿using statsd.net.shared;
+﻿using log4net;
+using statsd.net.shared;
 using statsd.net.shared.Factories;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
@@ -18,6 +19,7 @@ namespace statsd.relay
     private CancellationTokenSource _tokenSource;
     private ManualResetEvent _shutdownComplete;
     private List<IListener> _listeners;
+    private static readonly ILog _log = LogManager.GetLogger("statsdrelay");
 
     public WaitHandle ShutdownWaitHandle
     {
@@ -26,6 +28,8 @@ namespace statsd.relay
 
     public Relay(dynamic config)
     {
+      LoggingBootstrap.Configure();
+      _log.Info("statsdrelay is starting up.");
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent(false);
       _listeners = new List<IListener>();

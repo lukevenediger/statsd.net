@@ -78,7 +78,6 @@
     </Compile>
     <Compile Include="Statsd.cs" />
     <Compile Include="Framework\TimedGaugeAggregatorBlockFactory.cs" />
-    <Compile Include="Framework\LoggingBootstrap.cs" />
     <Compile Include="Framework\Percentile.cs" />
     <Compile Include="Framework\ProjectInstaller.cs">
       <SubType>Component</SubType>
@@ -89,6 +88,7 @@
     <None Include="Documentation\guidance\logging-transactions.md" />
     <None Include="Documentation\guidance\metric-anti-patterns.md" />
     <None Include="Documentation\installation\service-installation-guide.md" />
+    <None Include="Documentation\reference\client-libraries.md" />
     <None Include="Documentation\reference\incoming-message-format.md" />
     <None Include="Documentation\reference\statsd-net-configuration-file.md" />
     <None Include="log4net.config">
