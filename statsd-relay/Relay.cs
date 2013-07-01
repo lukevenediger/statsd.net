@@ -59,7 +59,7 @@ namespace statsd.relay
         BoundedCapacity = GroupingDataflowBlockOptions.Unbounded
       });
       batchBlock.LinkTo(outputBlock);
-      var messageParserBlock = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, relayMetrics);
+      var messageParserBlock = MessageParserBlockFactory.CreateMessageParserBlock(_tokenSource.Token, relayMetrics, _log);
       messageParserBlock.LinkTo(batchBlock);
 
       // Completion chain

@@ -46,6 +46,8 @@ namespace statsd.net.Framework
             _timings.ForEach(p => p.Post(messageValue as Timing));
           }
           break;
+        case MessageType.Invalid:
+          break;
         default:
           throw new ArgumentOutOfRangeException("StatsdMessage.MessageType", messageValue.MessageType.ToString()); 
       }

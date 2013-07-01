@@ -21,7 +21,8 @@ namespace DemoDataFeeder
         var stopwatch = Stopwatch.StartNew();
         var totalMetricsSent = 0;
         var tasks = new List<Task>();
-        for ( int count = 0; count < options.Threads; count++ )
+        int numThreads = options.Threads == 0 ? 1 : options.Threads;
+        for ( int count = 0; count < numThreads; count++ )
         {
           int myTaskNumber = count;
           var task = Task.Factory.StartNew( () =>

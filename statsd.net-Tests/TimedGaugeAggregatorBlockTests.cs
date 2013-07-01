@@ -71,5 +71,29 @@ namespace statsd.net_Tests
       Assert.AreEqual(1, _outputBuffer["foo"]);
       Assert.AreEqual(1, _outputBuffer["bar"]);
     }
+
+    [TestMethod]
+    public void NonZeroGauges_CarriedOverAfterFlush_Success()
+    {
+      _block.Post(new Gauge("foo", 1));
+      _block.Post(new Gauge("bar", 1));
+
+      _block.WaitUntilAllItemsProcessed();
+      _intervalService.Pulse();
+      _block.CompleteAndWait();
+
+      Assert.AreEqual(2, _outputBuffer.Items.Count);
+      Assert.AreEqual(1, _outputBuffer["foo"]);
+      Assert.AreEqual(1, _outputBuffer["bar"]);
+
+      // Pulse again
+      _intervalService.Pulse();
+      _block.CompleteAndWait();
+
+      // Ensure they correct
+      Assert.AreEqual(2, _outputBuffer.Items.Count);
+      Assert.AreEqual(1, _outputBuffer["foo"]);
+      Assert.AreEqual(1, _outputBuffer["bar"]);
+    }
   }
 }

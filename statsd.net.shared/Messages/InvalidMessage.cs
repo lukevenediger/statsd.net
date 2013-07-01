@@ -8,12 +8,17 @@ namespace statsd.net.shared.Messages
 {
   public class InvalidMessage : StatsdMessage
   {
-    private static InvalidMessage _instance = new InvalidMessage();
-    public static InvalidMessage Instance { get { return _instance; } }
+    public string Reason { get; private set; }
 
-    private InvalidMessage()
+    public InvalidMessage() :
+      this("Unknown")
+    {
+    }
+
+    public InvalidMessage(string reason)
     {
       MessageType = MessageType.Invalid;
+      Reason = reason;
     }
   }
 }

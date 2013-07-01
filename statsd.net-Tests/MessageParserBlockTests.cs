@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net;
 using statsd.net.shared.Factories;
+using log4net;
 
 namespace statsd.net_Tests
 {
@@ -20,12 +21,16 @@ namespace statsd.net_Tests
   {
     private TransformBlock<string, StatsdMessage> _block;
     private Mock<ISystemMetricsService> _systemMetrics;
+    private Mock<ILog> _log;
 
     [TestInitialize]
     public void Initialise()
     {
       _systemMetrics = new Mock<ISystemMetricsService>();
-      _block = MessageParserBlockFactory.CreateMessageParserBlock(new CancellationToken(), _systemMetrics.Object);
+      _log = new Mock<ILog>();
+      _block = MessageParserBlockFactory.CreateMessageParserBlock(new CancellationToken(), 
+        _systemMetrics.Object,
+        _log.Object);
     }
 
     [TestMethod]

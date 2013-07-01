@@ -65,15 +65,18 @@ namespace statsd.net
       // Initialise the core blocks
       _router = new StatsdMessageRouterBlock();
       _messageParser = MessageParserBlockFactory.CreateMessageParserBlock( _tokenSource.Token,
-        SuperCheapIOC.Resolve<ISystemMetricsService>() );
+        SuperCheapIOC.Resolve<ISystemMetricsService>(),
+        _log);
       _messageParser.LinkTo( _router );
-      _messageParser.Completion.ContinueWith( _ =>
+      _messageParser.Completion.LogAndContinueWith( _log, "MessageParser", () =>
         {
+          _log.Info("MessageParser: Completion signaled. Notifying the MessageBroadcaster.");
           _messageBroadcaster.Complete();
         } );
       _messageBroadcaster = new BroadcastBlock<GraphiteLine>( GraphiteLine.Clone );
-      _messageBroadcaster.Completion.ContinueWith( _ =>
+      _messageBroadcaster.Completion.LogAndContinueWith( _log, "MessageBroadcaster", () =>
         {
+          _log.Info("MessageBroadcaster: Completion signaled. Notifying all backends.");
           _backends.ForEach( q => q.Complete() );
         } );
 
@@ -173,7 +176,7 @@ namespace statsd.net
       _backends.Add(backend);
       SuperCheapIOC.Add(backend, name);
       _messageBroadcaster.LinkTo(backend);
-      backend.Completion.ContinueWith(p =>
+      backend.Completion.LogAndContinueWith(_log, name, () =>
         {
           if (_backends.All(q => !q.IsActive))
           {

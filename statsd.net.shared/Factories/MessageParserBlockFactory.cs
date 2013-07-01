@@ -8,28 +8,27 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net.shared.Services;
+using log4net;
 
 namespace statsd.net.shared.Factories
 {
   public static class MessageParserBlockFactory
   {
     public static TransformBlock<String, StatsdMessage> CreateMessageParserBlock(CancellationToken cancellationToken,
-      ISystemMetricsService systemMetrics)
+      ISystemMetricsService systemMetrics,
+      ILog log)
     {
       var block = new TransformBlock<String, StatsdMessage>(
         (line) =>
         {
-          StatsdMessage message;
           systemMetrics.LogCount("parser.linesSeen");
-          if (StatsdMessageFactory.TryParseMessage(line, out message))
-          {
-            return message;
-          }
-          else
+          StatsdMessage message = StatsdMessageFactory.ParseMessage(line);
+          if (message is InvalidMessage)
           {
             systemMetrics.LogCount("parser.badLinesSeen");
-            return InvalidMessage.Instance;
+            log.Info("Bad message: " + ((InvalidMessage)message).Reason);
           }
+          return message;
         },
         new ExecutionDataflowBlockOptions()
         {
