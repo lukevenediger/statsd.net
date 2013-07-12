@@ -108,5 +108,27 @@ namespace statsd.net_Tests
 
       Assert.AreEqual(10, _outputBuffer.Items.Count);
     }
+
+
+    [TestMethod]
+    public void WriteMinAndMaxLatencies_Success()
+    {
+      _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
+        String.Empty,
+        _intervalService,
+        _log.Object);
+      var pulseDate = DateTime.Now;
+
+      _block.Post(new Timing("foo.bar", 100));
+      _block.Post(new Timing("foo.bar", 200));
+      _block.WaitUntilAllItemsProcessed();
+      _intervalService.Pulse(pulseDate);
+
+      Assert.AreEqual(100, _outputBuffer["foo.bar.min"]);
+      Assert.AreEqual(200, _outputBuffer["foo.bar.max"]);
+      Assert.AreEqual(150, _outputBuffer["foo.bar.mean"]);
+      Assert.AreEqual(300, _outputBuffer["foo.bar.sum"]);
+      Assert.AreEqual(2, _outputBuffer["foo.bar.count"]);
+    }
   }
 }

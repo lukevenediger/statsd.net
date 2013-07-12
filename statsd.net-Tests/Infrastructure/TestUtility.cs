@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace statsd.net_Tests.Infrastructure
 {
-  class TestUtility
+  internal class TestUtility
   {
+    private static Random _random = new Random();
+
     public static List<int> Range(int max, bool zeroBased = true)
     {
       var items = new List<int>();
@@ -23,6 +25,14 @@ namespace statsd.net_Tests.Infrastructure
       get
       {
         return new TimeSpan(0, 0, 1);
+      }
+    }
+
+    public static int NextInteger
+    {
+      get
+      {
+        return _random.Next();
       }
     }
   }
