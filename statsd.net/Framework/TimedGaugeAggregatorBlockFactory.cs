@@ -16,6 +16,7 @@ namespace statsd.net.Framework
   {
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
       string rootNamespace, 
+      bool deleteGaugesOnFlush,
       IIntervalService intervalService,
       ILog log)
     {
@@ -37,7 +38,9 @@ namespace statsd.net.Framework
             return;
           }
           var bucket = gauges.ToArray();
-          gauges.Clear();
+          if (deleteGaugesOnFlush)
+          {
+          }
           var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
           for (int i = 0; i < lines.Length; i++)
           {

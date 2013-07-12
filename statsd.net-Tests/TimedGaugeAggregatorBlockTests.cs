@@ -30,6 +30,7 @@ namespace statsd.net_Tests
       _log = new Mock<ILog>();
       _block = TimedGaugeAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
+        false,
         _intervalService,
         _log.Object);
     }
@@ -87,6 +88,7 @@ namespace statsd.net_Tests
       Assert.AreEqual(1, _outputBuffer["bar"]);
 
       // Pulse again
+      _outputBuffer.Clear();
       _intervalService.Pulse();
       _block.CompleteAndWait();
 

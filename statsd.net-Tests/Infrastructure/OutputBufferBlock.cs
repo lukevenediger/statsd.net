@@ -43,5 +43,10 @@ namespace statsd.net_Tests.Infrastructure
     {
       throw new NotImplementedException();
     }
+
+    public void Clear()
+    {
+      Items.Clear();
+    }
   }
 }

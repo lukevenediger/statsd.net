@@ -48,7 +48,13 @@ namespace statsd.relay
        */
 
       var udpSender = new UDPRawStatsSender(config.target.host, (int)config.target.port, relayMetrics);
-      var outputBlock = new ActionBlock<StatsdMessage[]>((lines) => udpSender.Send(lines), new ExecutionDataflowBlockOptions()
+      var outputBlock = new ActionBlock<StatsdMessage[]>((lines) =>
+        {
+          // Only send valid lines
+          _log.InfoFormat("Forwarding {0} lines.", lines.Length);
+          udpSender.Send(lines.Where(p => !(p is InvalidMessage)).ToArray());
+        },
+        new ExecutionDataflowBlockOptions()
       {
         BoundedCapacity = ExecutionDataflowBlockOptions.Unbounded,
         CancellationToken = _tokenSource.Token
@@ -63,9 +69,26 @@ namespace statsd.relay
       messageParserBlock.LinkTo(batchBlock);
 
       // Completion chain
-      messageParserBlock.Completion.ContinueWith(x => batchBlock.Complete());
-      batchBlock.Completion.ContinueWith(x => outputBlock.Complete());
-      outputBlock.Completion.ContinueWith(x => { _shutdownComplete.Set(); });
+      messageParserBlock.Completion.LogAndContinueWith(_log, "MessageParserBlock",
+        () =>
+        {
+          _log.Info("MessageParserBlock: Completion signalled. Notifying BatchBlock.");
+          batchBlock.Complete();
+        });
+
+      batchBlock.Completion.LogAndContinueWith(_log, "BatchBlock",
+        () =>
+        {
+          _log.Info("BatchBlock: Completion signalled. Notifying OutputBlock.");
+          outputBlock.Complete();
+        });
+      outputBlock.Completion.LogAndContinueWith(_log, "OutputBlock",
+        () =>
+        {
+          // Last one to leave the room turns out the lights.
+          _log.Info("OutputBlock: Completion signalled. Shutting down.");
+          _shutdownComplete.Set();
+        });
 
       // Listeners
       if (config.listeners.udp.enabled)
@@ -101,6 +124,7 @@ namespace statsd.relay
       }
       // Wait for all the blocks to finish up.
       _shutdownComplete.WaitOne();
+      _log.Info("Done.");
     }
   }
 }

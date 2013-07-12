@@ -15,6 +15,7 @@ namespace statsd.net_Tests.Infrastructure
     public bool CancelCalled { get; private set; }
     public bool RunOnceCalled { get; private set; }
     public DateTime RunOnceDateTime { get; set; }
+    public int IntervalSeconds { get; set; }
     
     public void Start()
     {

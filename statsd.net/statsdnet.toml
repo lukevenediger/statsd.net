@@ -37,6 +37,7 @@ gaugesNamespace = "gauges"
 countersNamespace = "counts"
 setsNamespace = "sets"
 timersNamespace = "timers"
+deleteGaugesOnFlush = false
 
   [calc.percentiles.p90-5min]
   flushIntervalSeconds = 300

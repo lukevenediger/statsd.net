@@ -16,6 +16,7 @@ namespace statsd.net.shared.Services
     void Start();
     void Cancel();
     void RunOnce();
+    int IntervalSeconds { get; }
   }
 
   [DebuggerDisplay("Fires every {_timer.Interval} milliseconds.")]
@@ -24,9 +25,12 @@ namespace statsd.net.shared.Services
     private System.Timers.Timer _timer;
     private ManualResetEvent _callbackComplete;
 
+    public int IntervalSeconds { get; private set; }
+
     public IntervalService(TimeSpan delay, CancellationToken? cancellationToken = null)
     {
       _callbackComplete = new ManualResetEvent(true);
+      IntervalSeconds = Convert.ToInt32(delay.TotalSeconds);
       _timer = new System.Timers.Timer(delay.TotalMilliseconds);
       _timer.Elapsed += (sender, e) =>
         {

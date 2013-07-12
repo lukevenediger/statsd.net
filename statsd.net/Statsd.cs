@@ -120,7 +120,7 @@ namespace statsd.net
       AddAggregator(MessageType.Counter,
         TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, intervalService, _log));
       AddAggregator(MessageType.Gauge,
-        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, intervalService, _log));
+        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, config.calc.deleteGaugesOnFlush, intervalService, _log));
       AddAggregator(MessageType.Set,
         TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, intervalService, _log));
       AddAggregator(MessageType.Timing,
