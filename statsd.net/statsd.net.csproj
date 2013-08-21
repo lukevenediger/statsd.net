@@ -34,6 +34,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Griffin.Networking">
+      <HintPath>..\packages\Griffin.Networking.0.5.7\lib\net40\Griffin.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="Griffin.Networking.Protocol.Http, Version=0.5.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Griffin.Networking.Protocol.Http.0.5.2\lib\net40\Griffin.Networking.Protocol.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="Griffin.WebServer, Version=0.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Griffin.WebServer.0.5.0\lib\net40\Griffin.WebServer.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
     </Reference>
@@ -147,6 +158,9 @@
       <MergeAsm Include="$(OutputPath)statsd.net.shared.dll" />
       <MergeAsm Include="$(OutputPath)System.Threading.Tasks.Dataflow.dll" />
       <MergeAsm Include="$(OutputPath)toml-net.dll" />
+	  <MergeAsm Include="$(OutputPath)Griffin.Networking.dll" />
+	  <MergeAsm Include="$(OutputPath)Griffin.WebServer.dll" />
+	  <MergeAsm Include="$(OutputPath)Griffin.Networking.Protocol.Http.dll" />
     </ItemGroup>
     <PropertyGroup>
       <MergedAssembly>$(ProjectDir)$(OutDir)statsdnet.exe</MergedAssembly>

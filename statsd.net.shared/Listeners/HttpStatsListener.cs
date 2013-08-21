@@ -1,6 +1,11 @@
-﻿using statsd.net.shared.Services;
+﻿using Griffin.Networking.Messaging;
+using Griffin.Networking.Protocol.Http.Protocol;
+using Griffin.WebServer;
+using Griffin.WebServer.Modules;
+using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -12,96 +17,108 @@ namespace statsd.net.shared.Listeners
 {
   public class HttpStatsListener : IListener
   {
-    private HttpListener _listener;
-    private ITargetBlock<string> _target;
-    private CancellationToken _token;
-    private ISystemMetricsService _systemMetrics;
     private const string FLASH_CROSSDOMAIN = "<?xml version=\"1.0\" ?>\r\n<cross-domain-policy>\r\n  <allow-access-from domain=\"*\" />\r\n</cross-domain-policy>\r\n";
 
-    public bool IsListening { get; private set; }
+    private HttpServer _httpServer;
+    private ISystemMetricsService _systemMetrics;
+    private ITargetBlock<string> _target;
+    private int _port;
 
     public HttpStatsListener(int port, ISystemMetricsService systemMetrics)
     {
-      _listener = new HttpListener();
-      _listener.Prefixes.Add("http://*:" + port + "/");
-      _listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
       _systemMetrics = systemMetrics;
-      IsListening = false;
+      _port = port;
+      var moduleManager = new ModuleManager();
+      moduleManager.Add(new HttpStatsListenerModule(this));
+      _httpServer = new HttpServer(moduleManager);
     }
 
-    public async void LinkTo(ITargetBlock<string> target, CancellationToken token)
+    public void LinkTo(ITargetBlock<string> target, CancellationToken token)
     {
       _target = target;
-      _token = token;
-      _listener.Start();
+      _httpServer.Start(IPAddress.Any, _port);
       IsListening = true;
-      await Listen();
+      Task.Factory.StartNew(() =>
+        {
+          // Wait for cancellation
+          token.WaitHandle.WaitOne();
+          _httpServer.Stop();
+          IsListening = false;
+        });
     }
 
-    private async Task Listen()
+    public bool IsListening { get; private set; }
+
+    private class HttpStatsListenerModule : IWorkerModule
     {
-      while(!_token.IsCancellationRequested)
+      private HttpStatsListener _parent;
+      public HttpStatsListenerModule(HttpStatsListener parent)
       {
-        var context = await _listener.GetContextAsync();
-#pragma warning disable 4014
-        Task.Factory.StartNew(() => { ProcessRequest(context); }, _token);
-#pragma warning restore 4014
-      }
-      _listener.Close();
-      IsListening = false;
-    }
-
-    private void ProcessRequest(HttpListenerContext context)
-    {
-      context.Response.Headers.Add("Server", "statsd.net");
-      System.Threading.Thread.Sleep(10000);
-
-      if (context.Request.Url.PathAndQuery.Equals("/crossdomain.xml", StringComparison.OrdinalIgnoreCase))
-      {
-        SendCrossdomainFile(context.Response);
-        return;
-      }
-      else if (context.Request.Url.PathAndQuery.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
-      {
-        context.Response.StatusCode = (int)HttpStatusCode.OK;
-        context.Response.Close();
-        return;
-      }
-      else if (context.Request.HttpMethod.ToUpper() != "POST")
-      {
-        context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-        context.Response.StatusDescription = "Please use POST.";
-        context.Response.Close();
-        return;
+        _parent = parent;
       }
 
-      context.Response.StatusCode = (int)HttpStatusCode.OK;
-      context.Response.StatusDescription = "OK";
-
-      // Get the body of this request
-      using (var body = context.Request.InputStream)
+      public void HandleRequestAsync(IHttpContext context, Action<IAsyncModuleResult> callback)
       {
-        using (var reader = new System.IO.StreamReader(body, context.Request.ContentEncoding))
+        callback(new AsyncModuleResult(context, HandleRequest(context)));
+      }
+
+      public void BeginRequest(IHttpContext context)
+      {
+        context.Response.AddHeader("server", "statsd.net");
+        context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+      }
+
+      public void EndRequest(IHttpContext context)
+      {
+      }
+
+      private ModuleResult HandleRequest(IHttpContext context)
+      {
+        if (!context.Request.Method.Equals("POST", StringComparison.InvariantCultureIgnoreCase))
+        {
+          context.Response.StatusCode = 405; // Method not allowed
+          context.Response.StatusDescription = "Please use POST.";
+        }
+
+        if (context.Request.Uri.PathAndQuery.Equals("/crossdomain.xml", StringComparison.InvariantCultureIgnoreCase))
+        {
+          SendCrossDomainFile(context.Response);
+        }
+        else
+        {
+          ExtractMetrics(context);
+        }
+
+        return ModuleResult.Stop;
+      }
+
+      private void SendCrossDomainFile(IResponse response)
+      {
+        var bytes = Encoding.UTF8.GetBytes(FLASH_CROSSDOMAIN);
+        response.ContentLength = bytes.Length;
+        response.ContentType = "application/xml";
+        response.Body.Write(bytes, 0, bytes.Length);
+      }
+
+      private void ExtractMetrics(IHttpContext context)
+      {
+        // Process the body of the request
+        using (var reader = new StreamReader(context.Request.Body, context.Request.ContentEncoding))
         {
           var rawPacket = reader.ReadToEnd();
-          _systemMetrics.LogCount("listeners.http.bytes", (int)context.Request.ContentLength64);
+          _parent._systemMetrics.LogCount("listeners.http.bytes", (int)context.Request.ContentLength);
           string[] lines = rawPacket.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
           for (int index = 0; index < lines.Length; index++)
           {
-            _target.Post(lines[index]);
+            _parent._target.Post(lines[index]);
           }
-          _systemMetrics.LogCount("listeners.http.lines", lines.Length);
+          _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
         }
-      }
-      context.Response.Close();
-    }
 
-    private void SendCrossdomainFile(HttpListenerResponse response)
-    {
-      var bytes = System.Text.Encoding.UTF8.GetBytes(FLASH_CROSSDOMAIN);
-      response.ContentLength64 = bytes.Length;
-      response.ContentType = "application/xml";
-      response.OutputStream.Write(bytes, 0, bytes.Length);
+        // Say OK
+        context.Response.StatusCode = 200; // Method not allowed
+        context.Response.StatusDescription = "OK";
+      }
     }
   }
 }
