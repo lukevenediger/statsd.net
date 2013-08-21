@@ -69,4 +69,25 @@ Change the example above to:
 
 ### Remarks
 A practical reason behind avoiding uniques in a metric is the fact that Graphite creates a new archive file for each new metric, causing a massive rise in disk consumption. Each file will contain sparse data even though the whole file has been allocated to hold as much data as the retention period allows, wasting valuable disk space. 
- 
+
+## Anti-Pattern: Redundant endings such as '.timing', '.count' or '.total'
+A metric that repeats the type name in the metric namespace.
+
+### Examples
+* ```stats_counts.api.GetProducts.count```
+* ```stats_counts.api.GetProducts.total```
+* ```stats.timers.api.UpdateOrderDetails.latency```
+* ```stats.timers.api.UpdateOrderDetails.timing```
+
+### Suggestions
+Adding terms like 'timing', 'count' and 'total' are redundant because the root namespace already indicates the type of measurement:
+* stats_counts - a counter
+* stats.timers - a latency
+* stats.gauge - a gauge 
+
+Change the examples to:
+* ```stats_counts.api.GetProducts```
+* ```stats.timers.api.UpdateOrderDetails```
+
+### Remarks
+Having these redundant terms in your namespaces will only serve to make your queries more tedious.
