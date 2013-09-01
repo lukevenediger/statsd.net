@@ -19,14 +19,14 @@ namespace statsd.net_Tests
   {
     private ActionBlock<StatsdMessage> _block;
     private ControllableIntervalService _intervalService;
-    private GraphiteLineOutputBlock _outputBuffer;
+    private BucketOutputBlock _outputBuffer;
     private Mock<ILog> _log;
 
     [TestInitialize]
     public void Initialise()
     {
       _intervalService = new ControllableIntervalService();
-      _outputBuffer = new GraphiteLineOutputBlock();
+      _outputBuffer = new BucketOutputBlock();
       _log = new Mock<ILog>();
       _block = TimedCounterAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,

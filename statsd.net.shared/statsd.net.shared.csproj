@@ -32,14 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Griffin.Networking">
-      <HintPath>..\packages\Griffin.Networking.0.5.7\lib\net40\Griffin.Networking.dll</HintPath>
-    </Reference>
-    <Reference Include="Griffin.Networking.Protocol.Http">
-      <HintPath>..\packages\Griffin.Networking.Protocol.Http.0.5.2\lib\net40\Griffin.Networking.Protocol.Http.dll</HintPath>
-    </Reference>
-    <Reference Include="Griffin.WebServer">
-      <HintPath>..\packages\Griffin.WebServer.0.5.0\lib\net40\Griffin.WebServer.dll</HintPath>
+    <Reference Include="Kayak">
+      <HintPath>..\packages\Kayak.0.7.2\lib\Kayak.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
@@ -50,6 +44,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.9\lib\net45\System.Threading.Tasks.Dataflow.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,11 +53,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backends\IBackend.cs" />
+    <Compile Include="BetterExpando.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Factories\MessageParserBlockFactory.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
-    <Compile Include="Listeners\HttpStatsListener2.cs" />
+    <None Include="Listeners\HttpStatsListener_old.cs.off" />
     <Compile Include="Listeners\IListener.cs" />
+    <Compile Include="Listeners\IMessageProcessor.cs" />
     <Compile Include="Listeners\TcpStatsListener.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
     <Compile Include="LoggingBootstrap.cs" />
@@ -77,11 +74,19 @@
     <Compile Include="Messages\Timing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\IntervalService.cs" />
+    <Compile Include="Services\PercentileCalculator.cs" />
     <Compile Include="Services\RelayMetricsService.cs" />
     <Compile Include="Services\SystemInfoService.cs" />
     <Compile Include="Services\SystemMetricsService.cs" />
+    <Compile Include="Structures\Bucket.cs" />
+    <Compile Include="Structures\BucketType.cs" />
+    <Compile Include="Structures\CounterBucket.cs" />
     <Compile Include="Structures\DatapointBox.cs" />
+    <Compile Include="Structures\GaugesBucket.cs" />
     <Compile Include="Structures\LatencyBucket.cs" />
+    <Compile Include="Structures\LatencyDatapointBox.cs" />
+    <Compile Include="Structures\PercentileBucket.cs" />
+    <Compile Include="Structures\SetsBucket.cs" />
     <Compile Include="SuperCheapIOC.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

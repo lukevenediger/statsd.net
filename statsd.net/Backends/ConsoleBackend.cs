@@ -1,5 +1,6 @@
 ﻿using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
+using statsd.net.shared.Structures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,9 +21,9 @@ namespace statsd.net.Backends
       _completionTask = new Task(() => { _isActive = false; });
     }
 
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket bucket, ISourceBlock<Bucket> source, bool consumeToAccept)
     {
-      Console.WriteLine(messageValue);
+      Console.WriteLine(bucket.ToString());
       return DataflowMessageStatus.Accepted;
     }
 

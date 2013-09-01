@@ -9,6 +9,7 @@ using System.Threading.Tasks.Dataflow;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
+using statsd.net.shared.Structures;
 
 namespace statsd.net.shared.Services
 {
@@ -24,7 +25,7 @@ namespace statsd.net.shared.Services
   public class SystemMetricsService : ISystemMetricsService
   {
     private string _prefix;
-    private ITargetBlock<GraphiteLine> _target;
+    private ITargetBlock<Bucket> _target;
     private ConcurrentDictionary<string, int> _metrics;
 
     public SystemMetricsService(string serviceName, string prefix = null, IIntervalService intervalService = null)
@@ -49,7 +50,7 @@ namespace statsd.net.shared.Services
       _metrics.AddOrUpdate(name, value, (key, input) => { return value; });
     }
 
-    public void SetTarget(ITargetBlock<GraphiteLine> target)
+    public void SetTarget(ITargetBlock<Bucket> target)
     {
       _target = target;
     }
@@ -63,15 +64,12 @@ namespace statsd.net.shared.Services
 
       // Get a count of metrics waiting to be sent out
       var outputBufferCount = SuperCheapIOC.ResolveAll<IBackend>().Sum(p => p.OutputCount);
-      _target.Post(new GraphiteLine(_prefix + "outputBuffer", outputBufferCount));
-      _target.Post(new GraphiteLine(_prefix + "up", 1));
+      LogGauge("outputBuffer", outputBufferCount);
+      LogGauge("up", 1);
 
-      var pairs = _metrics.ToArray();
+      var bucket = new CounterBucket(_metrics.ToArray(), args.Epoch, _prefix);
       _metrics.Clear();
-      foreach (var pair in pairs)
-      {
-        _target.Post(new GraphiteLine(_prefix + pair.Key, pair.Value));
-      }
+      _target.Post(bucket);
     }
   }
 }

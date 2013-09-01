@@ -4,15 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.shared.Messages
+namespace statsd.net.Backends.Librato
 {
-  public enum MessageType
+  public enum LibratoMetricType
   {
     Counter,
-    Timing,
-    Set,
     Gauge,
-    Invalid,
-    Unknown
+    Timing
   }
 }

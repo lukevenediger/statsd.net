@@ -19,14 +19,14 @@ namespace statsd.net_Tests
   {
     private ActionBlock<StatsdMessage> _block;
     private ControllableIntervalService _intervalService;
-    private GraphiteLineOutputBlock _outputBuffer;
+    private BucketOutputBlock _outputBuffer;
     private Mock<ILog> _log;
 
     [TestInitialize]
     public void Initialise()
     {
       _intervalService = new ControllableIntervalService();
-      _outputBuffer = new GraphiteLineOutputBlock();
+      _outputBuffer = new BucketOutputBlock();
       _log = new Mock<ILog>();
     }
 
@@ -81,7 +81,7 @@ namespace statsd.net_Tests
       _block.WaitUntilAllItemsProcessed();
       _intervalService.Pulse();
 
-      Assert.IsTrue(_outputBuffer.Items.Any(p => p.Name == "foo.p90"));
+      Assert.IsTrue(_outputBuffer.GraphiteLines.Any(p => p.Name == "foo.p90"));
       Assert.AreEqual(400, _outputBuffer["foo.p90"]);
     }
 

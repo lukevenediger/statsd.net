@@ -10,12 +10,13 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Collections.Concurrent;
 using log4net;
+using statsd.net.shared.Structures;
 
 namespace statsd.net.Framework
 {
   public class TimedSetAggregatorBlockFactory
   {
-    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
+    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<SetsBucket> target,
       string rootNamespace, 
       IIntervalService intervalService,
       ILog log)
@@ -48,18 +49,16 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var bucketOfSets = sets.ToArray();
+          var rawData = sets.ToArray();
           sets.Clear();
-          int numLinesPosted = 0;
-          foreach (var bucket in bucketOfSets)
-          {
-            foreach ( var set in bucket.Value )
-            {
-              target.Post( new GraphiteLine( ns + bucket.Key + "." + set.Key.ToString(), 1, e.Epoch ) );
-              numLinesPosted++;
-            }
-          }
-          log.InfoFormat("TimedSetAggregatorBlock - Posted {0} buckets and {1} lines.", bucketOfSets.Length, numLinesPosted);
+          var bucket = new SetsBucket(
+            rawData.Select(p =>
+              new KeyValuePair<string, List<KeyValuePair<int, bool>>>(p.Key, p.Value.ToList())
+            ).ToList(),
+            e.Epoch,
+            ns);
+
+          target.Post(bucket);
         };
       incoming.Completion.ContinueWith(p =>
         {

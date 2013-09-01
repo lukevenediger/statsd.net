@@ -8,35 +8,30 @@ namespace statsd.net.shared.Messages
 {
   public class GraphiteLine
   {
-    private string _name;
     private int _quantity;
     private long _epoc;
 
-    public string Name { get { return _name; } }
+    public string Name { get; private set; }
     public int Quantity { get { return _quantity; } }
+    public long Epoc { get { return _epoc; } }
 
-    public GraphiteLine(string name, int quantity)
+    public GraphiteLine(string name, 
+      int quantity, 
+      long? epoc = null)
     {
-      _name = name;
+      Name = name;
       _quantity = quantity;
-      _epoc = Utility.GetEpoch();
-    }
-
-    public GraphiteLine(string name, int quantity, long epoc)
-    {
-      _name = name;
-      _quantity = quantity;
-      _epoc = epoc;
+      _epoc = epoc ?? Utility.GetEpoch();
     }
 
     public override string ToString()
     {
-      return _name + " " + _quantity + " " + _epoc;
+      return Name + " " + _quantity + " " + _epoc;
     }
 
     public static GraphiteLine Clone(GraphiteLine line)
     {
-      return new GraphiteLine(line._name, line._quantity, line._epoc);
+      return new GraphiteLine(line.Name, line._quantity, line._epoc);
     }
 
     public static GraphiteLine[] CloneMany(GraphiteLine[] line)
@@ -46,7 +41,7 @@ namespace statsd.net.shared.Messages
 
     public override int GetHashCode()
     {
-      return _name.GetHashCode() ^ _quantity.GetHashCode() ^ _epoc.GetHashCode();
+      return Name.GetHashCode() ^ _quantity.GetHashCode() ^ _epoc.GetHashCode();
     }
 
     public override bool Equals(object obj)
@@ -64,7 +59,7 @@ namespace statsd.net.shared.Messages
 
     public bool Equals(GraphiteLine line)
     {
-      return line._name == this._name &&
+      return line.Name == this.Name &&
         line._quantity == this._quantity &&
         line._epoc == this._epoc;
     }

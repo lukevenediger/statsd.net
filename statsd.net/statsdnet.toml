@@ -11,7 +11,7 @@ name = "statsd"
 
   [listeners.http]
   enabled = true
-  port = 12001
+  port = 80
 
   [listeners.tcp]
   enabled = true
@@ -24,12 +24,22 @@ name = "statsd"
   writeBatchSize = 500
   
   [backends.graphite]
-  enabled = true
+  enabled = false
   host = "graphite"
   port = 2003
 
   [backends.console]
   enabled = true
+
+  [backends.librato]
+  enabled = true
+  email = "lukev@lukev.net"
+  token = "10745d7756eb9ceb0f60425431ac770eb69005e733eae57ffaf172c1cf43876e"
+  source = "unique-per-statsd-instance"
+  retryDelaySeconds = 5
+  postTimeoutSeconds = 30
+  maxBatchSize = 10
+
 
 [calc]
 flushIntervalSeconds = 10
@@ -40,15 +50,15 @@ timersNamespace = "timers"
 deleteGaugesOnFlush = false
 
   [calc.percentiles.p90-5min]
-  flushIntervalSeconds = 300
+  flushIntervalSeconds = 30
   percentile = 90
 
   [calc.percentiles.p90-1hour]
-  flushIntervalSeconds = 3600
+  flushIntervalSeconds = 60
   percentile = 90
     
   [calc.percentiles.p50-1hour]
-  flushIntervalSeconds = 3600
+  flushIntervalSeconds = 60
   percentile = 50
 
 [console]

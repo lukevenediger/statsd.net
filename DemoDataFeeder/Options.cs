@@ -27,7 +27,7 @@ namespace DemoDataFeeder
     [Option( 'n', "namespace", Required = false, DefaultValue = "(nothing)", HelpText = "The prefix prepended to every metric." )]
     public string Namespace
     {
-      get { return _namespace == "(nothing)" ? String.Empty : _namespace; }
+      get { return _namespace == "(nothing)" ? null : _namespace; }
       set { _namespace = value; }
     }
 

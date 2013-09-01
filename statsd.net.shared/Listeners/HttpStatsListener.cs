@@ -1,7 +1,5 @@
-﻿using Griffin.Networking.Messaging;
-using Griffin.Networking.Protocol.Http.Protocol;
-using Griffin.WebServer;
-using Griffin.WebServer.Modules;
+﻿using Kayak;
+using Kayak.Http;
 using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
@@ -12,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using System.Web;
 
 namespace statsd.net.shared.Listeners
 {
@@ -19,7 +18,7 @@ namespace statsd.net.shared.Listeners
   {
     private const string FLASH_CROSSDOMAIN = "<?xml version=\"1.0\" ?>\r\n<cross-domain-policy>\r\n  <allow-access-from domain=\"*\" />\r\n</cross-domain-policy>\r\n";
 
-    private HttpServer _httpServer;
+    private IScheduler _scheduler;
     private ISystemMetricsService _systemMetrics;
     private ITargetBlock<string> _target;
     private int _port;
@@ -28,96 +27,219 @@ namespace statsd.net.shared.Listeners
     {
       _systemMetrics = systemMetrics;
       _port = port;
-      var moduleManager = new ModuleManager();
-      moduleManager.Add(new HttpStatsListenerModule(this));
-      _httpServer = new HttpServer(moduleManager);
     }
 
     public void LinkTo(ITargetBlock<string> target, CancellationToken token)
     {
       _target = target;
-      _httpServer.Start(IPAddress.Any, _port);
       IsListening = true;
+      _scheduler = KayakScheduler.Factory.Create(new SchedulerDelegate());
+      var wsTask = Task.Factory.StartNew(() =>
+        {
+          var server = KayakServer.Factory.CreateHttp(
+            new RequestDelegate(this),
+            _scheduler);
+
+          using (server.Listen(new IPEndPoint(IPAddress.Any, _port)))
+          {
+            _scheduler.Start();
+          }
+          IsListening = false;
+        });
+
       Task.Factory.StartNew(() =>
         {
-          // Wait for cancellation
           token.WaitHandle.WaitOne();
-          _httpServer.Stop();
-          IsListening = false;
+          _scheduler.Stop();
         });
     }
 
     public bool IsListening { get; private set; }
 
-    private class HttpStatsListenerModule : IWorkerModule
+    private class SchedulerDelegate : ISchedulerDelegate
+    {
+      public void OnException(IScheduler scheduler, Exception e)
+      {
+         // Ignore
+      }
+
+      public void OnStop(IScheduler scheduler)
+      {
+      }
+    }
+
+    private class RequestDelegate : IHttpRequestDelegate
     {
       private HttpStatsListener _parent;
-      public HttpStatsListenerModule(HttpStatsListener parent)
+      public RequestDelegate(HttpStatsListener parent)
       {
         _parent = parent;
       }
 
-      public void HandleRequestAsync(IHttpContext context, Action<IAsyncModuleResult> callback)
+      public void OnRequest(HttpRequestHead head, 
+        IDataProducer body, 
+        IHttpResponseDelegate response)
       {
-        callback(new AsyncModuleResult(context, HandleRequest(context)));
-      }
-
-      public void BeginRequest(IHttpContext context)
-      {
-        context.Response.AddHeader("server", "statsd.net");
-        context.Response.AddHeader("Access-Control-Allow-Origin", "*");
-      }
-
-      public void EndRequest(IHttpContext context)
-      {
-      }
-
-      private ModuleResult HandleRequest(IHttpContext context)
-      {
-        if (!context.Request.Method.Equals("POST", StringComparison.InvariantCultureIgnoreCase))
+        if (head.Method.ToUpperInvariant() == "POST")
         {
-          context.Response.StatusCode = 405; // Method not allowed
-          context.Response.StatusDescription = "Please use POST.";
+          body.Connect(new BufferedConsumer(
+            (payload) =>
+            {
+              try
+              {
+                _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(payload));
+                string[] lines = payload.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                for (int index = 0; index < lines.Length; index++)
+                {
+                  _parent._target.Post(lines[index]);
+                }
+                _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
+                Respond(response, "200 OK");
+              }
+              catch
+              {
+                Respond(response, "400 bad request");
+              }
+
+            },
+            (error) =>
+            {
+              Respond(response, "500 Internal server error");
+            }));
         }
-
-        if (context.Request.Uri.PathAndQuery.Equals("/crossdomain.xml", StringComparison.InvariantCultureIgnoreCase))
+        else if (head.Method.ToUpperInvariant() == "GET" && head.Uri == "/crossdomain.xml")
         {
-          SendCrossDomainFile(context.Response);
+          var responseHead = new HttpResponseHead()
+          {
+            Status = "200 OK",
+            Headers = new Dictionary<string, string>
+            {
+              { "Content-Type", "application-xml" },
+              { "Content-Length", Encoding.UTF8.GetByteCount(FLASH_CROSSDOMAIN).ToString() },
+              { "Access-Control-Allow-Origin", "*"}
+            }
+          };
+          response.OnResponse(responseHead, new BufferedProducer(FLASH_CROSSDOMAIN));
         }
-        else
+        else if (head.Method.ToUpperInvariant() == "GET" && head.QueryString.Contains("metrics"))
         {
-          ExtractMetrics(context);
-        }
+          var qs = head.QueryString.Split(new string[] { "&" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Split(new string[] { "=" }, StringSplitOptions.None))
+            .ToDictionary(p => p[0], p => HttpUtility.UrlDecode(p[1]));
 
-        return ModuleResult.Stop;
-      }
-
-      private void SendCrossDomainFile(IResponse response)
-      {
-        var bytes = Encoding.UTF8.GetBytes(FLASH_CROSSDOMAIN);
-        response.ContentLength = bytes.Length;
-        response.ContentType = "application/xml";
-        response.Body.Write(bytes, 0, bytes.Length);
-      }
-
-      private void ExtractMetrics(IHttpContext context)
-      {
-        // Process the body of the request
-        using (var reader = new StreamReader(context.Request.Body, context.Request.ContentEncoding))
-        {
-          var rawPacket = reader.ReadToEnd();
-          _parent._systemMetrics.LogCount("listeners.http.bytes", (int)context.Request.ContentLength);
-          string[] lines = rawPacket.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+          string[] lines = qs["metrics"].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
           for (int index = 0; index < lines.Length; index++)
           {
             _parent._target.Post(lines[index]);
           }
           _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
-        }
+          _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(qs["metrics"]));
 
-        // Say OK
-        context.Response.StatusCode = 200; // Method not allowed
-        context.Response.StatusDescription = "OK";
+          var responseHead = new HttpResponseHead()
+          {
+            Status = "200 OK",
+            Headers = new Dictionary<string, string>
+            {
+              { "Content-Type", "application-xml" },
+              { "Content-Length", "0" },
+              { "Access-Control-Allow-Origin", "*"}
+            }
+          };
+          response.OnResponse(responseHead, new EmptyResponse());
+        }
+        else
+        {
+          var headers = new HttpResponseHead()
+          {
+            Status = "404 Not Found",
+            Headers = new Dictionary<string, string>
+            {
+              { "Content-Type", "text/plain" },
+              { "Content-Length", Encoding.UTF8.GetByteCount("not found").ToString() },
+              { "Access-Control-Allow-Origin", "*"}
+            }
+          };
+          response.OnResponse(headers, new BufferedProducer("not found"));
+        }
+      }
+
+      private void Respond(IHttpResponseDelegate response, string status)
+      {
+        var responseHead = new HttpResponseHead()
+        {
+          Status = status,
+          Headers = new Dictionary<string, string>()
+          {
+              { "Content-Type", "text/plain" },
+              { "Content-Length", "0" },
+              { "Access-Control-Allow-Origin", "*"}
+          }
+        };
+        response.OnResponse(responseHead, new EmptyResponse());
+      }
+    }
+
+    private class BufferedConsumer : IDataConsumer
+    {
+      private List<ArraySegment<byte>> _buffer = new List<ArraySegment<byte>>();
+      private Action<string> _callback;
+      private Action<Exception> _error;
+
+      public BufferedConsumer(Action<string> callback,
+        Action<Exception> error)
+      {
+        _callback = callback;
+        _error = error;
+      }
+      
+      public bool OnData(ArraySegment<byte> data, Action continuation)
+      {
+        _buffer.Add(data);
+        return false;
+      }
+
+      public void OnEnd()
+      {
+        var payload = _buffer
+          .Select(p => Encoding.UTF8.GetString(p.Array, p.Offset, p.Count))
+          .Aggregate((result, next) => result + next);
+        _callback(payload);
+      }
+
+      public void OnError(Exception e)
+      {
+        _error(e);
+      }
+    }
+
+    private class BufferedProducer : IDataProducer
+    {
+      private ArraySegment<byte> _rawData;
+
+      public BufferedProducer(string data)
+      {
+        _rawData = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
+      }
+
+      public IDisposable Connect(IDataConsumer channel)
+      {
+        channel.OnData(_rawData, null);
+        channel.OnEnd();
+        return null;
+      }
+    }
+
+    private class EmptyResponse : IDataProducer
+    {
+      public EmptyResponse()
+      {
+      }
+
+      public IDisposable Connect(IDataConsumer channel)
+      {
+        channel.OnData(new ArraySegment<byte>(), null);
+        channel.OnEnd();
+        return null;
       }
     }
   }

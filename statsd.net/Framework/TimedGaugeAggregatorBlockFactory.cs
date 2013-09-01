@@ -1,6 +1,7 @@
 ﻿using log4net;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
+using statsd.net.shared.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace statsd.net.Framework
 {
   public class TimedGaugeAggregatorBlockFactory
   {
-    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
+    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       string rootNamespace, 
       bool deleteGaugesOnFlush,
       IIntervalService intervalService,
@@ -37,16 +38,11 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var bucket = gauges.ToArray();
+          var bucket = new GaugesBucket(gauges.ToArray(), e.Epoch, ns);
           if (deleteGaugesOnFlush)
           {
+            //TODO
           }
-          var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
-          for (int i = 0; i < lines.Length; i++)
-          {
-            target.Post(lines[i]);
-          }
-          log.InfoFormat("TimedGaugeAggregatorBlock - Posted {0} lines.", lines.Length);
         };
 
       incoming.Completion.ContinueWith(p =>

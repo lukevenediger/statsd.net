@@ -10,6 +10,7 @@ using System.Threading.Tasks.Dataflow;
 using statsd.net.shared;
 using statsd.net.shared.Backends;
 using log4net;
+using statsd.net.shared.Structures;
 
 namespace statsd.net.Backends
 {
@@ -20,6 +21,7 @@ namespace statsd.net.Backends
     private bool _isActive;
     private ISystemMetricsService _systemMetrics;
     private ILog _log;
+    private ActionBlock<GraphiteLine> _senderBlock;
     
     public GraphiteBackend(string host, int port, ISystemMetricsService systemMetrics)
     {
@@ -29,6 +31,7 @@ namespace statsd.net.Backends
       _client.Connect(ipAddress, port);
       _systemMetrics = systemMetrics;
       _completionTask = new Task(() => { _isActive = false; });
+      _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
     }
 
     public bool IsActive
@@ -41,19 +44,9 @@ namespace statsd.net.Backends
       get { return 0; }
     }
 
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)
     {
-      byte[] data = Encoding.ASCII.GetBytes(messageValue.ToString());
-      try
-      {
-        _client.Send(data, data.Length);
-        _systemMetrics.LogCount("backends.graphite.lines");
-        _systemMetrics.LogCount("backends.graphite.bytes", data.Length);
-      }
-      catch (SocketException ex)
-      {
-        _log.Error("Failed to send packet to Graphite: " + ex.SocketErrorCode.ToString());
-      }
+      messageValue.FeedTarget(_senderBlock);
       return DataflowMessageStatus.Accepted;
     }
 
@@ -70,6 +63,21 @@ namespace statsd.net.Backends
     public void Fault(Exception exception)
     {
       throw new NotImplementedException();
+    }
+
+    private void SendLine(GraphiteLine line)
+    {
+      byte[] data = Encoding.ASCII.GetBytes(line.ToString());
+      try
+      {
+        _client.Send(data, data.Length);
+        _systemMetrics.LogCount("backends.graphite.lines");
+        _systemMetrics.LogCount("backends.graphite.bytes", data.Length);
+      }
+      catch (SocketException ex)
+      {
+        _log.Error("Failed to send packet to Graphite: " + ex.SocketErrorCode.ToString());
+      }
     }
   }
 }

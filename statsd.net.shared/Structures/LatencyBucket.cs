@@ -1,52 +1,62 @@
-﻿using System;
+﻿using statsd.net.shared.Messages;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net.shared.Structures
 {
-  public class LatencyBucket : DatapointBox
+  public class LatencyBucket : Bucket
   {
-    private object _sync;
+    public KeyValuePair<string, LatencyDatapointBox>[] Latencies { get; private set; }
 
-    public int Min { get; private set; }
-    public int Max { get; private set; }
-    private int _count;
-    public int Count { get { return _count; } }
-    private int _sum;
-    public int Sum { get { return _sum; } }
-    public int Mean
+    public LatencyBucket(KeyValuePair<string, LatencyDatapointBox>[] latencies, 
+      long epoch,
+      string rootNamespace)
+      : base(BucketType.Timing, epoch, rootNamespace)
     {
-      get
+      Latencies = latencies;
+    }
+
+    public override void FeedTarget(ITargetBlock<GraphiteLine> target)
+    {
+      foreach (var latency in Latencies)
       {
-        return Convert.ToInt32(base.ToArray().Average());
+        var lines = MakeGraphiteLines(latency);
+        foreach (var line in lines)
+        {
+          target.Post(line);
+        }
       }
     }
 
-    public LatencyBucket(int maxItems = 1000, int? firstDataPoint = null)
-      : base(maxItems)
+    private GraphiteLine[] MakeGraphiteLines(KeyValuePair<string, LatencyDatapointBox> latency)
     {
-      _sync = new Object();
-      Min = -1;
-      Max = -1;
-      _count = 0;
-      if (firstDataPoint.HasValue) Add(firstDataPoint.Value);
+      return new GraphiteLine[] 
+      {
+        new GraphiteLine(RootNamespace + latency.Key + ".count", latency.Value.Count, Epoch),
+        new GraphiteLine(RootNamespace + latency.Key + ".min", latency.Value.Min, Epoch),
+        new GraphiteLine(RootNamespace + latency.Key + ".max", latency.Value.Max, Epoch),
+        new GraphiteLine(RootNamespace + latency.Key + ".mean", latency.Value.Mean, Epoch),
+        new GraphiteLine(RootNamespace + latency.Key + ".sum", latency.Value.Sum, Epoch),
+        new GraphiteLine(RootNamespace + latency.Key + ".sumSquares", latency.Value.SumSquares, Epoch)
+      };
     }
 
-    public override void Add(int dataPoint)
+    public override string ToString()
     {
-      Interlocked.Add(ref _sum, dataPoint);
-      Interlocked.Increment(ref _count);
-      lock (_sync)
+      var graphiteLines = new List<string>();
+      foreach (var latency in Latencies)
       {
-        if (Min == -1 || dataPoint < Min) Min = dataPoint;
-        if (Max == -1 || dataPoint > Max) Max = dataPoint;
-
-        base.AddInternal(dataPoint);
+        var lines = MakeGraphiteLines(latency);
+        foreach (var line in lines)
+        {
+          graphiteLines.Add(line.ToString());
+        }
       }
+      return String.Join(Environment.NewLine, graphiteLines.ToArray());
     }
   }
 }

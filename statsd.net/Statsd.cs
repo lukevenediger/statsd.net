@@ -16,6 +16,8 @@ using statsd.net.Backends.SqlServer;
 using statsd.net.shared.Backends;
 using statsd.net.shared;
 using statsd.net.shared.Factories;
+using statsd.net.shared.Structures;
+using statsd.net.Backends.Librato;
 
 namespace statsd.net
 {
@@ -23,7 +25,7 @@ namespace statsd.net
   {
     private TransformBlock<string, StatsdMessage> _messageParser;
     private StatsdMessageRouterBlock _router;
-    private BroadcastBlock<GraphiteLine> _messageBroadcaster;
+    private BroadcastBlock<Bucket> _messageBroadcaster;
     private List<IBackend> _backends;
     private List<IListener> _listeners;
     private CancellationTokenSource _tokenSource;
@@ -73,7 +75,7 @@ namespace statsd.net
           _log.Info("MessageParser: Completion signaled. Notifying the MessageBroadcaster.");
           _messageBroadcaster.Complete();
         } );
-      _messageBroadcaster = new BroadcastBlock<GraphiteLine>( GraphiteLine.Clone );
+      _messageBroadcaster = new BroadcastBlock<Bucket>( Bucket.Clone );
       _messageBroadcaster.Completion.LogAndContinueWith( _log, "MessageBroadcaster", () =>
         {
           _log.Info("MessageBroadcaster: Completion signaled. Notifying all backends.");
@@ -81,7 +83,7 @@ namespace statsd.net
         } );
 
       // Add the broadcaster to the IOC container
-      SuperCheapIOC.Add<BroadcastBlock<GraphiteLine>>( _messageBroadcaster );
+      SuperCheapIOC.Add<BroadcastBlock<Bucket>>( _messageBroadcaster );
       systemMetricsService.SetTarget( _messageBroadcaster );
 
       _backends = new List<IBackend>();
@@ -111,6 +113,11 @@ namespace statsd.net
           systemMetrics, 
           batchSize : (int)config.backends.sqlserver.writeBatchSize), 
         "sqlserver");
+      }
+      if (config.backends.librato.enabled)
+      {
+        AddBackend(new LibratoBackend(config.backends.librato, systemMetrics),
+          "librato");
       }
 
       // Load Aggregators

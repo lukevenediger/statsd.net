@@ -1,6 +1,8 @@
 ﻿using statsd.net.Backends;
+using statsd.net.shared;
 using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
+using statsd.net.shared.Structures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,7 @@ namespace statsd.net_Tests.Infrastructure
   {
     private bool _isActive;
     private Task _completionTask;
+    private ActionBlock<GraphiteLine> _collationTarget;
     
     public List<GraphiteLine> Messages { get; private set; }
 
@@ -21,12 +24,13 @@ namespace statsd.net_Tests.Infrastructure
     {
       Messages = new List<GraphiteLine>();
       _completionTask = new Task(() => { _isActive = false; });
+      _collationTarget = new ActionBlock<GraphiteLine>(p => Messages.Add(p), Utility.OneAtATimeExecution());
       _isActive = true;
     }
     
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)
     {
-      Messages.Add(messageValue);
+      messageValue.FeedTarget(_collationTarget);
       return DataflowMessageStatus.Accepted;
     }
 

@@ -60,5 +60,14 @@ namespace statsd.net.shared
         .First(p => p.AddressFamily == AddressFamily.InterNetwork);
     }
 
+    public static ExecutionDataflowBlockOptions UnboundedExecution()
+    {
+      return new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded };
+    }
+    
+    public static ExecutionDataflowBlockOptions OneAtATimeExecution()
+    {
+      return new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded };
+    }
   }
 }

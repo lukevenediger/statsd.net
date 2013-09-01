@@ -68,6 +68,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Infrastructure\BucketOutputBlock.cs" />
     <Compile Include="Infrastructure\ControllableIntervalService.cs" />
     <Compile Include="Infrastructure\InAppListenerOutputChannel.cs" />
     <Compile Include="Infrastructure\OutputBufferBlock.cs" />

@@ -21,14 +21,14 @@ namespace statsd.net_Tests
   {
     private ActionBlock<StatsdMessage> _block;
     private ControllableIntervalService _intervalService;
-    private GraphiteLineOutputBlock _outputBuffer;
+    private BucketOutputBlock _outputBuffer;
     private Mock<ILog> _log;
 
     [TestInitialize]
     public void Initialise()
     {
       _intervalService = new ControllableIntervalService();
-      _outputBuffer = new GraphiteLineOutputBlock();
+      _outputBuffer = new BucketOutputBlock();
       _log = new Mock<ILog>();
     }
 
@@ -52,9 +52,9 @@ namespace statsd.net_Tests
       Assert.AreEqual(new GraphiteLine("foo.bar.baz.sum", 100, pulseDate.ToEpoch()), _outputBuffer[4]);
       Assert.AreEqual(5, _outputBuffer.Items.Count);
       // Ensure that min, max, mean and sum are all equal
-      Assert.IsTrue(_outputBuffer[1].Quantity == _outputBuffer[2].Quantity 
-        && _outputBuffer[2].Quantity == _outputBuffer[3].Quantity
-        && _outputBuffer[3].Quantity == _outputBuffer[4].Quantity);
+      Assert.IsTrue(_outputBuffer.GetGraphiteLine(1).Quantity == _outputBuffer.GetGraphiteLine(2).Quantity 
+        && _outputBuffer.GetGraphiteLine(2).Quantity == _outputBuffer.GetGraphiteLine(3).Quantity
+        && _outputBuffer.GetGraphiteLine(3).Quantity == _outputBuffer.GetGraphiteLine(4).Quantity);
     }
 
     [TestMethod]

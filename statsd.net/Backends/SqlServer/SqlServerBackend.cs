@@ -15,6 +15,7 @@ using Microsoft.Practices.TransientFaultHandling;
 using log4net;
 using statsd.net.shared.Backends;
 using statsd.net.shared;
+using statsd.net.shared.Structures;
 
 namespace statsd.net.Backends.SqlServer
 {
@@ -72,9 +73,9 @@ namespace statsd.net.Backends.SqlServer
       get { return _batchBlock.OutputCount; }
     }
 
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, GraphiteLine messageValue, ISourceBlock<GraphiteLine> source, bool consumeToAccept)
+    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)
     {
-      _batchBlock.Post(messageValue);
+      messageValue.FeedTarget(_batchBlock);
       return DataflowMessageStatus.Accepted;
     }
 

@@ -16,13 +16,13 @@ namespace statsd.net.Framework
 {
   public class TimedLatencyAggregatorBlockFactory
   {
-    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
+    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       string rootNamespace, 
       IIntervalService intervalService,
       ILog log,
       int maxItemsPerBucket = 1000)
     {
-      var latencies = new ConcurrentDictionary<string, LatencyBucket>();
+      var latencies = new ConcurrentDictionary<string, LatencyDatapointBox>();
       var root = rootNamespace;
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
 	  
@@ -33,7 +33,7 @@ namespace statsd.net.Framework
           latencies.AddOrUpdate(latency.Name,
               (key) =>
               {
-                return new LatencyBucket(maxItemsPerBucket, latency.ValueMS);
+                return new LatencyDatapointBox(maxItemsPerBucket, latency.ValueMS);
               },
               (key, bag) =>
               {
@@ -50,18 +50,9 @@ namespace statsd.net.Framework
             return;
           }
 
-          var buckets = latencies.ToArray();
+          var latencyBucket = new LatencyBucket(latencies.ToArray(), e.Epoch, ns);
           latencies.Clear();
-
-          foreach (var bucket in buckets)
-          {
-            target.Post(new GraphiteLine(ns + bucket.Key + ".count", bucket.Value.Count, e.Epoch));
-            target.Post(new GraphiteLine(ns + bucket.Key + ".min", bucket.Value.Min, e.Epoch));
-            target.Post(new GraphiteLine(ns + bucket.Key + ".max", bucket.Value.Max, e.Epoch));
-            target.Post(new GraphiteLine(ns + bucket.Key + ".mean", bucket.Value.Mean, e.Epoch));
-            target.Post(new GraphiteLine(ns + bucket.Key + ".sum", bucket.Value.Sum, e.Epoch));
-          }
-          log.InfoFormat("TimedLatencyAggregatorBlock - Posted {0} buckets and {1} lines.", buckets.Length, buckets.Length * 5);
+          target.Post(latencyBucket);
         };
 
       incoming.Completion.ContinueWith(p =>

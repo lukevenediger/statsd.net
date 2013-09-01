@@ -99,7 +99,7 @@ namespace statsd.relay
       }
       if (config.listeners.http.enabled)
       {
-        var httpListener = new HttpStatsListener2((int)config.listeners.http.port, relayMetrics);
+        var httpListener = new HttpStatsListener((int)config.listeners.http.port, relayMetrics);
         httpListener.LinkTo(messageParserBlock, _tokenSource.Token);
         _listeners.Add(httpListener);
       }

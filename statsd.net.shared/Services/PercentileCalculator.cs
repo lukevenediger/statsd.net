@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.Framework
+namespace statsd.net.shared.Services
 {
-  public static class Percentile
+  public static class PercentileCalculator
   {
     public static bool TryCompute(List<int> data, int percentile, out int percentileValue)
     {

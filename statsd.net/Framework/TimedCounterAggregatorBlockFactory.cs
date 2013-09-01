@@ -1,6 +1,7 @@
 ﻿using log4net;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
+using statsd.net.shared.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,14 +15,14 @@ namespace statsd.net.Framework
 {
   public class TimedCounterAggregatorBlockFactory
   {
-    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
+    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       string rootNamespace, 
       IIntervalService intervalService,
       ILog log)
     {
       var counters = new ConcurrentDictionary<string, int>();
       var root = rootNamespace;
-      var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
+      var ns = String.IsNullOrEmpty(rootNamespace) ? "" : (rootNamespace + ".");
 
       var incoming = new ActionBlock<StatsdMessage>(p =>
         {
@@ -37,14 +38,9 @@ namespace statsd.net.Framework
             return;
           }
 
-          var bucket = counters.ToArray();
+          var bucket = new CounterBucket(counters.ToArray(), e.Epoch, ns);
           counters.Clear();
-          var lines = bucket.Select(q => new GraphiteLine(ns + q.Key, q.Value, e.Epoch)).ToArray();
-          for (int i = 0; i < lines.Length; i++)
-          {
-            target.Post(lines[i]);
-          }
-          log.InfoFormat("TimedCounterAggregatorBlock - Posted {0} lines", lines.Length);
+          target.Post(bucket);
         };
 
       incoming.Completion.ContinueWith(p =>

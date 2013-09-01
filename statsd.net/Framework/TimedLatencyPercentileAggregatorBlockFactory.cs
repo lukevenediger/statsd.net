@@ -16,7 +16,7 @@ namespace statsd.net.Framework
 {
   public class TimedLatencyPercentileAggregatorBlockFactory
   {
-    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<GraphiteLine> target,
+    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       string rootNamespace, 
       IIntervalService intervalService,
       int percentile,
@@ -52,19 +52,13 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var buckets = latencies.ToArray();
+          var bucket = new PercentileBucket(latencies.ToArray(),
+            e.Epoch,
+            rootNamespace,
+            percentileName,
+            percentile);
           latencies.Clear();
-          int percentileValue;
-          int numLinesPosted = 0;
-          foreach (var measurements in buckets)
-          {
-            if (Percentile.TryCompute(measurements.Value.ToArray().ToList(), percentile, out percentileValue))
-            {
-              target.Post(new GraphiteLine(ns + measurements.Key + percentileName, percentileValue, e.Epoch));
-              numLinesPosted++;
-            }
-          }
-          log.InfoFormat("TimedLatencyPercentileAggregatorBlock - Posted {0} buckets and {1} lines.", buckets.Length, numLinesPosted);
+          target.Post(bucket);
         };
 
       incoming.Completion.ContinueWith(p =>

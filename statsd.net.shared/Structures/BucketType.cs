@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.shared.Messages
+namespace statsd.net.shared.Structures
 {
-  public enum MessageType
+  public enum BucketType
   {
-    Counter,
+    Count,
     Timing,
-    Set,
     Gauge,
-    Invalid,
-    Unknown
+    Set,
+    Percentile
   }
 }

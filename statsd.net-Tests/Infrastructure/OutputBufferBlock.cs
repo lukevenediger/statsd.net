@@ -26,6 +26,7 @@ namespace statsd.net_Tests.Infrastructure
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, T messageValue, ISourceBlock<T> source, bool consumeToAccept)
     {
       Items.Add(messageValue);
+      OnMessageOffered(messageValue);
       return DataflowMessageStatus.Accepted;
     }
 
@@ -48,5 +49,10 @@ namespace statsd.net_Tests.Infrastructure
     {
       Items.Clear();
     }
+
+    protected virtual void OnMessageOffered(T message)
+    {
+    }
+
   }
 }
