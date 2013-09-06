@@ -139,6 +139,9 @@
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="$(SlowCheetahTargets)" Condition="Exists('$(SlowCheetahTargets)')" Label="SlowCheetah" />
+  <PropertyGroup>
+    <PostBuildEvent>$(SolutionDir)packages\ilmerge.2.13.0307\ILMerge.exe /target:exe /out:$(TargetDir)\statsdnet.exe /v4 $(TargetDir)statsd.net.exe $(TargetDir)log4net.dll $(TargetDir)Sprache.dll $(TargetDir)Microsoft.Practices.TransientFaultHandling.Core.dll $(TargetDir)\statsd.net.shared.dll $(TargetDir)\System.Threading.Tasks.Dataflow.dll $(TargetDir)\toml-net.dll $(TargetDir)\Kayak.dll</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -146,22 +149,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <UsingTask TaskName="ILMerge.MSBuild.Tasks.ILMerge" AssemblyFile="$(SolutionDir)\packages\ILMerge.MSBuild.Tasks.1.0.0.3\tools\ILMerge.MSBuild.Tasks.dll" />
-  <Target Name="AfterBuild">
-    <ItemGroup>
-      <MergeAsm Include="$(OutputPath)$(TargetFileName)" />
-      <MergeAsm Include="$(OutputPath)log4net.dll" />
-      <MergeAsm Include="$(OutputPath)Sprache.dll" />
-      <MergeAsm Include="$(OutputPath)Microsoft.Practices.TransientFaultHandling.Core.dll" />
-      <MergeAsm Include="$(OutputPath)statsd.net.shared.dll" />
-      <MergeAsm Include="$(OutputPath)System.Threading.Tasks.Dataflow.dll" />
-      <MergeAsm Include="$(OutputPath)toml-net.dll" />
-      <MergeAsm Include="$(OutputPath)Kayak.dll" />
-    </ItemGroup>
-    <PropertyGroup>
-      <MergedAssembly>$(ProjectDir)$(OutDir)statsdnet.exe</MergedAssembly>
-    </PropertyGroup>
-    <Message Text="ILMerge @(MergeAsm) -&gt; $(MergedAssembly)" Importance="high" />
-    <ILMerge InputAssemblies="@(MergeAsm)" OutputFile="$(MergedAssembly)" TargetKind="SameAsPrimaryAssembly" />
-  </Target>
 </Project>
