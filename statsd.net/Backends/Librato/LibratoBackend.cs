@@ -1,4 +1,5 @@
 ﻿using log4net;
+using Microsoft.Practices.TransientFaultHandling;
 using RestSharp;
 using statsd.net.shared;
 using statsd.net.shared.Backends;
@@ -40,6 +41,7 @@ namespace statsd.net.Backends.Librato
     private RestClient _client;
     private ISystemMetricsService _systemMetrics;
     private int _pendingOutputCount;
+    private RetryPolicy<LibratoErrorDetectionStrategy> _retryPolicy;
 
     private LibratoConfig _config;
 
@@ -161,6 +163,7 @@ namespace statsd.net.Backends.Librato
       {
         dynamic payload = GetPayload(epochGroup);
         pendingLines = payload.gauges.Length + payload.counters.Length;
+        _systemMetrics.LogGauge("backends.librato.lines", pendingLines);
         Interlocked.Add(ref _pendingOutputCount, pendingLines);
         
         var request = new RestRequest("/v1/metrics", Method.POST);
@@ -168,6 +171,7 @@ namespace statsd.net.Backends.Librato
         request.AddHeader("User-Agent", "statsd.net-librato-backend/" + _serviceVersion);
         request.AddBody(payload);
         var result = _client.Execute(request);
+        //result.e
 
         Interlocked.Add(ref _pendingOutputCount, -pendingLines);
       }
@@ -201,6 +205,15 @@ namespace statsd.net.Backends.Librato
         };
       }
       return payload;
+    }
+
+    private class LibratoErrorDetectionStrategy : ITransientErrorDetectionStrategy
+    {
+    public bool IsTransient(Exception ex)
+    {
+      //if (ex is Ne
+      return false;
+    }
     }
   }
 }
