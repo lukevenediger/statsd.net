@@ -17,7 +17,8 @@ namespace statsd.net
     {
       if (Environment.UserInteractive)
       {
-        string action = String.Concat(args);
+        string action = args.Length >= 1 ? args[0] : "";
+
         switch (action)
         {
           case "--install":
@@ -30,7 +31,7 @@ namespace statsd.net
             PrintVersion();
             break;
           case "--console":
-            RunConsoleMode();
+            RunConsoleMode(args.Length == 2 ? args[1] : null);
             break;
           case "--help":
             PrintHelp();
@@ -62,11 +63,12 @@ namespace statsd.net
         C("Error - unknown option: " + action);
       }
       C("Usage: statsd.net.exe [ --install | --uninstall | --console | --version | --help ]");
-      C("  --install     Install statsd.net as a Windows Service.");
-      C("  --uninstall   Uninstall statsd.net");
-      C("  --console     Run statsd.net in console mode (does not need to be installed first)");
-      C("  --version     Prints the service version");
-      C("  --help        Prints this help information.");
+      C("  --install              Install statsd.net as a Windows Service.");
+      C("  --uninstall            Uninstall statsd.net");
+      C("  --console              Run statsd.net in console mode (does not need to be installed first)");
+      C("  --console CONFIG_FILE  Run statsd.net in console mode, using the specified configuration file.");
+      C("  --version              Prints the service version");
+      C("  --help                 Prints this help information.");
     }
 
     private static void InstallService()
@@ -102,9 +104,9 @@ namespace statsd.net
       Console.WriteLine("Statsd.net v" + Assembly.GetExecutingAssembly().GetName().Version.ToString());
     }
 
-    private static void RunConsoleMode()
+    private static void RunConsoleMode(string configFile = null)
     {
-      var service = new ServiceWrapper();
+      var service = new ServiceWrapper(configFile);
       Console.CancelKeyPress += (source, args) =>
         {
           Console.WriteLine("CTRL^C pressed, shutting down...");

@@ -12,6 +12,7 @@ namespace statsd.net.shared.Messages
     Timing,
     Set,
     Gauge,
+    Raw,
     Invalid,
     Unknown
   }

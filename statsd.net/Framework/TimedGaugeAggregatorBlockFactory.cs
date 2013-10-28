@@ -1,4 +1,5 @@
 ﻿using log4net;
+using statsd.net.shared;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
@@ -17,7 +18,7 @@ namespace statsd.net.Framework
   {
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       string rootNamespace, 
-      bool deleteGaugesOnFlush,
+      bool removeZeroGauges,
       IIntervalService intervalService,
       ILog log)
     {
@@ -30,7 +31,7 @@ namespace statsd.net.Framework
           var gauge = p as Gauge;
           gauges.AddOrUpdate(gauge.Name, gauge.Value, (key, oldValue) => gauge.Value);
         },
-        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
+        Utility.UnboundedExecution());
 
       intervalService.Elapsed += (sender, e) =>
         {
@@ -38,11 +39,24 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var bucket = new GaugesBucket(gauges.ToArray(), e.Epoch, ns);
-          if (deleteGaugesOnFlush)
+          var items = gauges.ToArray();
+          var bucket = new GaugesBucket(items, e.Epoch, ns);
+          if (removeZeroGauges)
           {
-            //TODO
+            // Get all zero-value gauges
+            int placeholder;
+            var zeroGauges = 0;
+            for (int index = 0; index < items.Length; index++)
+            {
+              if (items[index].Value == 0)
+              {
+                gauges.TryRemove(items[index].Key, out placeholder);
+                zeroGauges += 1;
+              }
+            }
+            log.InfoFormat("Removed {0} empty gauges.", zeroGauges);
           }
+          gauges.Clear();
         };
 
       incoming.Completion.ContinueWith(p =>
@@ -52,6 +66,5 @@ namespace statsd.net.Framework
         });
       return incoming;
     }
-
   }
 }

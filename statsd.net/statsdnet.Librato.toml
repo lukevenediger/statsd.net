@@ -9,24 +9,7 @@ name = "statsd"
   enabled = true
   port = 12000
 
-  [listeners.http]
-  enabled = true
-  port = 80
-
-  [listeners.tcp]
-  enabled = true
-  port = 12002
-
 [backends]
-  [backends.sqlserver]
-  enabled = false
-  connectionString = "server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
-  writeBatchSize = 500
-  
-  [backends.graphite]
-  enabled = false
-  host = "graphite"
-  port = 2003
 
   [backends.console]
   enabled = true

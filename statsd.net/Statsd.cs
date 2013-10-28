@@ -18,6 +18,7 @@ using statsd.net.shared;
 using statsd.net.shared.Factories;
 using statsd.net.shared.Structures;
 using statsd.net.Backends.Librato;
+using statsd.net.Configuration;
 
 namespace statsd.net
 {
@@ -90,79 +91,129 @@ namespace statsd.net
       _listeners = new List<IListener>();
     }
 
-    public Statsd(dynamic config)
-       : this((string)config.general.name)
+    public Statsd(StatsdnetConfiguration config)
+       : this(config.Name)
     {
       _log.Info("statsd.net loading config.");
       var systemMetrics = SuperCheapIOC.Resolve<ISystemMetricsService>();
 
-      // Load backends
-      if (config.backends.console.enabled)
-      {
-        AddBackend(new ConsoleBackend(), "console");
-      }
-      if (config.backends.graphite.enabled)
-      {
-        AddBackend(new GraphiteBackend(config.backends.graphite.host, (int)config.backends.graphite.port, systemMetrics), "graphite");
-      }
-      if (config.backends.sqlserver.enabled)
-      {
-        AddBackend(new SqlServerBackend(
-          config.backends.sqlserver.connectionString, 
-          config.general.name, 
-          systemMetrics, 
-          batchSize : (int)config.backends.sqlserver.writeBatchSize), 
-        "sqlserver");
-      }
-      if (config.backends.librato.enabled)
-      {
-        AddBackend(new LibratoBackend(config.backends.librato, systemMetrics),
-          "librato");
-      }
+      LoadBackends(config, systemMetrics);
 
       // Load Aggregators
       var intervalServices = new List<IIntervalService>();
-      var intervalService = new IntervalService( ( int )config.calc.flushIntervalSeconds );
+      var intervalService = new IntervalService(config.FlushInterval,
+        _tokenSource.Token);
       intervalServices.Add(intervalService);
-      AddAggregator(MessageType.Counter,
-        TimedCounterAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.countersNamespace, intervalService, _log));
-      AddAggregator(MessageType.Gauge,
-        TimedGaugeAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.gaugesNamespace, config.calc.deleteGaugesOnFlush, intervalService, _log));
-      AddAggregator(MessageType.Set,
-        TimedSetAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.setsNamespace, intervalService, _log));
-      AddAggregator(MessageType.Timing,
-        TimedLatencyAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace, intervalService, _log));
-
-      // Load Latency Percentile Aggregators
-      foreach (var percentile in (IDictionary<string, object>)config.calc.percentiles)
-      {
-        dynamic thePercentile = percentile.Value;
-        intervalService = new IntervalService((int)thePercentile.flushIntervalSeconds);
-        AddAggregator(MessageType.Timing,
-          TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(_messageBroadcaster, config.calc.timersNamespace,
-            intervalService,
-            (int)thePercentile.percentile,
-            percentile.Key,
-            _log));
-        intervalServices.Add(intervalService);
-      }
-
-      // Load listeners - done last and once the rest of the chain is in place
-      if (config.listeners.udp.enabled)
-      {
-        AddListener(new UdpStatsListener((int)config.listeners.udp.port, systemMetrics));
-      }
-      if (config.listeners.tcp.enabled)
-      {
-        AddListener(new TcpStatsListener((int)config.listeners.tcp.port, systemMetrics));
-      }
-      if (config.listeners.http.enabled)
-      {
-        AddListener(new HttpStatsListener((int)config.listeners.http.port, systemMetrics));
-      }
+      LoadAggregators(config, intervalService, _messageBroadcaster);
+      // Load Listeners
+      LoadListeners(config, systemMetrics);
 
       // Now start the interval service
       intervalServices.ForEach(p => p.Start());
+    }
+
+    private void LoadAggregators(StatsdnetConfiguration config, 
+      IntervalService intervalService,
+      BroadcastBlock<Bucket> messageBroadcaster)
+    {
+      foreach (var aggregator in config.Aggregators)
+      {
+        switch (aggregator.Key)
+        {
+          case "counters":
+            var counter = aggregator.Value as CounterAggregationConfig; 
+            AddAggregator(MessageType.Counter,
+              TimedCounterAggregatorBlockFactory.CreateBlock(messageBroadcaster,
+                counter.Namespace,
+                intervalService, 
+                _log));
+            break;
+          case "gauges":
+            var gauge = aggregator.Value as GaugeAggregatorConfig;
+            AddAggregator(MessageType.Gauge,
+              TimedGaugeAggregatorBlockFactory.CreateBlock(messageBroadcaster,
+                gauge.Namespace,
+                gauge.RemoveZeroGauges,
+                intervalService,
+                _log)
+            );
+            break;
+          case "timers":
+            var timer = aggregator.Value as TimersAggregationConfig;
+            AddAggregator(MessageType.Timing,
+              TimedLatencyAggregatorBlockFactory.CreateBlock(messageBroadcaster, 
+                timer.Namespace, 
+                intervalService, 
+                _log)
+            );
+            // Add Percentiles
+            foreach (var percentile in timer.Percentiles)
+            {
+              AddAggregator(MessageType.Timing,
+                TimedLatencyPercentileAggregatorBlockFactory.CreateBlock(messageBroadcaster,
+                  timer.Namespace,
+                  intervalService,
+                  percentile.Threshold,
+                  percentile.Name,
+                  _log)
+              );
+            }
+            break;
+        }
+      }
+    }
+
+    private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
+    {
+      foreach (var backendConfig in config.Backends)
+      {
+        if (backendConfig is GraphiteConfiguration)
+        {
+          var graphiteConfig = backendConfig as GraphiteConfiguration;
+          AddBackend(new GraphiteBackend(graphiteConfig.Host, graphiteConfig.Port, systemMetrics));
+        }
+        else if (backendConfig is ConsoleConfiguration)
+        {
+          AddBackend(new ConsoleBackend());
+        }
+        else if (backendConfig is LibratoBackendConfiguration)
+        {
+          var libratoConfig = backendConfig as LibratoBackendConfiguration;
+          AddBackend(new LibratoBackend(libratoConfig, config.Name, systemMetrics));
+        }
+        else if (backendConfig is SqlServerConfiguration)
+        {
+          var sqlConfig = backendConfig as SqlServerConfiguration;
+          AddBackend(new SqlServerBackend(
+            sqlConfig.ConnectionString,
+            config.Name,
+            systemMetrics,
+            batchSize: sqlConfig.WriteBatchSize));
+        }
+      }
+    }
+
+    private void LoadListeners(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
+    {
+      // Load listeners - done last and once the rest of the chain is in place
+      foreach (var listenerConfig in config.Listeners)
+      {
+        if (listenerConfig is UDPListenerConfiguration)
+        {
+          var udpConfig = listenerConfig as UDPListenerConfiguration;
+          AddListener(new UdpStatsListener(udpConfig.Port, systemMetrics));
+        }
+        else if (listenerConfig is TCPListenerConfiguration)
+        {
+          var tcpConfig = listenerConfig as TCPListenerConfiguration;
+          AddListener(new TcpStatsListener(tcpConfig.Port, systemMetrics));
+        }
+        else if (listenerConfig is HTTPListenerConfiguration)
+        {
+          var httpConfig = listenerConfig as HTTPListenerConfiguration;
+          AddListener(new HttpStatsListener(httpConfig.Port, systemMetrics));
+        }
+      }
     }
 
     public void AddListener(IListener listener)
@@ -172,7 +223,7 @@ namespace statsd.net
       listener.LinkTo(_messageParser, _tokenSource.Token); 
     }
 
-    public void AddAggregator(MessageType targetType, ActionBlock<StatsdMessage> aggregator)
+    private void AddAggregator(MessageType targetType, ActionBlock<StatsdMessage> aggregator)
     {
       _router.AddTarget(targetType, aggregator);
     }
@@ -181,7 +232,7 @@ namespace statsd.net
     {
       _log.InfoFormat("Adding backend {0} named '{1}'", backend.GetType().Name, name);
       _backends.Add(backend);
-      SuperCheapIOC.Add(backend, name);
+      //SuperCheapIOC.Add(backend, name);
       _messageBroadcaster.LinkTo(backend);
       backend.Completion.LogAndContinueWith(_log, name, () =>
         {

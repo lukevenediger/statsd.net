@@ -4,15 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace statsd.net.shared.Structures
+namespace statsd.net_Tests.Integration
 {
-  public enum BucketType
+  class Gauges
   {
-    Count,
-    Timing,
-    Gauge,
-    Set,
-    Percentile,
-    Raw
   }
 }

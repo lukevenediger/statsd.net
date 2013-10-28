@@ -40,9 +40,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.9.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.9\lib\net45\System.Threading.Tasks.Dataflow.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.11\lib\portable-net45+win8\System.Threading.Tasks.Dataflow.dll</HintPath>
     </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -57,7 +57,6 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Factories\MessageParserBlockFactory.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
-    <None Include="Listeners\HttpStatsListener_old.cs.off" />
     <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\IMessageProcessor.cs" />
     <Compile Include="Listeners\TcpStatsListener.cs" />
@@ -68,6 +67,7 @@
     <Compile Include="Messages\GraphiteLine.cs" />
     <Compile Include="Messages\InvalidMessage.cs" />
     <Compile Include="Messages\MessageType.cs" />
+    <Compile Include="Messages\Raw.cs" />
     <Compile Include="Messages\Set.cs" />
     <Compile Include="Messages\StatsdMessage.cs" />
     <Compile Include="Messages\StatsdMessageFactory.cs" />
@@ -86,6 +86,7 @@
     <Compile Include="Structures\LatencyBucket.cs" />
     <Compile Include="Structures\LatencyDatapointBox.cs" />
     <Compile Include="Structures\PercentileBucket.cs" />
+    <Compile Include="Structures\RawBucket.cs" />
     <Compile Include="Structures\SetsBucket.cs" />
     <Compile Include="SuperCheapIOC.cs" />
     <Compile Include="Utility.cs" />

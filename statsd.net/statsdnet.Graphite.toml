@@ -9,37 +9,14 @@ name = "statsd"
   enabled = true
   port = 12000
 
-  [listeners.http]
-  enabled = true
-  port = 80
-
-  [listeners.tcp]
-  enabled = true
-  port = 12002
-
 [backends]
-  [backends.sqlserver]
-  enabled = false
-  connectionString = "server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
-  writeBatchSize = 500
-  
   [backends.graphite]
-  enabled = false
+  enabled = true
   host = "graphite"
   port = 2003
 
   [backends.console]
   enabled = true
-
-  [backends.librato]
-  enabled = true
-  email = "lukev@lukev.net"
-  token = "10745d7756eb9ceb0f60425431ac770eb69005e733eae57ffaf172c1cf43876e"
-  source = "unique-per-statsd-instance"
-  retryDelaySeconds = 5
-  postTimeoutSeconds = 30
-  maxBatchSize = 10
-  countersAsGauges = true
 
 [calc]
 flushIntervalSeconds = 10
@@ -47,7 +24,7 @@ gaugesNamespace = "gauges"
 countersNamespace = "counts"
 setsNamespace = "sets"
 timersNamespace = "timers"
-removeZeroGauges = false
+removeZeroGauges = true
 
   [calc.percentiles.p90-5min]
   flushIntervalSeconds = 30
@@ -60,8 +37,3 @@ removeZeroGauges = false
   [calc.percentiles.p50-1hour]
   flushIntervalSeconds = 60
   percentile = 50
-
-[console]
-enabled = true
-localhostOnly = true
-port = 8080

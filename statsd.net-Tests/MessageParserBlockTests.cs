@@ -54,5 +54,33 @@ namespace statsd.net_Tests
 
       _systemMetrics.VerifyAll();
     }
+
+    [TestMethod]
+    public void ProcessedRawLine_GotValidRawMessageInstance()
+    {
+      _systemMetrics.Setup(p => p.LogCount("parser.LinesSeen", 1)).Verifiable();
+
+      var timestamp = DateTime.Now.Ticks;
+      var metric = "a.raw.metric:100|r|" + timestamp;
+      _block.Post(metric);
+      var message = _block.Receive();
+
+      Assert.AreEqual(metric, message.ToString());
+      _systemMetrics.VerifyAll();
+    }
+
+    [TestMethod]
+    public void ProcessedRawLine_NoTimeStamp_GotValidRawMessageInstance()
+    {
+      _systemMetrics.Setup(p => p.LogCount("parser.LinesSeen", 1)).Verifiable();
+
+      var timestamp = DateTime.Now.Ticks;
+      var metric = "a.raw.metric:100|r";
+      _block.Post(metric);
+      var message = _block.Receive();
+
+      Assert.AreEqual(metric, message.ToString());
+      _systemMetrics.VerifyAll();
+    }
   }
 }

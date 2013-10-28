@@ -22,7 +22,6 @@ namespace statsd.net.shared.Listeners
     public bool IsListening { get; private set; }
     private ActionBlock<byte []> _preprocessorBlock;
     private ITargetBlock<string> _targetBlock;
-    private string _straggler;
 
     public UdpStatsListener(int port, ISystemMetricsService systemMetrics)
     {
@@ -30,6 +29,9 @@ namespace statsd.net.shared.Listeners
       _systemMetrics = systemMetrics;
       _preprocessorBlock = new ActionBlock<byte []>( (data) =>
         {
+          // Log a metric to see what the difference between the read buffer and the max buffer size is
+          _systemMetrics.LogGauge("listeners.udp.buffer.max", MAX_BUFFER_SIZE);
+          _systemMetrics.LogGauge("listeners.udp.buffer.current", data.Length);
           _systemMetrics.LogCount( "listeners.udp.bytes", data.Length );
           string rawPacket = Encoding.UTF8.GetString( data );
 
@@ -68,10 +70,6 @@ namespace statsd.net.shared.Listeners
         },
         cancellationToken);
       IsListening = true;
-    }
-
-    private void ProcessIncomingData ( byte [] data )
-    {
     }
   }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using System.Xml.Linq;
 
 public static class ExtensionMethods
 {
@@ -50,6 +51,12 @@ public static class ExtensionMethods
     }
   }
 
+  public static bool HasOwnProperty(this object target, string propertyName)
+  {
+    var dict = target as IDictionary<string, object>;
+    return dict.ContainsKey(propertyName);
+  }
+
   public static void LogAndContinueWith(this Task task, ILog log, string name, Action action)
   {
     task.ContinueWith(_ =>
@@ -70,4 +77,13 @@ public static class ExtensionMethods
         action();
       });
   }
-}
+
+  public static int ToInt(this XElement element, string attributeName)
+  {
+    return int.Parse(element.Attribute(attributeName).Value);
+  }
+  
+  public static bool ToBoolean(this XElement element, string attributeName)
+  {
+    return Boolean.Parse(element.Attribute(attributeName).Value);
+  }}

@@ -47,6 +47,17 @@ namespace statsd.net.shared.Messages
           case "s":
             // uniques:765|s
             return new Set(nameAndValue[0], Int32.Parse(statProperties[0]));
+          case "r":
+            // some.other.value:12312|r
+            // some.other.value:12312|r|99988883333
+            if (statProperties.Length == 2)
+            {
+              return new Raw(nameAndValue[0], Int32.Parse(statProperties[0]));
+            }
+            else
+            {
+              return new Raw(nameAndValue[0], Int32.Parse(statProperties[0]), long.Parse(statProperties[2]));
+            }
           default:
             return new InvalidMessage("Unknown message type: " + statProperties[1]);
         }

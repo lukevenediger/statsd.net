@@ -1,6 +1,7 @@
 ﻿using log4net;
 using Microsoft.Practices.TransientFaultHandling;
 using RestSharp;
+using statsd.net.Configuration;
 using statsd.net.shared;
 using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,6 +32,7 @@ namespace statsd.net.Backends.Librato
   public class LibratoBackend : IBackend
   {
     public const string ILLEGAL_NAME_CHARACTERS = @"[^-.:_\w]+";
+    public const string LIBRATO_API_URL = "http://metrics-api.librato.com";
 
     private Task _completionTask;
     private ILog _log;
@@ -42,30 +45,40 @@ namespace statsd.net.Backends.Librato
     private ISystemMetricsService _systemMetrics;
     private int _pendingOutputCount;
     private RetryPolicy<LibratoErrorDetectionStrategy> _retryPolicy;
-
-    private LibratoConfig _config;
+    private Incremental _retryStrategy;
+    private LibratoBackendConfiguration _config;
 
     public int OutputCount
     {
       get { return _pendingOutputCount; }
     }
 
-    public LibratoBackend(dynamic configuration, ISystemMetricsService systemMetrics)
+    public LibratoBackend(LibratoBackendConfiguration configuration, string source, ISystemMetricsService systemMetrics)
     {
       _completionTask = new Task(() => IsActive = false);
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
-      _config = GetConfiguration(configuration);
+      _config = configuration;
+      _config.Source = source;
       _serviceVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
       
       _preprocessorBlock = new ActionBlock<Bucket>(bucket => ProcessBucket(bucket), Utility.UnboundedExecution());
-      _batchBlock = new BatchBlock<LibratoMetric>(10); //_config.MaxBatchSize);
+      _batchBlock = new BatchBlock<LibratoMetric>(_config.MaxBatchSize);
       _outputBlock = new ActionBlock<LibratoMetric[]>(lines => PostToLibrato(lines), Utility.OneAtATimeExecution());
       _batchBlock.LinkTo(_outputBlock);
 
-      _client = new RestClient(_config.Api);
+      _client = new RestClient(LIBRATO_API_URL);
       _client.Authenticator = new HttpBasicAuthenticator(_config.Email, _config.Token);
-      _client.Timeout = _config.PostTimeoutSeconds * 1000;
+      _client.Timeout = (int)_config.PostTimeout.TotalMilliseconds;
+
+      _retryPolicy = new RetryPolicy<LibratoErrorDetectionStrategy>(_config.NumRetries);
+      _retryPolicy.Retrying += (sender, args) =>
+        {
+          _log.Warn(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
+          _systemMetrics.LogCount("backends.librato.retry");
+        };
+      _retryStrategy = new Incremental(_config.NumRetries, _config.RetryDelay, TimeSpan.FromSeconds(2));
+      IsActive = true;
     }
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader,
@@ -92,23 +105,6 @@ namespace statsd.net.Backends.Librato
       throw new NotImplementedException();
     }
 
-    private LibratoConfig GetConfiguration(dynamic configuration)
-    {
-      dynamic configWrapped = new BetterExpando(ignoreCase: true,
-        returnEmptyStringForMissingProperties: true,
-        root: configuration);
-      var config = new LibratoConfig();
-      config.Email = configWrapped.email;
-      config.Token = configWrapped.token;
-      config.Source = configWrapped.source;
-      config.SkipInternalMetrics = configWrapped.ValueOrDefault("SkipInternalMetrics", false);
-      config.RetryDelaySeconds = (int)configWrapped.ValueOrDefault("RetryDelaySeconds", (long)5);
-      config.PostTimeoutSeconds = (int)configWrapped.ValueOrDefault("PostTimeoutSeconds", (long)4);
-      config.MaxBatchSize = (int)configWrapped.ValueOrDefault("MaxBatchSize", (long)500);
-      config.Api = configWrapped.ValueOrDefault("Api", "https://metrics-api.librato.com");
-      return config;
-    }
-
     private void ProcessBucket(Bucket bucket)
     {
       switch (bucket.BucketType)
@@ -117,7 +113,14 @@ namespace statsd.net.Backends.Librato
           var counterBucket = bucket as CounterBucket;
           foreach (var count in counterBucket.Items)
           {
-            _batchBlock.Post(new LibratoCounter(counterBucket.RootNamespace + count.Key, count.Value, bucket.Epoch));
+            if (_config.CountersAsGauges)
+            {
+              _batchBlock.Post(new LibratoGauge(counterBucket.RootNamespace + count.Key, count.Value, bucket.Epoch));
+            }
+            else
+            {
+              _batchBlock.Post(new LibratoCounter(counterBucket.RootNamespace + count.Key, count.Value, bucket.Epoch));
+            }
           }
           break;
         case BucketType.Gauge:
@@ -161,59 +164,73 @@ namespace statsd.net.Backends.Librato
       var pendingLines = 0;
       foreach (var epochGroup in lines.GroupBy(p => p.Epoch))
       {
-        dynamic payload = GetPayload(epochGroup);
+        var payload = GetPayload(epochGroup);
         pendingLines = payload.gauges.Length + payload.counters.Length;
         _systemMetrics.LogGauge("backends.librato.lines", pendingLines);
         Interlocked.Add(ref _pendingOutputCount, pendingLines);
-        
+
         var request = new RestRequest("/v1/metrics", Method.POST);
         request.RequestFormat = DataFormat.Json;
         request.AddHeader("User-Agent", "statsd.net-librato-backend/" + _serviceVersion);
         request.AddBody(payload);
-        var result = _client.Execute(request);
-        //result.e
 
-        Interlocked.Add(ref _pendingOutputCount, -pendingLines);
+        _retryPolicy.ExecuteAction(() =>
+          {
+            bool succeeded = false;
+            try
+            {
+              _systemMetrics.LogCount("backends.librato.post.attempt");
+              var result = _client.Execute(request);
+              if (result.StatusCode == HttpStatusCode.Unauthorized)
+              {
+                _systemMetrics.LogCount("backends.librato.error.unauthorised");
+                throw new UnauthorizedAccessException("Librato.com reports that your access is not authorised. Is your API key and email address correct?");
+              }
+              else if (result.StatusCode != HttpStatusCode.OK)
+              {
+                _systemMetrics.LogCount("backends.librato.error." + result.StatusCode.ToString());
+                throw new Exception(String.Format("Request could not be processed. Server said {0}", result.StatusCode.ToString()));
+              }
+              else
+              {
+                succeeded = true;
+                _log.Info(String.Format("Wrote {0} lines to Librato.", pendingLines));
+              }
+            }
+            finally
+            {
+              Interlocked.Add(ref _pendingOutputCount, -pendingLines);
+              _systemMetrics.LogCount("backends.librato.post." + (succeeded ? "success" : "failure"));
+            }
+          });
       }
     }
 
-    private dynamic GetPayload(IGrouping<long, LibratoMetric> epochGroup)
+    private APIPayload GetPayload(IGrouping<long, LibratoMetric> epochGroup)
     {
       var lines = epochGroup.ToList();
       // Split the lines up into gauges and counters
-      var gauges = lines.Where(p => p.MetricType == LibratoMetricType.Gauge || p.MetricType == LibratoMetricType.Timing ).ToArray();
+      var gauges = lines.Where(p => p.MetricType == LibratoMetricType.Gauge || p.MetricType == LibratoMetricType.Timing).ToArray();
       var counts = lines.Where(p => p.MetricType == LibratoMetricType.Counter).ToArray();
 
-      dynamic payload;
-      if (String.IsNullOrEmpty(_config.Source))
-      {
-        payload = new
-        {
-          gauges = gauges,
-          counters = counts,
-          measure_time = epochGroup.Key
-        };
-      }
-      else
-      {
-        payload = new
-        {
-          gauges = gauges,
-          counters = counts,
-          measure_time = epochGroup.Key,
-          source = _config.Source
-        };
-      }
+      var payload = new APIPayload();
+      payload.gauges = gauges;
+      payload.counters = counts;
+      payload.measure_time = epochGroup.Key;
+      payload.source = _config.Source;
       return payload;
     }
 
     private class LibratoErrorDetectionStrategy : ITransientErrorDetectionStrategy
     {
-    public bool IsTransient(Exception ex)
-    {
-      //if (ex is Ne
-      return false;
-    }
+      public bool IsTransient(Exception ex)
+      {
+        if (ex is TimeoutException)
+        {
+          return true;
+        }
+        return false;
+      }
     }
   }
 }

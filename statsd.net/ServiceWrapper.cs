@@ -10,15 +10,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.Configuration;
 
 namespace statsd.net
 {
   public class ServiceWrapper : ServiceBase
   {
     private Statsd _statsd;
+    private string _configFile;
 
-    public ServiceWrapper()
+    public ServiceWrapper(string configFile = null)
     {
+      _configFile = configFile ?? "statsdnet.config";
     }
 
     protected override void OnStart(string[] args)
@@ -37,18 +40,13 @@ namespace statsd.net
 
     public void Start(bool waitForCompletion = true)
     {
-      var configFile = ResolveConfigFile("statsdnet.toml");
+      //TODO : JV IS CONFIG FILE A ACTUAL FILE PATH?  IF SO THEN ITS MISLEADING SHOULD BE CONFIGFILEPATH??
+      var configFile = ResolveConfigFile(_configFile);
       if (!File.Exists(configFile))
       {
-        configFile = ResolveConfigFile("statsd.toml");
+        throw new FileNotFoundException("Could not find the statsd.net config file. I looked here: " + configFile);
       }
-      if (!File.Exists(configFile))
-      {
-        throw new FileNotFoundException("Could not find the statsd.net config file. Tried statsdnet.toml and statsd.toml.");
-      }
-      var contents = File.ReadAllText(configFile);
-      var config = Toml.Toml.Parse(contents);
-
+      var config = ConfigurationFactory.Parse(configFile);
       _statsd = new Statsd(config);
       if (waitForCompletion)
       {

@@ -32,6 +32,7 @@ namespace statsd.net.Backends
       _systemMetrics = systemMetrics;
       _completionTask = new Task(() => { _isActive = false; });
       _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
+      _isActive = true;
     }
 
     public bool IsActive
