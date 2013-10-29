@@ -26,14 +26,14 @@ namespace statsd.net.Backends
     {
       _systemMetrics = systemMetrics;
       _completionTask = new Task(() => { _isActive = false; });
-      StatsdClient.Statsd client = new StatsdClient.Statsd(host, port, StatsdClient.ConnectionType.Tcp);
+      StatsdClient.Statsd client = new StatsdClient.Statsd( host, port, StatsdClient.ConnectionType.Tcp );
 
       _statsdOutputBlock = new ActionBlock<GraphiteLine>(line =>
         {
           client.LogRaw(line.Name, line.Quantity, line.Epoc);
           _systemMetrics.LogCount("backends.statsdnet.lines");
         },
-        Utility.UnboundedExecution());
+        Utility.OneAtATimeExecution());
 
       _isActive = true;
     }

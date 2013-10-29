@@ -16,6 +16,10 @@ namespace statsd.net.Configuration
       var xml = XDocument.Parse(File.ReadAllText(configFile));
       var statsdnet = xml.Element("statsdnet");
       config.Name = statsdnet.Attribute("name").Value;
+      if ( statsdnet.Attributes().Any( p => p.Name == "hideSystemStats" ) )
+      {
+        config.HideSystemStats = statsdnet.ToBoolean( "hideSystemStats" );
+      }
 
       // Add listeners
       foreach (var item in statsdnet.Element("listeners").Elements())
@@ -27,11 +31,14 @@ namespace statsd.net.Configuration
             listener = new UDPListenerConfiguration(item.ToInt("port"));
             break;
           case "tcp":
-            var tcp = new TCPListenerConfiguration(item.ToInt("port"));
+            listener = new TCPListenerConfiguration(item.ToInt("port"));
             break;
           case "http":
-            var http = new HTTPListenerConfiguration(item.ToInt("port"));
-            if (item.Attribute("headerKey") != null) { http.HeaderKey = item.Attribute("headerKey").Value; }
+            listener = new HTTPListenerConfiguration(item.ToInt("port"));
+            if ( item.Attribute( "headerKey" ) != null )
+            {
+              ( ( HTTPListenerConfiguration )listener ).HeaderKey = item.Attribute( "headerKey" ).Value;
+            }
             break;
           default:
             throw new ArgumentOutOfRangeException("Not sure what this listener is: " + item.Name);
@@ -92,7 +99,7 @@ namespace statsd.net.Configuration
             config.Aggregators.Add("sets", new SetAggregationConfig(ns: item.Attribute("namespace").Value));
             break;
           case "timers":
-            var timerConfig = new TimersAggregationConfig(ns: item.Attribute("namespace").Value);
+            var timerConfig = new TimersAggregationConfig( ns: item.Attribute( "namespace" ).Value, calculateSumSquares: item.ToBoolean( "calculateSumSquares" ) );
             config.Aggregators.Add("timers", timerConfig);
             // Now add the percentiles
             foreach (var subItem in item.Elements())

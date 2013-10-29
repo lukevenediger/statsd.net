@@ -19,6 +19,7 @@ namespace statsd.net.Framework
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       string rootNamespace, 
       IIntervalService intervalService,
+      bool calculateSumSquares,
       ILog log,
       int maxItemsPerBucket = 1000)
     {
@@ -50,7 +51,7 @@ namespace statsd.net.Framework
             return;
           }
 
-          var latencyBucket = new LatencyBucket(latencies.ToArray(), e.Epoch, ns);
+          var latencyBucket = new LatencyBucket(latencies.ToArray(), e.Epoch, ns, calculateSumSquares);
           latencies.Clear();
           target.Post(latencyBucket);
         };

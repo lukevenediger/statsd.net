@@ -17,6 +17,7 @@ namespace statsd.net.shared.Services
   {
     void LogCount(string name, int quantity = 1);
     void LogGauge(string name, int value);
+    bool HideSystemStats { get; set; }
   }
 
   /// <summary>
@@ -27,8 +28,9 @@ namespace statsd.net.shared.Services
     private string _prefix;
     private ITargetBlock<Bucket> _target;
     private ConcurrentDictionary<string, int> _metrics;
+    public bool HideSystemStats { get; set; }
 
-    public SystemMetricsService(string serviceName, string prefix = null, IIntervalService intervalService = null)
+    public SystemMetricsService(string serviceName, string prefix = null, IIntervalService intervalService = null, bool hideSystemStats = false)
     {
       if (intervalService == null)
       {
@@ -36,6 +38,7 @@ namespace statsd.net.shared.Services
       }
       _prefix = serviceName + "." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
       _metrics = new ConcurrentDictionary<string, int>();
+      HideSystemStats = hideSystemStats;
       intervalService.Elapsed += SendMetrics;
       intervalService.Start();
    }
@@ -69,7 +72,10 @@ namespace statsd.net.shared.Services
 
       var bucket = new CounterBucket(_metrics.ToArray(), args.Epoch, _prefix);
       _metrics.Clear();
-      _target.Post(bucket);
+      if ( !HideSystemStats )
+      {
+        _target.Post( bucket );
+      }
     }
   }
 }

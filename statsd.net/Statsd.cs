@@ -96,6 +96,7 @@ namespace statsd.net
     {
       _log.Info("statsd.net loading config.");
       var systemMetrics = SuperCheapIOC.Resolve<ISystemMetricsService>();
+      systemMetrics.HideSystemStats = config.HideSystemStats;
 
       LoadBackends(config, systemMetrics);
 
@@ -143,7 +144,8 @@ namespace statsd.net
             AddAggregator(MessageType.Timing,
               TimedLatencyAggregatorBlockFactory.CreateBlock(messageBroadcaster, 
                 timer.Namespace, 
-                intervalService, 
+                intervalService,
+                timer.CalculateSumSquares,
                 _log)
             );
             // Add Percentiles
@@ -161,6 +163,9 @@ namespace statsd.net
             break;
         }
       }
+      // Add the Raw (pass-through) aggregator
+      AddAggregator(MessageType.Raw,
+        PassThroughBlockFactory.CreateBlock(messageBroadcaster, intervalService));
     }
 
     private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
@@ -189,6 +194,11 @@ namespace statsd.net
             config.Name,
             systemMetrics,
             batchSize: sqlConfig.WriteBatchSize));
+        }
+        else if ( backendConfig is StatsdBackendConfiguration )
+        {
+          var statsdConfig = backendConfig as StatsdBackendConfiguration;
+          AddBackend( new StatsdnetBackend( statsdConfig.Host, statsdConfig.Port, systemMetrics ) );
         }
       }
     }

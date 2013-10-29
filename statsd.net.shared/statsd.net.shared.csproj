@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Backends\IBackend.cs" />
     <Compile Include="BetterExpando.cs" />
+    <Compile Include="Encryption\SimplerAES.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Factories\MessageParserBlockFactory.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
@@ -75,7 +76,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\IntervalService.cs" />
     <Compile Include="Services\PercentileCalculator.cs" />
-    <Compile Include="Services\RelayMetricsService.cs" />
     <Compile Include="Services\SystemInfoService.cs" />
     <Compile Include="Services\SystemMetricsService.cs" />
     <Compile Include="Structures\Bucket.cs" />

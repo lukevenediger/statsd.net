@@ -38,6 +38,7 @@ namespace statsd.net_Tests
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
         _intervalService,
+        true,
         _log.Object);
       var pulseDate = DateTime.Now;
 
@@ -63,6 +64,7 @@ namespace statsd.net_Tests
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
         _intervalService,
+        true,
         _log.Object);
       var pulseDate = DateTime.Now;
 
@@ -84,6 +86,7 @@ namespace statsd.net_Tests
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
         _intervalService,
+        true,
         _log.Object);
       var pulseDate = DateTime.Now;
 
@@ -116,6 +119,7 @@ namespace statsd.net_Tests
       _block = TimedLatencyAggregatorBlockFactory.CreateBlock(_outputBuffer,
         String.Empty,
         _intervalService,
+        true,
         _log.Object);
       var pulseDate = DateTime.Now;
 

@@ -43,10 +43,6 @@
     <Reference Include="RestSharp">
       <HintPath>..\packages\RestSharp.104.1\lib\net4\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="StatsdClient, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\StatsdCsharpClient.1.2.0.0\lib\net45\StatsdClient.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
@@ -98,6 +94,7 @@
     <Compile Include="Framework\StatsdMessageRouterBlock.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="statsdnet-relay.config" />
     <None Include="statsdnet.config" />
     <None Include="statsdnet.Graphite.toml" />
     <None Include="statsdnet.Librato.toml" />
@@ -127,6 +124,10 @@
     <None Include="statsdnet.toml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\statsd-csharp-client\StatsdClient\StatsdClient.csproj">
+      <Project>{d9c7b372-074b-4649-b45e-01fe10724af9}</Project>
+      <Name>StatsdClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
       <Project>{be150548-d5eb-4289-8706-3ea475175592}</Project>
       <Name>statsd.net.shared</Name>

@@ -50,5 +50,24 @@ namespace statsd.net.shared.Structures
         Percentile,
         out percentileValue);
     }
+
+    public override string ToString ()
+    {
+      var graphiteLines = new List<string>();
+      int percentileValue;
+      foreach (var measurements in Timings)
+      {
+        if (TryComputePercentile(measurements, out percentileValue))
+        {
+          graphiteLines.Add(
+            new GraphiteLine(
+              RootNamespace + measurements.Key + PercentileName,
+              percentileValue,
+              Epoch ).ToString()
+              );
+        }
+      }
+      return String.Join(Environment.NewLine, graphiteLines.ToArray());
+    }
   }
 }

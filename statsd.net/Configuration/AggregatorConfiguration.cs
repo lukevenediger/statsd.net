@@ -46,11 +46,13 @@ namespace statsd.net.Configuration
     private List<PercentileConfig> _percentiles;
 
     public string Namespace { get; set; }
+    public bool CalculateSumSquares { get; set; }
     public IReadOnlyList<PercentileConfig> Percentiles { get { return _percentiles; } }
 
-    public TimersAggregationConfig(string ns)
+    public TimersAggregationConfig(string ns, bool calculateSumSquares)
     {
       Namespace = ns;
+      CalculateSumSquares = calculateSumSquares;
       _percentiles = new List<PercentileConfig>();
     }
 

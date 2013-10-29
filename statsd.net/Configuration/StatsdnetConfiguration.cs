@@ -9,6 +9,7 @@ namespace statsd.net.Configuration
   public class StatsdnetConfiguration
   {
     public string Name { get; set; }
+    public bool HideSystemStats { get; set; }
     public TimeSpan FlushInterval { get; set; }
     public List<ListenerConfiguration> Listeners { get; private set; }
     public List<BackendConfiguration> Backends { get; private set; }

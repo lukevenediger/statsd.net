@@ -61,6 +61,10 @@ namespace statsd.net.shared.Listeners
           while (!_token.IsCancellationRequested)
           {
             var byteCount = networkStream.Read(buffer, 0, buffer.Length);
+            if ( byteCount == 0 )
+            {
+              return;
+            }
             _systemMetrics.LogCount("tcp.bytes", byteCount);
             var lines = Encoding.UTF8.GetString(buffer, 0, byteCount).Replace("\r", "").Split('\n');
             // Post what we have
