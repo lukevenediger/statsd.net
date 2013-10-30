@@ -99,12 +99,11 @@
     <Compile Include="Framework\StatsdMessageRouterBlock.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="statsdnet.config" />
     <None Include="statsdnet.config.librato" />
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
-    <None Include="statsdnet-relay.config" />
-    <None Include="statsdnet.config" />
-    <None Include="statsdnet.Graphite.toml" />
-    <None Include="statsdnet.Librato.toml" />
+    <None Include="statsdnet.config.relay" />
+    <None Include="statsdnet.config.everything" />
     <None Include="Documentation\guidance\logging-transactions.md" />
     <None Include="Documentation\guidance\metric-anti-patterns.md" />
     <None Include="Documentation\installation\service-installation-guide.md" />
@@ -127,7 +126,6 @@
     </None>
     <None Include="packages.config" />
     <None Include="readme.md" />
-    <None Include="statsdnet.toml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">

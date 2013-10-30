@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<statsdnet name="statsd">
+<statsdnet name="statsd" hideSystemStats="false">
     <listeners>
         <udp port="8000" />
         <tcp port="8001" />
@@ -26,7 +26,7 @@
                  countersAsGauges="true" />
         <sqlserver connectionString="server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
                    writeBatchSize="500" />
-        <graphite host="metricsas1" port="2003" />
-        <statsd host="windows" port="11002" />
+        <graphite host="localhost" port="2003" />
+        <statsd host="localhost" port="11002" />
     </backends>
 </statsdnet>
