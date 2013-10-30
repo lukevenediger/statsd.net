@@ -65,7 +65,6 @@ namespace statsd.net.Configuration
             backend = new LibratoBackendConfiguration(
                 email: item.Attribute("email").Value,
                 token: item.Attribute("token").Value,
-                source: item.Attribute("source").Value,
                 numRetries: item.ToInt("numRetries"),
                 retryDelay: ConvertToTimespan(item.Attribute("retryDelay").Value),
                 postTimeout: ConvertToTimespan(item.Attribute("postTimeout").Value),

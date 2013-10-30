@@ -41,18 +41,16 @@ namespace statsd.net.Configuration
   {
     public string Email { get; set; }
     public string Token { get; set; }
-    public string Source { get; set; }
     public TimeSpan RetryDelay { get; set; }
     public TimeSpan PostTimeout { get; set; }
     public int MaxBatchSize { get; set; }
     public bool CountersAsGauges { get; set; }
     public int NumRetries { get; set; } 
 
-    public LibratoBackendConfiguration(string email, string token, string source, TimeSpan retryDelay, int numRetries, TimeSpan postTimeout, int maxBatchSize, bool countersAsGauges)
+    public LibratoBackendConfiguration(string email, string token, TimeSpan retryDelay, int numRetries, TimeSpan postTimeout, int maxBatchSize, bool countersAsGauges)
     {
       this.Email = email;
       this.Token = token;
-      this.Source = source;
       this.RetryDelay = retryDelay;
       this.NumRetries = numRetries;
       this.PostTimeout = postTimeout;

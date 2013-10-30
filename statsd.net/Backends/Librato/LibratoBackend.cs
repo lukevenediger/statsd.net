@@ -47,6 +47,7 @@ namespace statsd.net.Backends.Librato
     private RetryPolicy<LibratoErrorDetectionStrategy> _retryPolicy;
     private Incremental _retryStrategy;
     private LibratoBackendConfiguration _config;
+    private string _source;
 
     public int OutputCount
     {
@@ -59,7 +60,7 @@ namespace statsd.net.Backends.Librato
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
       _config = configuration;
-      _config.Source = source;
+      _source = source;
       _serviceVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
       
       _preprocessorBlock = new ActionBlock<Bucket>(bucket => ProcessBucket(bucket), Utility.UnboundedExecution());
@@ -217,7 +218,7 @@ namespace statsd.net.Backends.Librato
       payload.gauges = gauges;
       payload.counters = counts;
       payload.measure_time = epochGroup.Key;
-      payload.source = _config.Source;
+      payload.source = _source;
       return payload;
     }
 

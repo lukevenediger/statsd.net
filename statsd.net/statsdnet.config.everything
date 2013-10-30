@@ -2,6 +2,8 @@
 <statsdnet name="statsd">
     <listeners>
         <udp port="8000" />
+        <tcp port="8001" />
+        <http port="8002" />
     </listeners>
     <aggregation flushInterval="1m">
         <gauges namespace="test.gauges" removeZeroGauges="true" />
@@ -14,7 +16,17 @@
         </timers>
     </aggregation>
     <backends>
-        <graphite host="metricsas1" port="2003" />
         <console />
+        <librato email="your-email-here"
+                 token="your-api-token-here"
+                 numRetries="3"
+                 retryDelay="5s"
+                 postTimeout="30s"
+                 maxBatchSize="10"
+                 countersAsGauges="true" />
+        <sqlserver connectionString="server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
+                   writeBatchSize="500" />
+        <graphite host="metricsas1" port="2003" />
+        <statsd host="windows" port="11002" />
     </backends>
 </statsdnet>

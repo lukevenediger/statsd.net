@@ -34,14 +34,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
+    <Reference Include="log4net, Version=1.2.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\log4net.2.0.2\lib\net40-full\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Practices.TransientFaultHandling.Core">
       <HintPath>..\packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4\Microsoft.Practices.TransientFaultHandling.Core.dll</HintPath>
     </Reference>
-    <Reference Include="RestSharp">
-      <HintPath>..\packages\RestSharp.104.1\lib\net4\RestSharp.dll</HintPath>
+    <Reference Include="RestSharp, Version=104.3.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\RestSharp.104.3.3\lib\net4\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="StatsdClient">
+      <HintPath>..\packages\StatsdCsharpClient.1.2.1.0\lib\net45\StatsdClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -94,6 +99,8 @@
     <Compile Include="Framework\StatsdMessageRouterBlock.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="statsdnet.config.librato" />
+    <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
     <None Include="statsdnet-relay.config" />
     <None Include="statsdnet.config" />
     <None Include="statsdnet.Graphite.toml" />
@@ -118,7 +125,6 @@
       <IsTransformFile>True</IsTransformFile>
       <SubType>Designer</SubType>
     </None>
-    <None Include="packageRestore.proj" />
     <None Include="packages.config" />
     <None Include="readme.md" />
     <None Include="statsdnet.toml" />
@@ -142,8 +148,9 @@
     <PostBuildEvent>$(SolutionDir)packages\ilmerge.2.13.0307\ILMerge.exe /target:exe /out:$(TargetDir)\statsdnet.exe /v4 $(TargetDir)statsd.net.exe $(TargetDir)log4net.dll $(TargetDir)Microsoft.Practices.TransientFaultHandling.Core.dll $(TargetDir)\statsd.net.shared.dll $(TargetDir)\System.Threading.Tasks.Dataflow.dll $(TargetDir)\Kayak.dll $(TargetDir)\StatsdClient.dll</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Label="SlowCheetah">
+    <SlowCheetahToolsPath>$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\..\packages\SlowCheetah.2.5.10.2\tools\))</SlowCheetahToolsPath>
     <SlowCheetah_EnableImportFromNuGet Condition=" '$(SC_EnableImportFromNuGet)'=='' ">true</SlowCheetah_EnableImportFromNuGet>
-    <SlowCheetah_NuGetImportPath Condition=" '$(SlowCheetah_NuGetImportPath)'=='' ">$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\..\packages\SlowCheetah.2.5.8\tools\SlowCheetah.Transforms.targets ))</SlowCheetah_NuGetImportPath>
+    <SlowCheetah_NuGetImportPath Condition=" '$(SlowCheetah_NuGetImportPath)'=='' ">$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\Properties\SlowCheetah\SlowCheetah.Transforms.targets ))</SlowCheetah_NuGetImportPath>
     <SlowCheetahTargets Condition=" '$(SlowCheetah_EnableImportFromNuGet)'=='true' and Exists('$(SlowCheetah_NuGetImportPath)') ">$(SlowCheetah_NuGetImportPath)</SlowCheetahTargets>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

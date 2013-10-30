@@ -15,6 +15,7 @@
     </aggregation>
     <backends>
         <console />
+        <!-- The target statsd.net instance must be listening on TCP:12001 -->
         <statsd host="localhost" port="12001" />
     </backends>
 </statsdnet>

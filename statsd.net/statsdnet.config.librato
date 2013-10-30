@@ -14,7 +14,13 @@
         </timers>
     </aggregation>
     <backends>
-        <graphite host="metricsas1" port="2003" />
         <console />
+        <librato email="your-email-here"
+                 token="your-api-token-here"
+                 numRetries="3"
+                 retryDelay="5s"
+                 postTimeout="30s"
+                 maxBatchSize="10"
+                 countersAsGauges="true" />
     </backends>
 </statsdnet>
