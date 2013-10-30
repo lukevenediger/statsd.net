@@ -1,1 +1,0 @@
-﻿## Statsd-relay configuration file
