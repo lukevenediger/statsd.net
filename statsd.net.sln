@@ -28,8 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{189634
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "statsd.net.shared", "statsd.net.shared\statsd.net.shared.csproj", "{BE150548-D5EB-4289-8706-3EA475175592}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsdClient", "..\statsd-csharp-client\StatsdClient\StatsdClient.csproj", "{D9C7B372-074B-4649-B45E-01FE10724AF9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,10 +50,6 @@ Global
 		{BE150548-D5EB-4289-8706-3EA475175592}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE150548-D5EB-4289-8706-3EA475175592}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE150548-D5EB-4289-8706-3EA475175592}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D9C7B372-074B-4649-B45E-01FE10724AF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D9C7B372-074B-4649-B45E-01FE10724AF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D9C7B372-074B-4649-B45E-01FE10724AF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D9C7B372-074B-4649-B45E-01FE10724AF9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

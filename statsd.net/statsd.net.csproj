@@ -124,10 +124,6 @@
     <None Include="statsdnet.toml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\statsd-csharp-client\StatsdClient\StatsdClient.csproj">
-      <Project>{d9c7b372-074b-4649-b45e-01fe10724af9}</Project>
-      <Name>StatsdClient</Name>
-    </ProjectReference>
     <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
       <Project>{be150548-d5eb-4289-8706-3ea475175592}</Project>
       <Name>statsd.net.shared</Name>
@@ -143,7 +139,7 @@
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="$(SlowCheetahTargets)" Condition="Exists('$(SlowCheetahTargets)')" Label="SlowCheetah" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)packages\ilmerge.2.13.0307\ILMerge.exe /target:exe /out:$(TargetDir)\statsdnet.exe /v4 $(TargetDir)statsd.net.exe $(TargetDir)log4net.dll $(TargetDir)Microsoft.Practices.TransientFaultHandling.Core.dll $(TargetDir)\statsd.net.shared.dll $(TargetDir)\System.Threading.Tasks.Dataflow.dll $(TargetDir)\Kayak.dll</PostBuildEvent>
+    <PostBuildEvent>$(SolutionDir)packages\ilmerge.2.13.0307\ILMerge.exe /target:exe /out:$(TargetDir)\statsdnet.exe /v4 $(TargetDir)statsd.net.exe $(TargetDir)log4net.dll $(TargetDir)Microsoft.Practices.TransientFaultHandling.Core.dll $(TargetDir)\statsd.net.shared.dll $(TargetDir)\System.Threading.Tasks.Dataflow.dll $(TargetDir)\Kayak.dll $(TargetDir)\StatsdClient.dll</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Label="SlowCheetah">
     <SlowCheetah_EnableImportFromNuGet Condition=" '$(SC_EnableImportFromNuGet)'=='' ">true</SlowCheetah_EnableImportFromNuGet>
