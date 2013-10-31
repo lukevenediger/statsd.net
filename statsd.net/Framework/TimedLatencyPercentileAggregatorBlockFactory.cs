@@ -54,7 +54,7 @@ namespace statsd.net.Framework
           }
           var bucket = new PercentileBucket(latencies.ToArray(),
             e.Epoch,
-            rootNamespace,
+            ns,
             percentileName,
             percentile);
           latencies.Clear();
