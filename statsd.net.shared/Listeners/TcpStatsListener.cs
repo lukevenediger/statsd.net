@@ -57,6 +57,8 @@ namespace statsd.net.shared.Listeners
         _systemMetrics.LogCount("tcp.connection.open");
         using (var networkStream = tcpClient.GetStream())
         {
+          // Set an aggressive read timeout
+          networkStream.ReadTimeout = 1000; /* one second */
           var buffer = new byte[4096];
           while (!_token.IsCancellationRequested)
           {
@@ -65,6 +67,7 @@ namespace statsd.net.shared.Listeners
             {
               return;
             }
+            _systemMetrics.LogCount("tcp.reads");
             _systemMetrics.LogCount("tcp.bytes", byteCount);
             var lines = Encoding.UTF8.GetString(buffer, 0, byteCount).Replace("\r", "").Split('\n');
             // Post what we have
@@ -78,19 +81,30 @@ namespace statsd.net.shared.Listeners
           }
         }
       }
-      catch (SocketException)
+      catch (SocketException se)
       {
         // oops, we're done  
+        _systemMetrics.LogCount("tcp.error.SocketException." + se.SocketErrorCode.ToString());
       }
       catch (IOException)
       {
         // Not much we can do here.
+        _systemMetrics.LogCount("tcp.error.IOException");
       }
       finally
       {
-        tcpClient.Close();
+        try
+        {
+          tcpClient.Close();
+        }
+        catch
+        {
+          // Do nothing but log that this happened
+          _systemMetrics.LogCount("tcp.error.closeThrewException");
+        }
+
         _systemMetrics.LogCount("tcp.connection.closed");
-        Interlocked.Increment(ref _activeConnections);
+        Interlocked.Decrement(ref _activeConnections);
         _systemMetrics.LogGauge("tcp.activeConnections", _activeConnections);
       }
     }

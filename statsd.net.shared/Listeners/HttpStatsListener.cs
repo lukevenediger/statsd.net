@@ -82,6 +82,29 @@ namespace statsd.net.shared.Listeners
       {
         if (head.Method.ToUpperInvariant() == "POST")
         {
+          ProcessPOSTRequest(body, response);
+        }
+        else if (head.Method.ToUpperInvariant() == "GET" && head.Uri == "/crossdomain.xml")
+        {
+          ProcessCrossDomainRequest(body, response);
+        }
+        else if (head.Method.ToUpperInvariant() == "GET" && head.QueryString.Contains("metrics"))
+        {
+          ProcessGETRequest(body, head, response);
+        }
+        else if (head.Method.ToUpperInvariant() == "GET" && head.Uri == "/")
+        {
+          ProcessLoadBalancerRequest(body, response);
+        }
+        else
+        {
+          ProcessFileNotFound(body, response);
+        }
+      }
+
+
+      private void ProcessPOSTRequest(IDataProducer body, IHttpResponseDelegate response)
+      {
           body.Connect(new BufferedConsumer(
             (payload) =>
             {
@@ -106,61 +129,70 @@ namespace statsd.net.shared.Listeners
             {
               Respond(response, "500 Internal server error");
             }));
-        }
-        else if (head.Method.ToUpperInvariant() == "GET" && head.Uri == "/crossdomain.xml")
+      }
+
+      private void ProcessCrossDomainRequest(IDataProducer body, IHttpResponseDelegate response)
+      {
+        var responseHead = new HttpResponseHead()
         {
-          var responseHead = new HttpResponseHead()
-          {
-            Status = "200 OK",
-            Headers = new Dictionary<string, string>
+          Status = "200 OK",
+          Headers = new Dictionary<string, string>
             {
               { "Content-Type", "application-xml" },
               { "Content-Length", Encoding.UTF8.GetByteCount(FLASH_CROSSDOMAIN).ToString() },
               { "Access-Control-Allow-Origin", "*"}
             }
-          };
-          response.OnResponse(responseHead, new BufferedProducer(FLASH_CROSSDOMAIN));
-        }
-        else if (head.Method.ToUpperInvariant() == "GET" && head.QueryString.Contains("metrics"))
+        };
+        response.OnResponse(responseHead, new BufferedProducer(FLASH_CROSSDOMAIN));
+      }
+
+      private void ProcessGETRequest(IDataProducer body, HttpRequestHead head, IHttpResponseDelegate response)
+      {
+        var qs = head.QueryString.Split(new string[] { "&" }, StringSplitOptions.RemoveEmptyEntries)
+          .Select(p => p.Split(new string[] { "=" }, StringSplitOptions.None))
+          .ToDictionary(p => p[0], p => HttpUtility.UrlDecode(p[1]));
+
+        string[] lines = qs["metrics"].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+        for (int index = 0; index < lines.Length; index++)
         {
-          var qs = head.QueryString.Split(new string[] { "&" }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(p => p.Split(new string[] { "=" }, StringSplitOptions.None))
-            .ToDictionary(p => p[0], p => HttpUtility.UrlDecode(p[1]));
+          _parent._target.Post(lines[index]);
+        }
+        _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
+        _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(qs["metrics"]));
 
-          string[] lines = qs["metrics"].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-          for (int index = 0; index < lines.Length; index++)
-          {
-            _parent._target.Post(lines[index]);
-          }
-          _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
-          _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(qs["metrics"]));
-
-          var responseHead = new HttpResponseHead()
-          {
-            Status = "200 OK",
-            Headers = new Dictionary<string, string>
+        var responseHead = new HttpResponseHead()
+        {
+          Status = "200 OK",
+          Headers = new Dictionary<string, string>
             {
               { "Content-Type", "application-xml" },
               { "Content-Length", "0" },
               { "Access-Control-Allow-Origin", "*"}
             }
-          };
-          response.OnResponse(responseHead, new EmptyResponse());
-        }
-        else
+        };
+        response.OnResponse(responseHead, new EmptyResponse());
+      }
+
+      private void ProcessLoadBalancerRequest(IDataProducer body, IHttpResponseDelegate response)
+      {
+        _parent._systemMetrics.LogCount("listeners.http.loadbalancer");
+        Respond(response, "200 OK");
+      }
+      
+      private void ProcessFileNotFound(IDataProducer body, IHttpResponseDelegate response)
+      {
+        _parent._systemMetrics.LogCount("listeners.http.404");
+        var headers = new HttpResponseHead()
         {
-          var headers = new HttpResponseHead()
-          {
-            Status = "404 Not Found",
-            Headers = new Dictionary<string, string>
+          Status = "404 Not Found",
+          Headers = new Dictionary<string, string>
             {
               { "Content-Type", "text/plain" },
               { "Content-Length", Encoding.UTF8.GetByteCount("not found").ToString() },
               { "Access-Control-Allow-Origin", "*"}
             }
-          };
-          response.OnResponse(headers, new BufferedProducer("not found"));
-        }
+        };
+        response.OnResponse(headers, new BufferedProducer("not found"));
       }
 
       private void Respond(IHttpResponseDelegate response, string status)

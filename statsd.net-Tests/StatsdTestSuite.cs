@@ -1,8 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using statsd.net;
 using statsd.net.Framework;
 using statsd.net.shared;
 using statsd.net.shared.Messages;
+using statsd.net.shared.Services;
 using statsd.net_Tests.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -21,6 +23,7 @@ namespace statsd.net_Tests
     protected StatsdClient.Statsd _client;
     protected ControllableIntervalService _intervalService;
     protected OutputBufferBlock<GraphiteLine> _outputBlock;
+    protected ISystemMetricsService _systemMetrics;
 
     [TestInitialize]
     public void Setup()
@@ -33,7 +36,8 @@ namespace statsd.net_Tests
       _outputBlock = new OutputBufferBlock<GraphiteLine>();
       _client = new StatsdClient.Statsd("", 0, outputChannel : new InAppListenerOutputChannel(_listener));
       _statsd.AddListener(_listener);
-      _statsd.AddBackend(_backend);
+      _statsd.AddBackend(_backend, _systemMetrics, "testing");
+      _systemMetrics = new Mock<ISystemMetricsService>().Object;
     }
 
     [TestCleanup]
