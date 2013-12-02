@@ -18,6 +18,16 @@ namespace statsd.net.shared.Structures
       Gauges = Gauges;
     }
 
+    public override GraphiteLine[] ToLines()
+    {
+      var lines = new List<GraphiteLine>();
+      foreach (var gauge in Gauges)
+      {
+        lines.Add(new GraphiteLine(RootNamespace + gauge.Key, gauge.Value, Epoch));
+      }
+      return lines.ToArray();
+    }
+
     public override void FeedTarget(ITargetBlock<GraphiteLine> target)
     {
       foreach (var gauge in Gauges)

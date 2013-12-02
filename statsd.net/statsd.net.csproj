@@ -75,7 +75,8 @@
     <Compile Include="Backends\Librato\LibratoMetric.cs" />
     <Compile Include="Backends\SqlServer\SqlServerBackend.cs" />
     <Compile Include="Backends\SqlServer\SqlServerErrorDetectionStrategy.cs" />
-    <Compile Include="Backends\StatsdnetBackend.cs" />
+    <Compile Include="Backends\Statsdnet\StatsdnetBackend.cs" />
+    <Compile Include="Backends\Statsdnet\StatsdnetForwardingClient.cs" />
     <Compile Include="Configuration\AggregatorConfiguration.cs" />
     <Compile Include="Configuration\BackendConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationFactory.cs" />
@@ -103,7 +104,9 @@
     <None Include="statsdnet.config.librato" />
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
     <None Include="statsdnet.config.relay" />
-    <None Include="statsdnet.config.everything" />
+    <None Include="statsdnet.config.everything">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Documentation\guidance\logging-transactions.md" />
     <None Include="Documentation\guidance\metric-anti-patterns.md" />
     <None Include="Documentation\installation\service-installation-guide.md" />

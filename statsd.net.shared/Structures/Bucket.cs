@@ -25,6 +25,8 @@ namespace statsd.net.shared.Structures
 
     public abstract void FeedTarget(ITargetBlock<GraphiteLine> target);
 
+    public abstract GraphiteLine[] ToLines();
+
     public static Bucket Clone(Bucket bucket)
     {
       // Don't clone the bucket, just send back this reference since nobody

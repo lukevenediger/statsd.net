@@ -55,12 +55,15 @@
   <ItemGroup>
     <Compile Include="Backends\IBackend.cs" />
     <Compile Include="BetterExpando.cs" />
+    <Compile Include="Blocks\TimedBufferBlock.cs" />
     <Compile Include="Encryption\SimplerAES.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Factories\MessageParserBlockFactory.cs" />
+    <Compile Include="Structures\DecoderBlockPacket.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
     <Compile Include="Listeners\IListener.cs" />
     <Compile Include="Listeners\IMessageProcessor.cs" />
+    <Compile Include="Listeners\StatsdnetTcpListener.cs" />
     <Compile Include="Listeners\TcpStatsListener.cs" />
     <Compile Include="Listeners\UdpStatsListener.cs" />
     <Compile Include="LoggingBootstrap.cs" />

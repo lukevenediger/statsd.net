@@ -63,11 +63,13 @@ namespace statsd.net.Configuration
   {
     public string Host { get; set; }
     public int Port { get; set; }
+    public TimeSpan FlushInterval { get; set; }
 
-    public StatsdBackendConfiguration(string host, int port)
+    public StatsdBackendConfiguration(string host, int port, TimeSpan? flushInterval)
     {
       Host = host;
       Port = port;
+      FlushInterval = flushInterval ?? new TimeSpan(0, 0, 5);
     }
   }
 

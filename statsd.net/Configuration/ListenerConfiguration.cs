@@ -38,4 +38,13 @@ namespace statsd.net.Configuration
       HeaderKey = headerKey;
     }
   }
+
+  public class StatsdnetListenerConfiguration : ListenerConfiguration
+  {
+    public int Port { get; set; }
+    public StatsdnetListenerConfiguration(int port)
+    {
+      Port = port;
+    }
+  }
 }

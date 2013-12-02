@@ -19,6 +19,7 @@ using statsd.net.shared.Factories;
 using statsd.net.shared.Structures;
 using statsd.net.Backends.Librato;
 using statsd.net.Configuration;
+using statsd.net.Backends.Statsdnet;
 
 namespace statsd.net
 {
@@ -226,7 +227,7 @@ namespace statsd.net
         {
           var statsdConfig = backendConfig as StatsdBackendConfiguration;
           AddBackend(
-            new StatsdnetBackend(statsdConfig.Host, statsdConfig.Port, systemMetrics),
+            new StatsdnetBackend(statsdConfig.Host, statsdConfig.Port, statsdConfig.FlushInterval, systemMetrics),
             systemMetrics,
             "statsd"
           );
@@ -256,6 +257,12 @@ namespace statsd.net
           var httpConfig = listenerConfig as HTTPListenerConfiguration;
           AddListener(new HttpStatsListener(httpConfig.Port, systemMetrics));
           systemMetrics.LogCount("startup.listener.http." + httpConfig.Port);
+        }
+        else if (listenerConfig is StatsdnetListenerConfiguration)
+        {
+          var statsdnetConfig = listenerConfig as StatsdnetListenerConfiguration;
+          AddListener(new StatsdnetTcpListener(statsdnetConfig.Port, systemMetrics));
+          systemMetrics.LogCount("startup.listener.statsdnet." + statsdnetConfig.Port);
         }
       }
     }

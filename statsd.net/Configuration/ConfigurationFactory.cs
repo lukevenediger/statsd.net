@@ -40,6 +40,9 @@ namespace statsd.net.Configuration
               ( ( HTTPListenerConfiguration )listener ).HeaderKey = item.Attribute( "headerKey" ).Value;
             }
             break;
+          case "statsdnet":
+            listener = new StatsdnetListenerConfiguration(item.ToInt("port"));
+            break;
           default:
             throw new ArgumentOutOfRangeException("Not sure what this listener is: " + item.Name);
         }
@@ -72,8 +75,10 @@ namespace statsd.net.Configuration
                 countersAsGauges: item.ToBoolean("countersAsGauges")
               );
             break;
-          case "statsd":
-            backend = new StatsdBackendConfiguration(item.Attribute("host").Value, item.ToInt("port"));
+          case "statsdnet":
+            backend = new StatsdBackendConfiguration(item.Attribute("host").Value, 
+              item.ToInt("port"),
+              ConvertToTimespan(item.Attribute("flushInterval").Value));
             break;
         }
         config.Backends.Add(backend);

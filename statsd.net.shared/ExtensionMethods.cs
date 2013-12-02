@@ -1,7 +1,10 @@
 ﻿using log4net;
 using statsd.net.shared.Messages;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -86,4 +89,44 @@ public static class ExtensionMethods
   public static bool ToBoolean(this XElement element, string attributeName)
   {
     return Boolean.Parse(element.Attribute(attributeName).Value);
-  }}
+  }
+
+  public static byte[] Compress(this byte[] data)
+  {
+    using (var output = new MemoryStream())
+    {
+      using (var zip = new GZipStream(output, CompressionMode.Compress))
+      {
+        zip.Write(data, 0, data.Length);
+      }
+      return output.ToArray();
+    }
+  }
+
+  public static byte[] Decompress(this byte[] data)
+  {
+    using (var output = new MemoryStream())
+    {
+      using (var input = new MemoryStream(data))
+      {
+        using (var unzip = new GZipStream(input, CompressionMode.Decompress))
+        {
+          unzip.CopyTo(output);
+        }
+      }
+      return output.ToArray();
+    }
+  }
+
+  public static T[] Empty<T>(this ConcurrentBag<T> bag)
+  {
+    var numItems = bag.Count;
+    var items = new List<T>(numItems);
+    T item;
+    while (bag.TryTake(out item))
+    {
+      items.Add(item);
+    }
+    return items.ToArray();
+  }
+}

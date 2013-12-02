@@ -18,15 +18,33 @@ namespace statsd.net.shared.Structures
       _rawLines = rawLines;
     }
 
-    public override void FeedTarget(ITargetBlock<GraphiteLine> target)
+    public override GraphiteLine[] ToLines()
     {
+      var lines = new List<GraphiteLine>();
       foreach (var line in _rawLines)
       {
         for (int index = 0; index < _rawLines.Length; index++)
         {
-          target.Post(new GraphiteLine(line.Name, line.Value, line.Timestamp ?? Epoch));
+          lines.Add(new GraphiteLine(line.Name, line.Value, line.Timestamp ?? Epoch));
         }
       }
+      return lines.ToArray();
+    }
+
+    public override void FeedTarget(ITargetBlock<GraphiteLine> target)
+    {
+      foreach (var line in _rawLines)
+      {
+        target.Post(new GraphiteLine(line.Name, line.Value, line.Timestamp ?? Epoch));
+      }
+    }
+
+    public override string ToString()
+    {
+      var lines = _rawLines.Select(line =>
+        new GraphiteLine(line.Name, line.Value, line.Timestamp ?? Epoch).ToString())
+        .ToArray();
+      return String.Join(Environment.NewLine, lines);
     }
   }
 }

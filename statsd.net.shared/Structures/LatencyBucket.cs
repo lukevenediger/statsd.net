@@ -23,6 +23,16 @@ namespace statsd.net.shared.Structures
       _calculateSumSquares = calculateSumSquares;
     }
 
+    public override GraphiteLine[] ToLines()
+    {
+      var lines = new List<GraphiteLine>();
+      foreach (var latency in Latencies)
+      {
+        lines.AddRange(MakeGraphiteLines(latency));
+      }
+      return lines.ToArray();
+    }
+
     public override void FeedTarget(ITargetBlock<GraphiteLine> target)
     {
       foreach (var latency in Latencies)

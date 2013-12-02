@@ -54,7 +54,10 @@ namespace statsd.net.Framework
                 zeroGauges += 1;
               }
             }
-            log.InfoFormat("Removed {0} empty gauges.", zeroGauges);
+            if (zeroGauges > 0)
+            {
+              log.InfoFormat("Removed {0} empty gauges.", zeroGauges);
+            }
           }
           gauges.Clear();
         };

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<statsdnet name="statsd">
+<statsdnet name="statsdnet">
     <listeners>
         <udp port="8000" />
     </listeners>

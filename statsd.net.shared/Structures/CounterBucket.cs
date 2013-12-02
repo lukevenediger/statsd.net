@@ -15,6 +15,16 @@ namespace statsd.net.shared.Structures
     {
     }
 
+    public override GraphiteLine[] ToLines()
+    {
+      var lines = new List<GraphiteLine>();
+      foreach (var count in Items)
+      {
+        lines.Add(new GraphiteLine(RootNamespace + count.Key, count.Value, Epoch));
+      }
+      return lines.ToArray();
+    }
+
     public override void FeedTarget(ITargetBlock<GraphiteLine> target)
     {
       foreach (var count in Items)

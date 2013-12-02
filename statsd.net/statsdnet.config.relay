@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<statsdnet name="statsd" hideSystemStats="true">
+<statsdnet name="statsdnet" hideSystemStats="true">
     <listeners>
         <udp port="11000" />
     </listeners>
@@ -15,7 +15,7 @@
     </aggregation>
     <backends>
         <console />
-        <!-- The target statsd.net instance must be listening on TCP:12001 -->
+        <!-- The target statsd.net instance must have a <statsdnet> listener configured on port 12001 -->
         <statsd host="localhost" port="12001" />
     </backends>
 </statsdnet>

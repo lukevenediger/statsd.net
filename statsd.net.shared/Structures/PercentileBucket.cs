@@ -27,6 +27,25 @@ namespace statsd.net.shared.Structures
       Percentile = percentile;
     }
 
+    public override GraphiteLine[] ToLines()
+    {
+      var lines = new List<GraphiteLine>();
+      int percentileValue;
+      foreach (var measurements in Timings)
+      {
+        if (TryComputePercentile(measurements, out percentileValue))
+        {
+          lines.Add(
+            new GraphiteLine(
+              RootNamespace + measurements.Key + PercentileName, 
+              percentileValue, 
+              Epoch)
+          );
+        }
+      }
+      return lines.ToArray();
+    }
+
     public override void FeedTarget(ITargetBlock<GraphiteLine> target)
     {
       int percentileValue;

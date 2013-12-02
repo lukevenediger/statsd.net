@@ -20,6 +20,19 @@ namespace statsd.net.shared.Structures
       Sets = sets;
     }
 
+    public override GraphiteLine[] ToLines()
+    {
+      var lines = new List<GraphiteLine>();
+      foreach (var set in Sets)
+      {
+        foreach (var item in set.Value)
+        {
+          lines.Add(new GraphiteLine(RootNamespace + set.Key, 1, Epoch));
+        }
+      }
+      return lines.ToArray();
+    }
+
     public override void FeedTarget(ITargetBlock<GraphiteLine> target)
     {
       foreach (var set in Sets)
