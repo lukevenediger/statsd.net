@@ -21,10 +21,10 @@ namespace statsd.net.Framework
     public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<Bucket> target,
       IIntervalService intervalService)
     {
-      var rawLines = new ConcurrentBag<Raw>();
+      var rawLines = new ConcurrentStack<Raw>();
       var incoming = new ActionBlock<StatsdMessage>(p =>
         {
-          rawLines.Add(p as Raw);
+          rawLines.Push(p as Raw);
         },
         Utility.UnboundedExecution());
 
@@ -34,7 +34,9 @@ namespace statsd.net.Framework
           {
             return;
           }
-          var bucket = new RawBucket(rawLines.ToArray(), e.Epoch);
+          var lines = rawLines.ToArray();
+          rawLines.Clear();
+          var bucket = new RawBucket(lines, e.Epoch);
           target.Post(bucket);
         };
       return incoming;

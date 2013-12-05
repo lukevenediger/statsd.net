@@ -12,7 +12,7 @@ namespace statsd.net.shared.Blocks
 {
   public class TimedBufferBlock<T> : ITargetBlock<T>
   {
-    private ConcurrentBag<T> _buffer;
+    private ConcurrentStack<T> _buffer;
     private Action<T[]> _flushAction;
     private IIntervalService _intervalService;
     private Task _completionTask;
@@ -23,7 +23,7 @@ namespace statsd.net.shared.Blocks
       IIntervalService interval = null,
       CancellationToken? cancellationToken = null)
     {
-      _buffer = new ConcurrentBag<T>();
+      _buffer = new ConcurrentStack<T>();
          
       _completionTask = new Task(() =>
       {
@@ -44,13 +44,14 @@ namespace statsd.net.shared.Blocks
 
     private void Flush()
     {
-      var items = _buffer.Empty();
+      var items = _buffer.ToArray();
+      _buffer.Clear();
       _flushAction(items);
     }
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, T messageValue, ISourceBlock<T> source, bool consumeToAccept)
     {
-      _buffer.Add(messageValue);
+      _buffer.Push(messageValue);
       return DataflowMessageStatus.Accepted;
     }
 
