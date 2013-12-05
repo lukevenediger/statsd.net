@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Messages;
+﻿using log4net;
+using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
 using System;
@@ -26,12 +27,15 @@ namespace statsd.net.shared.Listeners
     private TcpListener _tcpListener;
     private int _activeConnections;
     private ActionBlock<DecoderBlockPacket> _decoderBlock;
+    private ILog _log;
 
     public bool IsListening { get; private set; }
 
     public StatsdnetTcpListener(int port, ISystemMetricsService systemMetrics)
     {
       _systemMetrics = systemMetrics;
+      _log = SuperCheapIOC.Resolve<ILog>();
+
       IsListening = false;
       _activeConnections = 0;
       _tcpListener = new TcpListener(IPAddress.Any, port);
@@ -88,15 +92,13 @@ namespace statsd.net.shared.Listeners
       {
         // oops, we're done  
         _systemMetrics.LogCount("listeners.statsdnet.error.SocketException." + se.SocketErrorCode.ToString());
-      }
-      catch (IOException io)
-      {
-        // Not much we can do here.
-        _systemMetrics.LogCount("listeners.statsdnet.error.IOException");
+        _log.Error(String.Format("Socket Error occurred while listening. Code: {0}", se.SocketErrorCode), se);
       }
       catch (Exception ex)
       {
-        var a = 1;
+        _systemMetrics.LogCount("listeners.statsdnet.error." + ex.GetType().Name);
+        _log.Error(String.Format("{0} Error occurred while listening: ", ex.GetType().Name, ex.Message),
+          ex);
       }
       finally
       {

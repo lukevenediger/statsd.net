@@ -1,4 +1,6 @@
-﻿using statsd.net.shared.Services;
+﻿using log4net;
+using statsd.net.shared;
+using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,14 +21,16 @@ namespace statsd.net.Backends.Statsdnet
     private int _port;
     private int _numRetries;
     private ISystemMetricsService _systemMetrics;
+    private ILog _log;
 
-    public StatsdnetForwardingClient(string host, int port, ISystemMetricsService systemMetrics, int numRetries = 3)
+    public StatsdnetForwardingClient(string host, int port, ISystemMetricsService systemMetrics, int numRetries = 1)
     {
       _host = host;
       _port = port;
       _systemMetrics = systemMetrics;
       _numRetries = numRetries;
       _client = new TcpClient();
+      _log = SuperCheapIOC.Resolve<ILog>();
     }
 
     public bool Send (byte[] data)
@@ -100,12 +104,22 @@ namespace statsd.net.Backends.Statsdnet
       catch (SocketException se)
       {
         _systemMetrics.LogCount("backends.statsdnet.error.SocketException." + se.SocketErrorCode.ToString());
+        _log.Error(String.Format("Socket Error occurred while listening. Code: {0}", se.SocketErrorCode), se);
         return handleRetry();
       }
-      catch (IOException)
+      catch (Exception ex)
       {
-        _systemMetrics.LogCount("backends.statsdnet.error.IOException");
-        return handleRetry();
+        _systemMetrics.LogCount("backends.statsdnet.error." + ex.GetType().Name);
+        _log.Error(String.Format("{0} Error occurred while listening: ", ex.GetType().Name, ex.Message),
+          ex);
+        if (ex is IOException)
+        {
+          return handleRetry();
+        }
+        else
+        {
+          return false;
+        }
       }
     }
   }
