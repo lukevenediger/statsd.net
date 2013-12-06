@@ -61,6 +61,7 @@ namespace statsd.net.Framework
           }
           
           gauges.Clear();
+          target.Post(bucket);
         };
 
       incoming.Completion.ContinueWith(p =>

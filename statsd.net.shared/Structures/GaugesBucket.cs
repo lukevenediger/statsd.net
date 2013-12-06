@@ -15,7 +15,7 @@ namespace statsd.net.shared.Structures
     public GaugesBucket(KeyValuePair<string, int>[] gauges, long epoch, string rootNamespace = "")
       : base(BucketType.Count, epoch, rootNamespace)
     {
-      Gauges = Gauges;
+      Gauges = gauges;
     }
 
     public override GraphiteLine[] ToLines()
