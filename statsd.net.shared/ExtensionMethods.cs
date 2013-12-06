@@ -91,6 +91,15 @@ public static class ExtensionMethods
     return Boolean.Parse(element.Attribute(attributeName).Value);
   }
 
+  public static bool ToBoolean(this XElement element, string attributeName, bool defaultValue)
+  {
+    if (!element.Attributes().Any(p => p.Name == attributeName))
+    {
+      return defaultValue;
+    }
+    return Boolean.Parse(element.Attribute(attributeName).Value);
+  }
+
   public static byte[] Compress(this byte[] data)
   {
     using (var output = new MemoryStream())
@@ -101,6 +110,13 @@ public static class ExtensionMethods
       }
       return output.ToArray();
     }
+  }
+
+  public static byte[] Scramble(this byte[] data)
+  {
+    var rand = new Random();
+    rand.NextBytes(data);
+    return data;
   }
 
   public static byte[] Decompress(this byte[] data)
@@ -116,17 +132,5 @@ public static class ExtensionMethods
       }
       return output.ToArray();
     }
-  }
-
-  public static T[] Empty<T>(this ConcurrentBag<T> bag)
-  {
-    var numItems = bag.Count;
-    var items = new List<T>(numItems);
-    T item;
-    while (bag.TryTake(out item))
-    {
-      items.Add(item);
-    }
-    return items.ToArray();
   }
 }

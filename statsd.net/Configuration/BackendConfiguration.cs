@@ -64,12 +64,14 @@ namespace statsd.net.Configuration
     public string Host { get; set; }
     public int Port { get; set; }
     public TimeSpan FlushInterval { get; set; }
+    public bool EnableCompression { get; set; }
 
-    public StatsdBackendConfiguration(string host, int port, TimeSpan? flushInterval)
+    public StatsdBackendConfiguration(string host, int port, TimeSpan? flushInterval, bool enableCompression = true)
     {
       Host = host;
       Port = port;
       FlushInterval = flushInterval ?? new TimeSpan(0, 0, 5);
+      EnableCompression = enableCompression;
     }
   }
 

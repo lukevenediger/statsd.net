@@ -59,6 +59,7 @@ namespace statsd.net.Framework
               log.InfoFormat("Removed {0} empty gauges.", zeroGauges);
             }
           }
+          
           gauges.Clear();
         };
 

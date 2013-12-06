@@ -78,7 +78,8 @@ namespace statsd.net.Configuration
           case "statsdnet":
             backend = new StatsdBackendConfiguration(item.Attribute("host").Value, 
               item.ToInt("port"),
-              ConvertToTimespan(item.Attribute("flushInterval").Value));
+              ConvertToTimespan(item.Attribute("flushInterval").Value),
+              item.ToBoolean("enableCompression", true));
             break;
         }
         config.Backends.Add(backend);

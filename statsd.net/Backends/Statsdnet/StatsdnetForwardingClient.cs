@@ -20,15 +20,17 @@ namespace statsd.net.Backends.Statsdnet
     private string _host;
     private int _port;
     private int _numRetries;
+    private bool _enableCompression;
     private ISystemMetricsService _systemMetrics;
     private ILog _log;
 
-    public StatsdnetForwardingClient(string host, int port, ISystemMetricsService systemMetrics, int numRetries = 1)
+    public StatsdnetForwardingClient(string host, int port, ISystemMetricsService systemMetrics, int numRetries = 1, bool enableCompression = true)
     {
       _host = host;
       _port = port;
       _systemMetrics = systemMetrics;
       _numRetries = numRetries;
+      _enableCompression = enableCompression;
       _client = new TcpClient();
       _log = SuperCheapIOC.Resolve<ILog>();
     }
@@ -82,7 +84,7 @@ namespace statsd.net.Backends.Statsdnet
           _client.Connect(_host, _port);
           _writer = new BinaryWriter(_client.GetStream());
         }
-        if (data.Length < COMPRESSION_SIZE_THRESHOLD)
+        if (_enableCompression && data.Length < COMPRESSION_SIZE_THRESHOLD)
         {
           _writer.Write(data.Length);
           _writer.Write(false);
