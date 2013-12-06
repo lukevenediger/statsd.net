@@ -125,8 +125,8 @@ namespace statsd.net.shared.Listeners
         byte[] rawData;
         if (packet.isCompressed)
         {
-          _systemMetrics.LogCount("listeners.statsdnet.bytes.gzip", packet.data.Length);
           rawData = packet.data.Decompress();
+          _systemMetrics.LogCount("listeners.statsdnet.bytes.gzip", packet.data.Length);
         }
         else
         {
