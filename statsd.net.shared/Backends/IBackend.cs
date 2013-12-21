@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Messages;
+﻿using System.Xml.Linq;
+using statsd.net.shared.Messages;
 using statsd.net.shared.Structures;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,6 @@ namespace statsd.net.shared.Backends
   {
     bool IsActive { get; }
     int OutputCount { get; }
+    void Configure(string collectorName, XElement configElement);
   }
 }

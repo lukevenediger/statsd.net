@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using System.Xml.Linq;
+using log4net;
 using Microsoft.Practices.TransientFaultHandling;
 using RestSharp;
 using statsd.net.Configuration;
@@ -59,10 +60,20 @@ namespace statsd.net.Backends.Librato
       _completionTask = new Task(() => IsActive = false);
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
+
+      Configure(configuration, source);
+    }
+
+    public LibratoBackend()
+    {
+    }
+
+    private void Configure(LibratoBackendConfiguration configuration, string collectorName)
+    {
       _config = configuration;
-      _source = source;
+      _source = collectorName;
       _serviceVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
-      
+
       _preprocessorBlock = new ActionBlock<Bucket>(bucket => ProcessBucket(bucket), Utility.UnboundedExecution());
       _batchBlock = new BatchBlock<LibratoMetric>(_config.MaxBatchSize);
       _outputBlock = new ActionBlock<LibratoMetric[]>(lines => PostToLibrato(lines), Utility.OneAtATimeExecution());
@@ -74,12 +85,28 @@ namespace statsd.net.Backends.Librato
 
       _retryPolicy = new RetryPolicy<LibratoErrorDetectionStrategy>(_config.NumRetries);
       _retryPolicy.Retrying += (sender, args) =>
-        {
-          _log.Warn(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
-          _systemMetrics.LogCount("backends.librato.retry");
-        };
+      {
+        _log.Warn(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
+        _systemMetrics.LogCount("backends.librato.retry");
+      };
       _retryStrategy = new Incremental(_config.NumRetries, _config.RetryDelay, TimeSpan.FromSeconds(2));
       IsActive = true;
+      
+    }
+    public void Configure(string collectorName, XElement configElement)
+    {
+      var config = new LibratoBackendConfiguration(
+          email: configElement.Attribute("email").Value,
+          token: configElement.Attribute("token").Value,
+          numRetries: configElement.ToInt("numRetries"),
+          retryDelay: Utility.ConvertToTimespan(configElement.Attribute("retryDelay").Value),
+          postTimeout: Utility.ConvertToTimespan(configElement.Attribute("postTimeout").Value),
+          maxBatchSize: configElement.ToInt("maxBatchSize"),
+          countersAsGauges: configElement.ToBoolean("countersAsGauges")
+        );
+
+      Configure(config, collectorName);
+      
     }
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader,

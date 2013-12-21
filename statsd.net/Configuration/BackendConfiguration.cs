@@ -14,10 +14,13 @@ namespace statsd.net.Configuration
   {
     public string ConnectionString { get; set; }
     public int WriteBatchSize { get; set; }
+    public int Retries { get; private set; }
+
     public SqlServerConfiguration(string connectionString, int writeBatchSize)
     {
       ConnectionString = connectionString;
       WriteBatchSize = writeBatchSize;
+      Retries = 3;
     }
   }
 

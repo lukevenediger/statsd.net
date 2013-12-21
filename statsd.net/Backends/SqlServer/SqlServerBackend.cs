@@ -1,4 +1,6 @@
-﻿using Microsoft.SqlServer.Server;
+﻿using System.Xml.Linq;
+using Microsoft.SqlServer.Server;
+using statsd.net.Configuration;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using System;
@@ -41,9 +43,19 @@ namespace statsd.net.Backends.SqlServer
       int batchSize = 50)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
+      _systemMetrics = systemMetrics;
+
+      Configure(connectionString, collectorName, retries, batchSize);
+    }
+
+    public SqlServerBackend()
+    {
+    }
+
+    private void Configure(string connectionString, string collectorName, int retries = 3, int batchSize = 50)
+    {
       _connectionString = connectionString;
       _collectorName = collectorName;
-      _systemMetrics = systemMetrics;
       _retries = retries;
 
       InitialiseRetryHandling();
@@ -56,11 +68,17 @@ namespace statsd.net.Backends.SqlServer
       _actionBlock.Completion.ContinueWith(p => { _isActive = false; });
 
       _completionTask = new Task(() =>
-        {
-          _log.Info("SqlServerBackend - Completion has been signaled. Waiting for action block to complete.");
-          _batchBlock.Complete();
-          _actionBlock.Completion.Wait();
-        });
+      {
+        _log.Info("SqlServerBackend - Completion has been signaled. Waiting for action block to complete.");
+        _batchBlock.Complete();
+        _actionBlock.Completion.Wait();
+      });
+    }
+
+    public void Configure(string collectorName, XElement configElement)
+    {
+      var config = new SqlServerConfiguration(configElement.Attribute("connectionString").Value, configElement.ToInt("writeBatchSize"));
+      Configure(config.ConnectionString, collectorName, config.Retries, config.WriteBatchSize);
     }
 
     public bool IsActive

@@ -1,5 +1,7 @@
-﻿using log4net;
+﻿using System.Xml.Linq;
+using log4net;
 using log4net.Core;
+using statsd.net.Configuration;
 using statsd.net.shared;
 using statsd.net.shared.Backends;
 using statsd.net.shared.Blocks;
@@ -30,7 +32,16 @@ namespace statsd.net.Backends.Statsdnet
     {
       _systemMetrics = systemMetrics;
       var log = SuperCheapIOC.Resolve<ILog>();
-      _client = new StatsdnetForwardingClient(host, port, systemMetrics);
+      Configure(host, port, flushPeriod);
+    }
+
+    public StatsdnetBackend()
+    {
+    }
+
+    private void Configure(string host, int port, TimeSpan flushPeriod)
+    {
+      _client = new StatsdnetForwardingClient(host, port, _systemMetrics);
       _bufferBlock = new TimedBufferBlock<GraphiteLine[]>(flushPeriod, PostMetrics);
 
       _completionTask = new Task(() =>
@@ -39,6 +50,18 @@ namespace statsd.net.Backends.Statsdnet
       });
 
       _isActive = true;
+      
+    }
+
+    public void Configure(string collectorName, XElement configElement)
+    {
+      var config = new StatsdBackendConfiguration(configElement.Attribute("host").Value,
+        configElement.ToInt("port"),
+        Utility.ConvertToTimespan(configElement.Attribute("flushInterval").Value),
+        configElement.ToBoolean("enableCompression", true));
+
+      Configure(config.Host, config.Port, config.FlushInterval);
+
     }
 
     private void PostMetrics(GraphiteLine[][] lineArrays)

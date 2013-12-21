@@ -1,4 +1,5 @@
-﻿using statsd.net.Backends;
+﻿using System.Xml.Linq;
+using statsd.net.Backends;
 using statsd.net.shared;
 using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
@@ -26,6 +27,11 @@ namespace statsd.net_Tests.Infrastructure
       _completionTask = new Task(() => { _isActive = false; });
       _collationTarget = new ActionBlock<GraphiteLine>(p => Messages.Add(p), Utility.OneAtATimeExecution());
       _isActive = true;
+    }
+
+    public void Configure(string collectorName, XElement configElement)
+    {
+      // No configuration needed.
     }
     
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)

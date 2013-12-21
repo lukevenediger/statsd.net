@@ -1,4 +1,6 @@
-﻿using statsd.net.Backends;
+﻿using System.Configuration;
+using System.Windows.Markup;
+using statsd.net.Backends;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using statsd.net.Framework;
@@ -183,6 +185,38 @@ namespace statsd.net
 
     private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
     {
+      foreach (var pair in config.BackendConfigurations)
+      {
+        string backendName = pair.Key;
+        IBackend backend = CreateBackendFromName(backendName);
+        
+        if (backend == null)
+          continue;
+
+        backend.Configure(config.Name, pair.Value);
+        AddBackend(backend, systemMetrics, backendName);
+      }
+    }
+
+    private IBackend CreateBackendFromName(string name)
+    {
+      // TODO: This should be done via some kind of plugin system
+      switch (name)
+      {
+        case "graphite": return new GraphiteBackend();
+        case "sqlserver": return new SqlServerBackend();
+        case "console": return new ConsoleBackend();
+        case "librato": return new LibratoBackend();
+        case "statsdnet": return new StatsdnetBackend();
+      }
+
+      _log.WarnFormat("Unrecognized backend \"{0}\".  Backend will be ignored.", name);
+      return null;
+    }
+
+    /*
+    private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
+    {
       foreach (var backendConfig in config.Backends)
       {
         if (backendConfig is GraphiteConfiguration)
@@ -234,7 +268,7 @@ namespace statsd.net
         }
       }
     }
-
+    */
     private void LoadListeners(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
     {
       // Load listeners - done last and once the rest of the chain is in place

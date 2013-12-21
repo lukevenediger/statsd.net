@@ -1,4 +1,6 @@
-﻿using statsd.net.shared.Messages;
+﻿using System.Xml.Linq;
+using statsd.net.Configuration;
+using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
@@ -26,13 +28,29 @@ namespace statsd.net.Backends
     public GraphiteBackend(string host, int port, ISystemMetricsService systemMetrics)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
-      var ipAddress = Utility.HostToIPv4Address(host);
-      _client = new UdpClient();
-      _client.Connect(ipAddress, port);
       _systemMetrics = systemMetrics;
       _completionTask = new Task(() => { _isActive = false; });
       _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
       _isActive = true;
+
+      Configure(host, port);
+    }
+
+    public GraphiteBackend()
+    {
+    }
+
+    private void Configure(string host, int port)
+    {
+      var ipAddress = Utility.HostToIPv4Address(host);
+      _client = new UdpClient();
+      _client.Connect(ipAddress, port);
+    }
+
+    public void Configure(string collectorName, XElement configElement)
+    {
+      var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"));
+      Configure(config.Host, config.Port);
     }
 
     public bool IsActive

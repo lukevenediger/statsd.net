@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using statsd.net.shared;
 
 namespace statsd.net.Configuration
 {
@@ -50,6 +51,7 @@ namespace statsd.net.Configuration
       }
 
       // Add Backends
+/*
       foreach (var item in statsdnet.Element("backends").Elements())
       {
         BackendConfiguration backend = null;
@@ -83,6 +85,13 @@ namespace statsd.net.Configuration
             break;
         }
         config.Backends.Add(backend);
+    
+      }
+*/
+      foreach (var item in statsdnet.Element("backends").Elements())
+      {
+        string name = item.Name.LocalName;
+        config.BackendConfigurations[name] = item;
       }
 
       // Add aggregators
@@ -126,31 +135,7 @@ namespace statsd.net.Configuration
 
     private static TimeSpan ConvertToTimespan(string time)
     {
-      string amount = String.Empty;
-      foreach (var character in time)
-      {
-        if (Char.IsNumber(character))
-        {
-          amount += character;
-        }
-        else if (Char.IsLetter(character))
-        {
-          var value = Int32.Parse(amount);
-          switch(character)
-          {
-            case 's':
-              return new TimeSpan(0, 0, value);
-            case 'm':
-              return new TimeSpan(0, value, 0);
-            case 'h':
-              return new TimeSpan(value, 0, 0);
-            case 'd':
-              return new TimeSpan(value, 0, 0, 0);
-          }
-        }
-      }
-      // Default to seconds if there isn't a postfix
-      return new TimeSpan(0, 0, Int32.Parse(amount));
+      return Utility.ConvertToTimespan(time);
     }
   }
 }

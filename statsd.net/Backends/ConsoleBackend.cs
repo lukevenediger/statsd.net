@@ -1,4 +1,6 @@
-﻿using statsd.net.shared.Backends;
+﻿using System.Xml.Linq;
+using statsd.net.Configuration;
+using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Structures;
 using System;
@@ -20,6 +22,12 @@ namespace statsd.net.Backends
       _isActive = true;
       _completionTask = new Task(() => { _isActive = false; });
     }
+
+    public void Configure(string collectorName, XElement configElement)
+    {
+      // No configuration needed.
+    }
+
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket bucket, ISourceBlock<Bucket> source, bool consumeToAccept)
     {
@@ -52,5 +60,6 @@ namespace statsd.net.Backends
     {
       get { return 0; }
     }
+
   }
 }
