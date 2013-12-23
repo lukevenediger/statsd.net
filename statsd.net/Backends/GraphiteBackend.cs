@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
 using statsd.net.Configuration;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
@@ -16,6 +17,7 @@ using statsd.net.shared.Structures;
 
 namespace statsd.net.Backends
 {
+  [Export(typeof(IBackend))]
   public class GraphiteBackend : IBackend
   {
     private UdpClient _client;
@@ -24,8 +26,10 @@ namespace statsd.net.Backends
     private ISystemMetricsService _systemMetrics;
     private ILog _log;
     private ActionBlock<GraphiteLine> _senderBlock;
-    
-    public GraphiteBackend(string host, int port, ISystemMetricsService systemMetrics)
+
+    public string Name { get { return "Graphite"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
@@ -33,24 +37,11 @@ namespace statsd.net.Backends
       _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
       _isActive = true;
 
-      Configure(host, port);
-    }
-
-    public GraphiteBackend()
-    {
-    }
-
-    private void Configure(string host, int port)
-    {
-      var ipAddress = Utility.HostToIPv4Address(host);
-      _client = new UdpClient();
-      _client.Connect(ipAddress, port);
-    }
-
-    public void Configure(string collectorName, XElement configElement)
-    {
       var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"));
-      Configure(config.Host, config.Port);
+
+      var ipAddress = Utility.HostToIPv4Address(config.Host);
+      _client = new UdpClient();
+      _client.Connect(ipAddress, config.Port);
     }
 
     public bool IsActive

@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
 using Microsoft.SqlServer.Server;
 using statsd.net.Configuration;
 using statsd.net.shared.Listeners;
@@ -21,6 +22,7 @@ using statsd.net.shared.Structures;
 
 namespace statsd.net.Backends.SqlServer
 {
+  [Export(typeof(IBackend))]
   public class SqlServerBackend : IBackend
   {
     private string _connectionString;
@@ -36,31 +38,22 @@ namespace statsd.net.Backends.SqlServer
     private RetryPolicy<SqlServerErrorDetectionStrategy> _retryPolicy;
     private ILog _log;
 
-    public SqlServerBackend(string connectionString, 
-      string collectorName,
-      ISystemMetricsService systemMetrics,
-      int retries = 3,
-      int batchSize = 50)
+    public string Name { get { return "SqlServer"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
 
-      Configure(connectionString, collectorName, retries, batchSize);
-    }
+      var config = new SqlServerConfiguration(configElement.Attribute("connectionString").Value, configElement.ToInt("writeBatchSize"));
 
-    public SqlServerBackend()
-    {
-    }
-
-    private void Configure(string connectionString, string collectorName, int retries = 3, int batchSize = 50)
-    {
-      _connectionString = connectionString;
+      _connectionString = config.ConnectionString;
       _collectorName = collectorName;
-      _retries = retries;
+      _retries = config.Retries;
 
       InitialiseRetryHandling();
 
-      _batchBlock = new BatchBlock<GraphiteLine>(batchSize);
+      _batchBlock = new BatchBlock<GraphiteLine>(config.WriteBatchSize);
       _actionBlock = new ActionBlock<GraphiteLine[]>(p => SendToDB(p), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
       _batchBlock.LinkTo(_actionBlock);
 
@@ -73,12 +66,7 @@ namespace statsd.net.Backends.SqlServer
         _batchBlock.Complete();
         _actionBlock.Completion.Wait();
       });
-    }
 
-    public void Configure(string collectorName, XElement configElement)
-    {
-      var config = new SqlServerConfiguration(configElement.Attribute("connectionString").Value, configElement.ToInt("writeBatchSize"));
-      Configure(config.ConnectionString, collectorName, config.Retries, config.WriteBatchSize);
     }
 
     public bool IsActive
@@ -137,7 +125,7 @@ namespace statsd.net.Backends.SqlServer
           row["metric"] = line.ToString();
           tableData.Rows.Add(row);
         }
-        _log.InfoFormat("Attempting to send {0} lines to tb_Metrics.", tableData.Rows.Count);
+        _log.DebugFormat("Attempting to send {0} lines to tb_Metrics.", tableData.Rows.Count);
 
         _retryPolicy.ExecuteAction(() =>
           {
@@ -147,7 +135,7 @@ namespace statsd.net.Backends.SqlServer
               bulk.WriteToServer(tableData);
             }
             _systemMetrics.LogCount("backends.sqlserver.lines", tableData.Rows.Count);
-            _log.InfoFormat("Wrote {0} lines to tb_Metrics.", tableData.Rows.Count);
+            _log.DebugFormat("Wrote {0} lines to tb_Metrics.", tableData.Rows.Count);
           });
       }
       catch (Exception ex)

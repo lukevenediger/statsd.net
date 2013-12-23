@@ -46,7 +46,6 @@ namespace statsd.net
 
     public Statsd ( string serviceName = null )
     {
-      LoggingBootstrap.Configure();
       _log.Info( "statsd.net starting." );
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent( false );
@@ -185,90 +184,12 @@ namespace statsd.net
 
     private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
     {
-      foreach (var pair in config.BackendConfigurations)
+      foreach (var backend in config.GetConfiguredBackends(systemMetrics))
       {
-        string backendName = pair.Key;
-        IBackend backend = CreateBackendFromName(backendName);
-        
-        if (backend == null)
-          continue;
-
-        backend.Configure(config.Name, pair.Value);
-        AddBackend(backend, systemMetrics, backendName);
+        AddBackend(backend, systemMetrics, backend.Name);
       }
     }
 
-    private IBackend CreateBackendFromName(string name)
-    {
-      // TODO: This should be done via some kind of plugin system
-      switch (name)
-      {
-        case "graphite": return new GraphiteBackend();
-        case "sqlserver": return new SqlServerBackend();
-        case "console": return new ConsoleBackend();
-        case "librato": return new LibratoBackend();
-        case "statsdnet": return new StatsdnetBackend();
-      }
-
-      _log.WarnFormat("Unrecognized backend \"{0}\".  Backend will be ignored.", name);
-      return null;
-    }
-
-    /*
-    private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
-    {
-      foreach (var backendConfig in config.Backends)
-      {
-        if (backendConfig is GraphiteConfiguration)
-        {
-          var graphiteConfig = backendConfig as GraphiteConfiguration;
-          AddBackend(
-            new GraphiteBackend(graphiteConfig.Host, graphiteConfig.Port, systemMetrics),
-            systemMetrics,
-            "graphite"
-          );
-        }
-        else if (backendConfig is ConsoleConfiguration)
-        {
-          AddBackend(
-            new ConsoleBackend(),
-            systemMetrics,
-            "console"
-          );
-        }
-        else if (backendConfig is LibratoBackendConfiguration)
-        {
-          var libratoConfig = backendConfig as LibratoBackendConfiguration;
-          AddBackend(
-            new LibratoBackend(libratoConfig, config.Name, systemMetrics),
-            systemMetrics,
-            "librato"
-         );
-        }
-        else if (backendConfig is SqlServerConfiguration)
-        {
-          var sqlConfig = backendConfig as SqlServerConfiguration;
-          AddBackend(new SqlServerBackend(
-            sqlConfig.ConnectionString,
-            config.Name,
-            systemMetrics,
-            batchSize: sqlConfig.WriteBatchSize),
-            systemMetrics,
-            "sqlserver"
-          );
-        }
-        else if ( backendConfig is StatsdBackendConfiguration )
-        {
-          var statsdConfig = backendConfig as StatsdBackendConfiguration;
-          AddBackend(
-            new StatsdnetBackend(statsdConfig.Host, statsdConfig.Port, statsdConfig.FlushInterval, systemMetrics),
-            systemMetrics,
-            "statsd"
-          );
-        }
-      }
-    }
-    */
     private void LoadListeners(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
     {
       // Load listeners - done last and once the rest of the chain is in place

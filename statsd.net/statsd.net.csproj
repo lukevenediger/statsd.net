@@ -49,6 +49,7 @@
       <HintPath>..\packages\StatsdCsharpClient.1.2.1.0\lib\net45\StatsdClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
@@ -101,7 +102,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
-    <None Include="statsdnet.config" />
+    <None Include="statsdnet.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="statsdnet.config.librato" />
     <None Include="statsdnet.config.relay" />
     <None Include="statsdnet.config.everything">

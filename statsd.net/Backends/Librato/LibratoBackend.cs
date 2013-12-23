@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
 using log4net;
 using Microsoft.Practices.TransientFaultHandling;
 using RestSharp;
@@ -30,6 +31,7 @@ namespace statsd.net.Backends.Librato
    *         Batch Block ->
    *            Post to Librato 
    */
+  [Export(typeof(IBackend))]
   public class LibratoBackend : IBackend
   {
     public const string ILLEGAL_NAME_CHARACTERS = @"[^-.:_\w]+";
@@ -55,22 +57,25 @@ namespace statsd.net.Backends.Librato
       get { return _pendingOutputCount; }
     }
 
-    public LibratoBackend(LibratoBackendConfiguration configuration, string source, ISystemMetricsService systemMetrics)
+    public string Name { get { return "Librato"; } }  
+    
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _completionTask = new Task(() => IsActive = false);
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
 
-      Configure(configuration, source);
-    }
-
-    public LibratoBackend()
-    {
-    }
-
-    private void Configure(LibratoBackendConfiguration configuration, string collectorName)
-    {
-      _config = configuration;
+      var config = new LibratoBackendConfiguration(
+          email: configElement.Attribute("email").Value,
+          token: configElement.Attribute("token").Value,
+          numRetries: configElement.ToInt("numRetries"),
+          retryDelay: Utility.ConvertToTimespan(configElement.Attribute("retryDelay").Value),
+          postTimeout: Utility.ConvertToTimespan(configElement.Attribute("postTimeout").Value),
+          maxBatchSize: configElement.ToInt("maxBatchSize"),
+          countersAsGauges: configElement.ToBoolean("countersAsGauges")
+        );
+      
+      _config = config;
       _source = collectorName;
       _serviceVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
@@ -91,22 +96,6 @@ namespace statsd.net.Backends.Librato
       };
       _retryStrategy = new Incremental(_config.NumRetries, _config.RetryDelay, TimeSpan.FromSeconds(2));
       IsActive = true;
-      
-    }
-    public void Configure(string collectorName, XElement configElement)
-    {
-      var config = new LibratoBackendConfiguration(
-          email: configElement.Attribute("email").Value,
-          token: configElement.Attribute("token").Value,
-          numRetries: configElement.ToInt("numRetries"),
-          retryDelay: Utility.ConvertToTimespan(configElement.Attribute("retryDelay").Value),
-          postTimeout: Utility.ConvertToTimespan(configElement.Attribute("postTimeout").Value),
-          maxBatchSize: configElement.ToInt("maxBatchSize"),
-          countersAsGauges: configElement.ToBoolean("countersAsGauges")
-        );
-
-      Configure(config, collectorName);
-      
     }
 
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader,

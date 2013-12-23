@@ -51,43 +51,6 @@ namespace statsd.net.Configuration
       }
 
       // Add Backends
-/*
-      foreach (var item in statsdnet.Element("backends").Elements())
-      {
-        BackendConfiguration backend = null;
-        switch (item.Name.LocalName)
-        {
-          case "sqlserver":
-            backend = new SqlServerConfiguration(item.Attribute("connectionString").Value, item.ToInt("writeBatchSize"));
-            break;
-          case "graphite":
-            backend = new GraphiteConfiguration(item.Attribute("host").Value, item.ToInt("port"));
-            break;
-          case "console":
-            backend = new ConsoleConfiguration();
-            break;
-          case "librato":
-            backend = new LibratoBackendConfiguration(
-                email: item.Attribute("email").Value,
-                token: item.Attribute("token").Value,
-                numRetries: item.ToInt("numRetries"),
-                retryDelay: ConvertToTimespan(item.Attribute("retryDelay").Value),
-                postTimeout: ConvertToTimespan(item.Attribute("postTimeout").Value),
-                maxBatchSize: item.ToInt("maxBatchSize"),
-                countersAsGauges: item.ToBoolean("countersAsGauges")
-              );
-            break;
-          case "statsdnet":
-            backend = new StatsdBackendConfiguration(item.Attribute("host").Value, 
-              item.ToInt("port"),
-              ConvertToTimespan(item.Attribute("flushInterval").Value),
-              item.ToBoolean("enableCompression", true));
-            break;
-        }
-        config.Backends.Add(backend);
-    
-      }
-*/
       foreach (var item in statsdnet.Element("backends").Elements())
       {
         string name = item.Name.LocalName;

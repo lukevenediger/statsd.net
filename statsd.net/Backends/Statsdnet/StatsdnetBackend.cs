@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
 using log4net;
 using log4net.Core;
 using statsd.net.Configuration;
@@ -20,6 +21,7 @@ namespace statsd.net.Backends.Statsdnet
   /// <summary>
   /// Forwards all metrics on to another statsd.net instance over TCP.
   /// </summary>
+  [Export(typeof(IBackend))]
   public class StatsdnetBackend : IBackend
   {
     private Task _completionTask;
@@ -28,21 +30,19 @@ namespace statsd.net.Backends.Statsdnet
     private ISystemMetricsService _systemMetrics;
     private StatsdnetForwardingClient _client;
 
-    public StatsdnetBackend(string host, int port, TimeSpan flushPeriod, ISystemMetricsService systemMetrics)
+    public string Name { get { return "Statsdnet"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _systemMetrics = systemMetrics;
-      var log = SuperCheapIOC.Resolve<ILog>();
-      Configure(host, port, flushPeriod);
-    }
 
-    public StatsdnetBackend()
-    {
-    }
-
-    private void Configure(string host, int port, TimeSpan flushPeriod)
-    {
-      _client = new StatsdnetForwardingClient(host, port, _systemMetrics);
-      _bufferBlock = new TimedBufferBlock<GraphiteLine[]>(flushPeriod, PostMetrics);
+      var config = new StatsdBackendConfiguration(configElement.Attribute("host").Value,
+        configElement.ToInt("port"),
+        Utility.ConvertToTimespan(configElement.Attribute("flushInterval").Value),
+        configElement.ToBoolean("enableCompression", true));
+      
+      _client = new StatsdnetForwardingClient(config.Host, config.Port, _systemMetrics);
+      _bufferBlock = new TimedBufferBlock<GraphiteLine[]>(config.FlushInterval, PostMetrics);
 
       _completionTask = new Task(() =>
       {
@@ -50,18 +50,6 @@ namespace statsd.net.Backends.Statsdnet
       });
 
       _isActive = true;
-      
-    }
-
-    public void Configure(string collectorName, XElement configElement)
-    {
-      var config = new StatsdBackendConfiguration(configElement.Attribute("host").Value,
-        configElement.ToInt("port"),
-        Utility.ConvertToTimespan(configElement.Attribute("flushInterval").Value),
-        configElement.ToBoolean("enableCompression", true));
-
-      Configure(config.Host, config.Port, config.FlushInterval);
-
     }
 
     private void PostMetrics(GraphiteLine[][] lineArrays)

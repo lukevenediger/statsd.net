@@ -3,6 +3,7 @@ using statsd.net.Backends;
 using statsd.net.shared;
 using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
+using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,9 @@ namespace statsd.net_Tests.Infrastructure
       _isActive = true;
     }
 
-    public void Configure(string collectorName, XElement configElement)
+    public string Name { get { return "InAppBackend"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       // No configuration needed.
     }
