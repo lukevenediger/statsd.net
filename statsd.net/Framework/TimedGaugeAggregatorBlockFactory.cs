@@ -1,4 +1,5 @@
 ﻿using log4net;
+using statsd.net.core.Structures;
 using statsd.net.shared;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;

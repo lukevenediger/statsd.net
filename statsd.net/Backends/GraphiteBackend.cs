@@ -1,6 +1,10 @@
 ﻿using System.ComponentModel.Composition;
 using System.Xml.Linq;
 using statsd.net.Configuration;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Messages;
+using statsd.net.core.Structures;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using System;
@@ -11,7 +15,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net.shared;
-using statsd.net.shared.Backends;
 using log4net;
 using statsd.net.shared.Structures;
 

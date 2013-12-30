@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Listeners;
+﻿using statsd.net.core;
+using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using System;
 using System.Collections.Generic;

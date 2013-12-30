@@ -134,6 +134,10 @@
     <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\statsd.net.core\statsd.net.core.csproj">
+      <Project>{9d5c34b4-3623-4234-bc82-f9da37204971}</Project>
+      <Name>statsd.net.core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
       <Project>{be150548-d5eb-4289-8706-3ea475175592}</Project>
       <Name>statsd.net.shared</Name>
@@ -149,7 +153,8 @@
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <Import Project="$(SlowCheetahTargets)" Condition="Exists('$(SlowCheetahTargets)')" Label="SlowCheetah" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)packages\ilmerge.2.13.0307\ILMerge.exe /target:exe /out:$(TargetDir)\statsdnet.exe /v4 $(TargetDir)statsd.net.exe $(TargetDir)log4net.dll $(TargetDir)Microsoft.Practices.TransientFaultHandling.Core.dll $(TargetDir)\statsd.net.shared.dll $(TargetDir)\System.Threading.Tasks.Dataflow.dll $(TargetDir)\Kayak.dll $(TargetDir)\StatsdClient.dll</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Label="SlowCheetah">
     <SlowCheetahToolsPath>$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\..\packages\SlowCheetah.2.5.10.3\tools\))</SlowCheetahToolsPath>

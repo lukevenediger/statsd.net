@@ -1,6 +1,9 @@
 ﻿using System.Configuration;
 using System.Windows.Markup;
 using statsd.net.Backends;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Structures;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using statsd.net.Framework;
@@ -15,7 +18,6 @@ using System.Threading.Tasks.Dataflow;
 using statsd.net.shared.Services;
 using log4net;
 using statsd.net.Backends.SqlServer;
-using statsd.net.shared.Backends;
 using statsd.net.shared;
 using statsd.net.shared.Factories;
 using statsd.net.shared.Structures;

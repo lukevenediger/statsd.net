@@ -7,7 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using log4net;
-using statsd.net.shared.Backends;
+using statsd.net.core;
+using statsd.net.core.Backends;
 using statsd.net.shared.Services;
 
 namespace statsd.net.Configuration

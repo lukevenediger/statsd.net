@@ -1,4 +1,6 @@
-﻿using statsd.net.shared.Messages;
+﻿using statsd.net.core.Messages;
+using statsd.net.core.Structures;
+using statsd.net.shared.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;

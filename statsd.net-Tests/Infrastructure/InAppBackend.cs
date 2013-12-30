@@ -1,7 +1,10 @@
 ﻿using System.Xml.Linq;
 using statsd.net.Backends;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Messages;
+using statsd.net.core.Structures;
 using statsd.net.shared;
-using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using statsd.net.shared.Structures;

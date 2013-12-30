@@ -48,11 +48,6 @@ namespace statsd.net.shared
       }
     }
 
-    public static long GetEpoch ()
-    {
-      return (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
-    }
-
     public static IPAddress HostToIPv4Address(string host)
     {
       return Dns

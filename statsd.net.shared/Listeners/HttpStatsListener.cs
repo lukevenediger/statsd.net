@@ -1,5 +1,6 @@
 ﻿using Kayak;
 using Kayak.Http;
+using statsd.net.core;
 using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
