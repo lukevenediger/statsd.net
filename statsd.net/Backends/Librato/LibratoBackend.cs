@@ -1,9 +1,13 @@
-﻿using log4net;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
+using log4net;
 using Microsoft.Practices.TransientFaultHandling;
 using RestSharp;
 using statsd.net.Configuration;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Structures;
 using statsd.net.shared;
-using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
@@ -29,6 +33,7 @@ namespace statsd.net.Backends.Librato
    *         Batch Block ->
    *            Post to Librato 
    */
+  [Export(typeof(IBackend))]
   public class LibratoBackend : IBackend
   {
     public const string ILLEGAL_NAME_CHARACTERS = @"[^-.:_\w]+";
@@ -54,15 +59,28 @@ namespace statsd.net.Backends.Librato
       get { return _pendingOutputCount; }
     }
 
-    public LibratoBackend(LibratoBackendConfiguration configuration, string source, ISystemMetricsService systemMetrics)
+    public string Name { get { return "Librato"; } }  
+    
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _completionTask = new Task(() => IsActive = false);
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
-      _config = configuration;
-      _source = source;
-      _serviceVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
+
+      var config = new LibratoBackendConfiguration(
+          email: configElement.Attribute("email").Value,
+          token: configElement.Attribute("token").Value,
+          numRetries: configElement.ToInt("numRetries"),
+          retryDelay: Utility.ConvertToTimespan(configElement.Attribute("retryDelay").Value),
+          postTimeout: Utility.ConvertToTimespan(configElement.Attribute("postTimeout").Value),
+          maxBatchSize: configElement.ToInt("maxBatchSize"),
+          countersAsGauges: configElement.ToBoolean("countersAsGauges")
+        );
       
+      _config = config;
+      _source = collectorName;
+      _serviceVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
+
       _preprocessorBlock = new ActionBlock<Bucket>(bucket => ProcessBucket(bucket), Utility.UnboundedExecution());
       _batchBlock = new BatchBlock<LibratoMetric>(_config.MaxBatchSize);
       _outputBlock = new ActionBlock<LibratoMetric[]>(lines => PostToLibrato(lines), Utility.OneAtATimeExecution());
@@ -74,10 +92,10 @@ namespace statsd.net.Backends.Librato
 
       _retryPolicy = new RetryPolicy<LibratoErrorDetectionStrategy>(_config.NumRetries);
       _retryPolicy.Retrying += (sender, args) =>
-        {
-          _log.Warn(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
-          _systemMetrics.LogCount("backends.librato.retry");
-        };
+      {
+        _log.Warn(String.Format("Retry {0} failed. Trying again. Delay {1}, Error: {2}", args.CurrentRetryCount, args.Delay, args.LastException.Message), args.LastException);
+        _systemMetrics.LogCount("backends.librato.retry");
+      };
       _retryStrategy = new Incremental(_config.NumRetries, _config.RetryDelay, TimeSpan.FromSeconds(2));
       IsActive = true;
     }

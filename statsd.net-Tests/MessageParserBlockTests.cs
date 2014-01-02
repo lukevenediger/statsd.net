@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using statsd.net.core;
 using statsd.net.Framework;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;

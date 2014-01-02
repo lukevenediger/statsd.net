@@ -1,7 +1,12 @@
-﻿using statsd.net.Backends;
+﻿using System.Xml.Linq;
+using statsd.net.Backends;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Messages;
+using statsd.net.core.Structures;
 using statsd.net.shared;
-using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
+using statsd.net.shared.Services;
 using statsd.net.shared.Structures;
 using System;
 using System.Collections.Generic;
@@ -26,6 +31,13 @@ namespace statsd.net_Tests.Infrastructure
       _completionTask = new Task(() => { _isActive = false; });
       _collationTarget = new ActionBlock<GraphiteLine>(p => Messages.Add(p), Utility.OneAtATimeExecution());
       _isActive = true;
+    }
+
+    public string Name { get { return "InAppBackend"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
+    {
+      // No configuration needed.
     }
     
     public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)

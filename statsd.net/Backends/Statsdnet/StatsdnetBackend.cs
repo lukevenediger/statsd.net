@@ -1,7 +1,13 @@
-﻿using log4net;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
+using log4net;
 using log4net.Core;
+using statsd.net.Configuration;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Messages;
+using statsd.net.core.Structures;
 using statsd.net.shared;
-using statsd.net.shared.Backends;
 using statsd.net.shared.Blocks;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Services;
@@ -18,6 +24,7 @@ namespace statsd.net.Backends.Statsdnet
   /// <summary>
   /// Forwards all metrics on to another statsd.net instance over TCP.
   /// </summary>
+  [Export(typeof(IBackend))]
   public class StatsdnetBackend : IBackend
   {
     private Task _completionTask;
@@ -26,12 +33,19 @@ namespace statsd.net.Backends.Statsdnet
     private ISystemMetricsService _systemMetrics;
     private StatsdnetForwardingClient _client;
 
-    public StatsdnetBackend(string host, int port, TimeSpan flushPeriod, ISystemMetricsService systemMetrics)
+    public string Name { get { return "Statsdnet"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _systemMetrics = systemMetrics;
-      var log = SuperCheapIOC.Resolve<ILog>();
-      _client = new StatsdnetForwardingClient(host, port, systemMetrics);
-      _bufferBlock = new TimedBufferBlock<GraphiteLine[]>(flushPeriod, PostMetrics);
+
+      var config = new StatsdBackendConfiguration(configElement.Attribute("host").Value,
+        configElement.ToInt("port"),
+        Utility.ConvertToTimespan(configElement.Attribute("flushInterval").Value),
+        configElement.ToBoolean("enableCompression", true));
+      
+      _client = new StatsdnetForwardingClient(config.Host, config.Port, _systemMetrics);
+      _bufferBlock = new TimedBufferBlock<GraphiteLine[]>(config.FlushInterval, PostMetrics);
 
       _completionTask = new Task(() =>
       {

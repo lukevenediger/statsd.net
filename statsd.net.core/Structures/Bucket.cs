@@ -1,12 +1,8 @@
-﻿using statsd.net.shared.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.core.Messages;
 
-namespace statsd.net.shared.Structures
+namespace statsd.net.core.Structures
 {
   public abstract class Bucket
   {

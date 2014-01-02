@@ -1,4 +1,11 @@
-﻿using Microsoft.SqlServer.Server;
+﻿using System.ComponentModel.Composition;
+using System.Xml.Linq;
+using Microsoft.SqlServer.Server;
+using statsd.net.Configuration;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Messages;
+using statsd.net.core.Structures;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using System;
@@ -13,12 +20,12 @@ using statsd.net.shared.Services;
 using statsd.net.Framework;
 using Microsoft.Practices.TransientFaultHandling;
 using log4net;
-using statsd.net.shared.Backends;
 using statsd.net.shared;
 using statsd.net.shared.Structures;
 
 namespace statsd.net.Backends.SqlServer
 {
+  [Export(typeof(IBackend))]
   public class SqlServerBackend : IBackend
   {
     private string _connectionString;
@@ -34,21 +41,22 @@ namespace statsd.net.Backends.SqlServer
     private RetryPolicy<SqlServerErrorDetectionStrategy> _retryPolicy;
     private ILog _log;
 
-    public SqlServerBackend(string connectionString, 
-      string collectorName,
-      ISystemMetricsService systemMetrics,
-      int retries = 3,
-      int batchSize = 50)
+    public string Name { get { return "SqlServer"; } }  
+
+    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
     {
       _log = SuperCheapIOC.Resolve<ILog>();
-      _connectionString = connectionString;
-      _collectorName = collectorName;
       _systemMetrics = systemMetrics;
-      _retries = retries;
+
+      var config = new SqlServerConfiguration(configElement.Attribute("connectionString").Value, configElement.ToInt("writeBatchSize"));
+
+      _connectionString = config.ConnectionString;
+      _collectorName = collectorName;
+      _retries = config.Retries;
 
       InitialiseRetryHandling();
 
-      _batchBlock = new BatchBlock<GraphiteLine>(batchSize);
+      _batchBlock = new BatchBlock<GraphiteLine>(config.WriteBatchSize);
       _actionBlock = new ActionBlock<GraphiteLine[]>(p => SendToDB(p), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 });
       _batchBlock.LinkTo(_actionBlock);
 
@@ -56,11 +64,12 @@ namespace statsd.net.Backends.SqlServer
       _actionBlock.Completion.ContinueWith(p => { _isActive = false; });
 
       _completionTask = new Task(() =>
-        {
-          _log.Info("SqlServerBackend - Completion has been signaled. Waiting for action block to complete.");
-          _batchBlock.Complete();
-          _actionBlock.Completion.Wait();
-        });
+      {
+        _log.Info("SqlServerBackend - Completion has been signaled. Waiting for action block to complete.");
+        _batchBlock.Complete();
+        _actionBlock.Completion.Wait();
+      });
+
     }
 
     public bool IsActive
@@ -119,7 +128,7 @@ namespace statsd.net.Backends.SqlServer
           row["metric"] = line.ToString();
           tableData.Rows.Add(row);
         }
-        _log.InfoFormat("Attempting to send {0} lines to tb_Metrics.", tableData.Rows.Count);
+        _log.DebugFormat("Attempting to send {0} lines to tb_Metrics.", tableData.Rows.Count);
 
         _retryPolicy.ExecuteAction(() =>
           {
@@ -129,7 +138,7 @@ namespace statsd.net.Backends.SqlServer
               bulk.WriteToServer(tableData);
             }
             _systemMetrics.LogCount("backends.sqlserver.lines", tableData.Rows.Count);
-            _log.InfoFormat("Wrote {0} lines to tb_Metrics.", tableData.Rows.Count);
+            _log.DebugFormat("Wrote {0} lines to tb_Metrics.", tableData.Rows.Count);
           });
       }
       catch (Exception ex)

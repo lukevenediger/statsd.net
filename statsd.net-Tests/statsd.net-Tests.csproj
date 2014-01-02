@@ -55,6 +55,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.14\lib\portable-net45+win8\System.Threading.Tasks.Dataflow.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -91,6 +93,10 @@
     <Compile Include="TimedSetAggregatorBlockTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\statsd.net.core\statsd.net.core.csproj">
+      <Project>{9d5c34b4-3623-4234-bc82-f9da37204971}</Project>
+      <Name>statsd.net.core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\statsd.net.shared\statsd.net.shared.csproj">
       <Project>{be150548-d5eb-4289-8706-3ea475175592}</Project>
       <Name>statsd.net.shared</Name>

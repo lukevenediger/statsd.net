@@ -1,4 +1,5 @@
-﻿using statsd.net.shared.Listeners;
+﻿using statsd.net.shared;
+using statsd.net.shared.Listeners;
 using statsd.net.Framework;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace statsd.net
   {
     private Statsd _statsd;
     private string _configFile;
+    private StatsdnetConfiguration _config;
 
     public ServiceWrapper(string configFile = null)
     {
@@ -36,18 +38,26 @@ namespace statsd.net
         _statsd.Stop();
         _statsd.ShutdownWaitHandle.WaitOne();
       }
+
+      if (_config != null)
+      {
+        _config.Dispose();
+        _config = null;
+      }
     }
 
     public void Start(bool waitForCompletion = true)
     {
       //TODO : JV IS CONFIG FILE A ACTUAL FILE PATH?  IF SO THEN ITS MISLEADING SHOULD BE CONFIGFILEPATH??
+      LoggingBootstrap.Configure();
+
       var configFile = ResolveConfigFile(_configFile);
       if (!File.Exists(configFile))
       {
         throw new FileNotFoundException("Could not find the statsd.net config file. I looked here: " + configFile);
       }
-      var config = ConfigurationFactory.Parse(configFile);
-      _statsd = new Statsd(config);
+      _config = ConfigurationFactory.Parse(configFile);
+      _statsd = new Statsd(_config);
       if (waitForCompletion)
       {
         _statsd.ShutdownWaitHandle.WaitOne();

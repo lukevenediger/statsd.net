@@ -1,4 +1,9 @@
-﻿using statsd.net.Backends;
+﻿using System.Configuration;
+using System.Windows.Markup;
+using statsd.net.Backends;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Structures;
 using statsd.net.shared.Listeners;
 using statsd.net.shared.Messages;
 using statsd.net.Framework;
@@ -13,7 +18,6 @@ using System.Threading.Tasks.Dataflow;
 using statsd.net.shared.Services;
 using log4net;
 using statsd.net.Backends.SqlServer;
-using statsd.net.shared.Backends;
 using statsd.net.shared;
 using statsd.net.shared.Factories;
 using statsd.net.shared.Structures;
@@ -44,7 +48,6 @@ namespace statsd.net
 
     public Statsd ( string serviceName = null )
     {
-      LoggingBootstrap.Configure();
       _log.Info( "statsd.net starting." );
       _tokenSource = new CancellationTokenSource();
       _shutdownComplete = new ManualResetEvent( false );
@@ -183,55 +186,9 @@ namespace statsd.net
 
     private void LoadBackends(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
     {
-      foreach (var backendConfig in config.Backends)
+      foreach (var backend in config.GetConfiguredBackends(systemMetrics))
       {
-        if (backendConfig is GraphiteConfiguration)
-        {
-          var graphiteConfig = backendConfig as GraphiteConfiguration;
-          AddBackend(
-            new GraphiteBackend(graphiteConfig.Host, graphiteConfig.Port, systemMetrics),
-            systemMetrics,
-            "graphite"
-          );
-        }
-        else if (backendConfig is ConsoleConfiguration)
-        {
-          AddBackend(
-            new ConsoleBackend(),
-            systemMetrics,
-            "console"
-          );
-        }
-        else if (backendConfig is LibratoBackendConfiguration)
-        {
-          var libratoConfig = backendConfig as LibratoBackendConfiguration;
-          AddBackend(
-            new LibratoBackend(libratoConfig, config.Name, systemMetrics),
-            systemMetrics,
-            "librato"
-         );
-        }
-        else if (backendConfig is SqlServerConfiguration)
-        {
-          var sqlConfig = backendConfig as SqlServerConfiguration;
-          AddBackend(new SqlServerBackend(
-            sqlConfig.ConnectionString,
-            config.Name,
-            systemMetrics,
-            batchSize: sqlConfig.WriteBatchSize),
-            systemMetrics,
-            "sqlserver"
-          );
-        }
-        else if ( backendConfig is StatsdBackendConfiguration )
-        {
-          var statsdConfig = backendConfig as StatsdBackendConfiguration;
-          AddBackend(
-            new StatsdnetBackend(statsdConfig.Host, statsdConfig.Port, statsdConfig.FlushInterval, systemMetrics),
-            systemMetrics,
-            "statsd"
-          );
-        }
+        AddBackend(backend, systemMetrics, backend.Name);
       }
     }
 

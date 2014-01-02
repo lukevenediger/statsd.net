@@ -48,11 +48,6 @@ namespace statsd.net.shared
       }
     }
 
-    public static long GetEpoch ()
-    {
-      return (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
-    }
-
     public static IPAddress HostToIPv4Address(string host)
     {
       return Dns
@@ -69,5 +64,35 @@ namespace statsd.net.shared
     {
       return new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded };
     }
+
+    public static TimeSpan ConvertToTimespan(string time)
+    {
+      string amount = String.Empty;
+      foreach (var character in time)
+      {
+        if (Char.IsNumber(character))
+        {
+          amount += character;
+        }
+        else if (Char.IsLetter(character))
+        {
+          var value = Int32.Parse(amount);
+          switch (character)
+          {
+            case 's':
+              return new TimeSpan(0, 0, value);
+            case 'm':
+              return new TimeSpan(0, value, 0);
+            case 'h':
+              return new TimeSpan(value, 0, 0);
+            case 'd':
+              return new TimeSpan(value, 0, 0, 0);
+          }
+        }
+      }
+      // Default to seconds if there isn't a postfix
+      return new TimeSpan(0, 0, Int32.Parse(amount));
+    }
+
   }
 }

@@ -6,19 +6,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using statsd.net.core;
+using statsd.net.core.Backends;
+using statsd.net.core.Structures;
 using statsd.net.shared.Listeners;
-using statsd.net.shared.Backends;
 using statsd.net.shared.Messages;
 using statsd.net.shared.Structures;
 
 namespace statsd.net.shared.Services
 {
-  public interface ISystemMetricsService
-  {
-    void LogCount(string name, int quantity = 1);
-    void LogGauge(string name, int value);
-    bool HideSystemStats { get; set; }
-  }
 
   /// <summary>
   /// Keeps track of things like bad lines, failed sends, lines processed etc.
