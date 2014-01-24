@@ -81,7 +81,11 @@ namespace statsd.net.shared.Listeners
         IDataProducer body, 
         IHttpResponseDelegate response)
       {
-        if (head.Method.ToUpperInvariant() == "POST")
+        if (head.Method.ToUpperInvariant() == "OPTIONS")
+        {
+          ProcessOPTIONSRequest(body, response);
+        }
+        else if (head.Method.ToUpperInvariant() == "POST")
         {
           ProcessPOSTRequest(body, response);
         }
@@ -103,6 +107,22 @@ namespace statsd.net.shared.Listeners
         }
       }
 
+      private void ProcessOPTIONSRequest(IDataProducer body, IHttpResponseDelegate response)
+      {
+        var responseHead = new HttpResponseHead()
+        {
+          Status = "200 OK",
+          Headers = new Dictionary<string, string>
+            {
+              { "Content-Type", "text/plain" },
+              { "Content-Length", "0" },
+              { "Access-Control-Allow-Origin", "*" },
+              { "Access-Control-Allow-Methods", "GET, POST, OPTIONS" },
+              { "Access-Control-Allow-Headers", "X-Requested-With,Content-Type" }
+            }
+        };
+        response.OnResponse(responseHead, new EmptyResponse());
+      }
 
       private void ProcessPOSTRequest(IDataProducer body, IHttpResponseDelegate response)
       {
