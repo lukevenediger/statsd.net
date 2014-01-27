@@ -81,7 +81,11 @@ namespace statsd.net.shared.Listeners
         IDataProducer body, 
         IHttpResponseDelegate response)
       {
-        if (head.Method.ToUpperInvariant() == "POST")
+        if (head.Method.ToUpperInvariant() == "OPTIONS")
+        {
+          ProcessOPTIONSRequest(body, response);
+        }
+        else if (head.Method.ToUpperInvariant() == "POST")
         {
           ProcessPOSTRequest(body, response);
         }
@@ -103,6 +107,22 @@ namespace statsd.net.shared.Listeners
         }
       }
 
+      private void ProcessOPTIONSRequest(IDataProducer body, IHttpResponseDelegate response)
+      {
+        var responseHead = new HttpResponseHead()
+        {
+          Status = "200 OK",
+          Headers = new Dictionary<string, string>
+            {
+              { "Content-Type", "text/plain" },
+              { "Content-Length", "0" },
+              { "Access-Control-Allow-Origin", "*" },
+              { "Access-Control-Allow-Methods", "GET, POST, OPTIONS" },
+              { "Access-Control-Allow-Headers", "X-Requested-With,Content-Type" }
+            }
+        };
+        response.OnResponse(responseHead, new EmptyResponse());
+      }
 
       private void ProcessPOSTRequest(IDataProducer body, IHttpResponseDelegate response)
       {
@@ -112,7 +132,9 @@ namespace statsd.net.shared.Listeners
               try
               {
                 _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(payload));
-                string[] lines = payload.Replace("\r", "").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                // Further split by ',' to match the GET while keeping backward compatibility and allowing you to use the join for both methods.
+                string[] lines = payload.Replace("\r", "").Split(new char[] { '\n', ',' }, StringSplitOptions.RemoveEmptyEntries);                
+
                 for (int index = 0; index < lines.Length; index++)
                 {
                   _parent._target.Post(lines[index]);
@@ -149,11 +171,11 @@ namespace statsd.net.shared.Listeners
 
       private void ProcessGETRequest(IDataProducer body, HttpRequestHead head, IHttpResponseDelegate response)
       {
-        var qs = head.QueryString.Split(new string[] { "&" }, StringSplitOptions.RemoveEmptyEntries)
-          .Select(p => p.Split(new string[] { "=" }, StringSplitOptions.None))
+        var qs = head.QueryString.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
+          .Select(p => p.Split(new char[] { '=' }, StringSplitOptions.None))
           .ToDictionary(p => p[0], p => HttpUtility.UrlDecode(p[1]));
 
-        string[] lines = qs["metrics"].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+        string[] lines = qs["metrics"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
         for (int index = 0; index < lines.Length; index++)
         {
           _parent._target.Post(lines[index]);
