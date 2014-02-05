@@ -33,6 +33,7 @@ Thanks to these guys for adding features to statsd.net!
 
 * Josh Clark - https://github.com/joshclark
 * Werner van Deventer - http://brutaldev.com
+* Eric J. Smith - http://www.codesmithtools.com/
 
 ### Licence
 MIT Licence.
