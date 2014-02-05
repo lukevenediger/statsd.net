@@ -26,7 +26,13 @@ Statsd.net is actively being used in a high-volume multi-site production environ
 ## About the Codebase
 
 ### Maintainers
-Luke Venediger - lukev@lukev.net
+* Luke Venediger - lukev@lukev.net, http://lukevenediger.me/
+
+### Contributors
+Thanks to these guys for adding features to statsd.net!
+
+* Josh Clark - https://github.com/joshclark
+* Werner van Deventer - http://brutaldev.com
 
 ### Licence
 MIT Licence.
