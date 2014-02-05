@@ -37,7 +37,7 @@ namespace statsd.net.Backends.Librato
   public class LibratoBackend : IBackend
   {
     public const string ILLEGAL_NAME_CHARACTERS = @"[^-.:_\w]+";
-    public const string LIBRATO_API_URL = "http://metrics-api.librato.com";
+    public const string LIBRATO_API_URL = "https://metrics-api.librato.com";
 
     private Task _completionTask;
     private ILog _log;
