@@ -180,6 +180,19 @@ namespace statsd.net.Backends.Librato
 
     private void PostToLibrato(LibratoMetric[] lines)
     {
+      try
+      {
+        PostToLibratoInternal(lines);
+      }
+      catch (Exception ex)
+      {
+        _log.Error("Failed to post metrics to Librato.com", ex);
+        _systemMetrics.LogCount("backends.librato.post.error." + ex.GetType().Name);
+      }
+    }
+
+    private void PostToLibratoInternal(LibratoMetric[] lines)
+    {
       var pendingLines = 0;
       foreach (var epochGroup in lines.GroupBy(p => p.Epoch))
       {

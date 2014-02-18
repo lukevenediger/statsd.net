@@ -15,7 +15,7 @@ namespace statsd.net.shared.Structures
     public KeyValuePair<string, int>[] Gauges { get; set; }
 
     public GaugesBucket(KeyValuePair<string, int>[] gauges, long epoch, string rootNamespace = "")
-      : base(BucketType.Count, epoch, rootNamespace)
+      : base(BucketType.Gauge, epoch, rootNamespace)
     {
       Gauges = gauges;
     }
