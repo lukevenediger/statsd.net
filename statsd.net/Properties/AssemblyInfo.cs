@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("statsd.net")]
-[assembly: AssemblyDescription("A scalable stats collection service.")]
+[assembly: AssemblyDescription("A scalable stats collection service. More info at https://github.com/lukevenediger/statsd.net/")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("statsd.net")]
-[assembly: AssemblyCopyright("Copyright © 2013 Luke Venediger")]
+[assembly: AssemblyCopyright("Copyright © 2014 Luke Venediger")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,5 +33,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 // Uses SEMVER: http://semver.org/
-[assembly: AssemblyVersion("1.4.0.4")]
-[assembly: AssemblyFileVersion("1.4.0.4")]
+[assembly: AssemblyVersion("1.4.1.0")]
+[assembly: AssemblyFileVersion("1.4.1.0")]
