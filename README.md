@@ -9,7 +9,7 @@ A high-performance stats collection service based on [etsy's](http://etsy.com/) 
 * Supports writing out to another statsd.net instance for relay configurations
 
 ## Download statsd.net
-The latest version is v1.1 (31-Oct), and can be downloaded on the [releases page](https://github.com/lukevenediger/statsd.net/releases).
+The latest version is v1.4.1.0 (23-Apr-14), and can be downloaded on the [releases page](https://github.com/lukevenediger/statsd.net/releases).
 
 ## Project Status
 Statsd.net is actively being used in a high-volume multi-site production environment.
@@ -18,7 +18,7 @@ Statsd.net is actively being used in a high-volume multi-site production environ
 * Find all this and more on the **[statsd.net wiki](https://github.com/lukevenediger/statsd.net/tree/master/statsd.net)**
 
 ## Coming Soon
-* [App Fabric](http://msdn.com/appfabric) and [memcached](http://memcached.org/) support to allow horizontal scaling, with load balancing and storage re
+* [App Fabric](http://msdn.com/appfabric) and [memcached](http://memcached.org/) support to allow horizontal scaling, with load balancing and storage
 * More backends
 * Web-based management console with a RESTful API
 * Histogram stats
