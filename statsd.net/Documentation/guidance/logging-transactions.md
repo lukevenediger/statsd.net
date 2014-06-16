@@ -23,7 +23,7 @@ While a failed request would be reported as
 
 Logging transaction events this way makes creating a ratio graph in Graphite a snap. Take this example, for instance, which shows the ratio of attempted to successful calls per day:
 
-`asPercent(summarize(stats_counts.taxiApp.hail.attempt, "1day"), summarize(stats_counts.taxiApp.hail.success))`
+`asPercent(summarize(stats_counts.taxiApp.hail.attempt, "1day"), summarize(stats_counts.taxiApp.hail.success, "1day"))`
 
 This can easily become a graph of failure ratio per day by changing the last series to *`stats_counts.taxiApp.hail.failure`*.
 
