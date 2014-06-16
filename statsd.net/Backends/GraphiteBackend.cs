@@ -1,96 +1,147 @@
 ﻿using System.ComponentModel.Composition;
+using System.Net;
 using System.Xml.Linq;
 using statsd.net.Configuration;
 using statsd.net.core;
 using statsd.net.core.Backends;
 using statsd.net.core.Messages;
 using statsd.net.core.Structures;
-using statsd.net.shared.Messages;
-using statsd.net.shared.Services;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using statsd.net.shared;
 using log4net;
-using statsd.net.shared.Structures;
 
 namespace statsd.net.Backends
 {
-  [Export(typeof(IBackend))]
-  public class GraphiteBackend : IBackend
-  {
-    private UdpClient _client;
-    private Task _completionTask;
-    private bool _isActive;
-    private ISystemMetricsService _systemMetrics;
-    private ILog _log;
-    private ActionBlock<GraphiteLine> _senderBlock;
-
-    public string Name { get { return "Graphite"; } }  
-
-    public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
+    [Export(typeof(IBackend))]
+    public class GraphiteBackend : IBackend
     {
-      _log = SuperCheapIOC.Resolve<ILog>();
-      _systemMetrics = systemMetrics;
-      _completionTask = new Task(() => { _isActive = false; });
-      _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
-      _isActive = true;
+        private Task _completionTask;
+        private bool _isActive;
+        private ISystemMetricsService _systemMetrics;
+        private ILog _log;
+        private ActionBlock<GraphiteLine> _senderBlock;
 
-      var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"));
+        public string Name { get { return "Graphite"; } }
 
-      var ipAddress = Utility.HostToIPv4Address(config.Host);
-      _client = new UdpClient();
-      _client.Connect(ipAddress, config.Port);
+        private IGraphiteCommunicator graphiteCommunicator;
+
+        public void Configure(string collectorName, XElement configElement, ISystemMetricsService systemMetrics)
+        {
+            _log = SuperCheapIOC.Resolve<ILog>();
+            _systemMetrics = systemMetrics;
+            _completionTask = new Task(() => { _isActive = false; });
+            _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
+            _isActive = true;
+
+            var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"), configElement.Attribute("protocol").Value);
+            switch (config.GraphiteCommunicationProtocol.ToUpper())
+            {
+                case "UDP":
+                    graphiteCommunicator = new GraphiteUdpCommunicator(config);
+                    break;
+
+                case "TCP":
+                    graphiteCommunicator = new GraphiteTcpCommunicator(config);
+                    break;
+            }
+        }
+
+        public bool IsActive
+        {
+            get { return _isActive; }
+        }
+
+        public int OutputCount
+        {
+            get { return 0; }
+        }
+
+        public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)
+        {
+            messageValue.FeedTarget(_senderBlock);
+            return DataflowMessageStatus.Accepted;
+        }
+
+        public void Complete()
+        {
+            _completionTask.Start();
+        }
+
+        public Task Completion
+        {
+            get { return _completionTask; }
+        }
+
+        public void Fault(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SendLine(GraphiteLine line)
+        {
+            try
+            {
+                graphiteCommunicator.SendLine(line);
+                _systemMetrics.LogCount("backends.graphite.lines");
+            }
+            catch (SocketException ex)
+            {
+                _log.Error("Failed to send packet to Graphite: " + ex.SocketErrorCode.ToString());
+            }
+        }
     }
 
-    public bool IsActive
+
+
+    public interface IGraphiteCommunicator
     {
-      get { return _isActive; }
+        void SendLine(GraphiteLine line);
     }
 
-    public int OutputCount
+    public class GraphiteTcpCommunicator : IGraphiteCommunicator
     {
-      get { return 0; }
+        private readonly GraphiteConfiguration configuration;
+        private TcpClient _tcpClient;
+        private NetworkStream _tcpStream;
+
+        public GraphiteTcpCommunicator(GraphiteConfiguration configuration)
+        {
+            this.configuration = configuration;
+            _tcpClient = new TcpClient();
+            var ipAddress = Utility.HostToIPv4Address(configuration.Host);
+            _tcpClient.Connect(ipAddress, configuration.Port);
+            _tcpStream = _tcpClient.GetStream();
+        }
+
+        public void SendLine(GraphiteLine line)
+        {
+            byte[] data = Encoding.ASCII.GetBytes((line + "\r\n"));
+            _tcpStream.Write(data, 0, data.Length);
+            _tcpStream.Flush();
+        }
     }
 
-    public DataflowMessageStatus OfferMessage(DataflowMessageHeader messageHeader, Bucket messageValue, ISourceBlock<Bucket> source, bool consumeToAccept)
+    public class GraphiteUdpCommunicator : IGraphiteCommunicator
     {
-      messageValue.FeedTarget(_senderBlock);
-      return DataflowMessageStatus.Accepted;
-    }
+        private readonly GraphiteConfiguration configuration;
+        private UdpClient _client;
 
-    public void Complete()
-    {
-      _completionTask.Start();
-    }
+        public GraphiteUdpCommunicator(GraphiteConfiguration configuration)
+        {
+            this.configuration = configuration;
+            var ipAddress = Utility.HostToIPv4Address(configuration.Host);
+            _client = new UdpClient();
+            _client.Connect(ipAddress, configuration.Port);
+        }
 
-    public Task Completion
-    {
-      get { return _completionTask; }
+        public void SendLine(GraphiteLine line)
+        {
+            byte[] data = Encoding.ASCII.GetBytes((line + "\r\n"));
+            _client.Send(data, data.Length);
+        }
     }
-
-    public void Fault(Exception exception)
-    {
-      throw new NotImplementedException();
-    }
-
-    private void SendLine(GraphiteLine line)
-    {
-      byte[] data = Encoding.ASCII.GetBytes(line.ToString());
-      try
-      {
-        _client.Send(data, data.Length);
-        _systemMetrics.LogCount("backends.graphite.lines");
-        _systemMetrics.LogCount("backends.graphite.bytes", data.Length);
-      }
-      catch (SocketException ex)
-      {
-        _log.Error("Failed to send packet to Graphite: " + ex.SocketErrorCode.ToString());
-      }
-    }
-  }
 }
