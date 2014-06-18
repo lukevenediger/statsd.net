@@ -6,76 +6,81 @@ using System.Threading.Tasks;
 
 namespace statsd.net.Configuration
 {
-  public class BackendConfiguration
-  {
-  }
-
-  public class SqlServerConfiguration : BackendConfiguration
-  {
-    public string ConnectionString { get; set; }
-    public int WriteBatchSize { get; set; }
-    public int Retries { get; private set; }
-
-    public SqlServerConfiguration(string connectionString, int writeBatchSize)
+    public class BackendConfiguration
     {
-      ConnectionString = connectionString;
-      WriteBatchSize = writeBatchSize;
-      Retries = 3;
     }
-  }
 
-  public class GraphiteConfiguration : BackendConfiguration
-  {
-    public string Host { get; set; }
-    public int Port { get; set; }
-
-    public GraphiteConfiguration(string host, int port)
+    public class SqlServerConfiguration : BackendConfiguration
     {
-      Host = host;
-      Port = port;
+        public string ConnectionString { get; set; }
+        public int WriteBatchSize { get; set; }
+        public int Retries { get; private set; }
+
+        public SqlServerConfiguration(string connectionString, int writeBatchSize)
+        {
+            ConnectionString = connectionString;
+            WriteBatchSize = writeBatchSize;
+            Retries = 3;
+        }
     }
-  }
 
-  public class ConsoleConfiguration : BackendConfiguration
-  {
-  }
-
-  public class LibratoBackendConfiguration : BackendConfiguration
-  {
-    public string Email { get; set; }
-    public string Token { get; set; }
-    public TimeSpan RetryDelay { get; set; }
-    public TimeSpan PostTimeout { get; set; }
-    public int MaxBatchSize { get; set; }
-    public bool CountersAsGauges { get; set; }
-    public int NumRetries { get; set; } 
-
-    public LibratoBackendConfiguration(string email, string token, TimeSpan retryDelay, int numRetries, TimeSpan postTimeout, int maxBatchSize, bool countersAsGauges)
+    public class GraphiteConfiguration : BackendConfiguration
     {
-      this.Email = email;
-      this.Token = token;
-      this.RetryDelay = retryDelay;
-      this.NumRetries = numRetries;
-      this.PostTimeout = postTimeout;
-      this.MaxBatchSize = maxBatchSize;
-      this.CountersAsGauges = countersAsGauges;
+        public string GraphiteCommunicationProtocol { get; set; }
+        public string Host { get; set; }
+        public int Port { get; set; }
+
+        public GraphiteConfiguration(string host, int port, string graphiteCommunicationProtocol)
+        {
+            GraphiteCommunicationProtocol = graphiteCommunicationProtocol;
+            Host = host;
+            Port = port;
+
+            if (graphiteCommunicationProtocol.ToUpper() != "UDP" && graphiteCommunicationProtocol.ToUpper() != "TCP")
+                throw new InvalidOperationException("configuration 'protocol' must be 'TCP' or 'UDP'");
+        }
     }
-  }
 
-  public class StatsdBackendConfiguration : BackendConfiguration
-  {
-    public string Host { get; set; }
-    public int Port { get; set; }
-    public TimeSpan FlushInterval { get; set; }
-    public bool EnableCompression { get; set; }
-
-    public StatsdBackendConfiguration(string host, int port, TimeSpan? flushInterval, bool enableCompression = true)
+    public class ConsoleConfiguration : BackendConfiguration
     {
-      Host = host;
-      Port = port;
-      FlushInterval = flushInterval ?? new TimeSpan(0, 0, 5);
-      EnableCompression = enableCompression;
     }
-  }
+
+    public class LibratoBackendConfiguration : BackendConfiguration
+    {
+        public string Email { get; set; }
+        public string Token { get; set; }
+        public TimeSpan RetryDelay { get; set; }
+        public TimeSpan PostTimeout { get; set; }
+        public int MaxBatchSize { get; set; }
+        public bool CountersAsGauges { get; set; }
+        public int NumRetries { get; set; }
+
+        public LibratoBackendConfiguration(string email, string token, TimeSpan retryDelay, int numRetries, TimeSpan postTimeout, int maxBatchSize, bool countersAsGauges)
+        {
+            this.Email = email;
+            this.Token = token;
+            this.RetryDelay = retryDelay;
+            this.NumRetries = numRetries;
+            this.PostTimeout = postTimeout;
+            this.MaxBatchSize = maxBatchSize;
+            this.CountersAsGauges = countersAsGauges;
+        }
+    }
+
+    public class StatsdBackendConfiguration : BackendConfiguration
+    {
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public TimeSpan FlushInterval { get; set; }
+        public bool EnableCompression { get; set; }
+
+        public StatsdBackendConfiguration(string host, int port, TimeSpan? flushInterval, bool enableCompression = true)
+        {
+            Host = host;
+            Port = port;
+            FlushInterval = flushInterval ?? new TimeSpan(0, 0, 5);
+            EnableCompression = enableCompression;
+        }
+    }
 
 }
