@@ -36,8 +36,12 @@ namespace statsd.net.Backends
             _completionTask = new Task(() => { _isActive = false; });
             _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
             _isActive = true;
+            
+            string _protocol = "UDP"; // Default protocol
+            if (configElement.Attribute("protocol") != null)
+                _protocol = configElement.Attribute("protocol").Value;
 
-            var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"), configElement.Attribute("protocol").Value);
+            var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"), _protocol);
             switch (config.GraphiteCommunicationProtocol.ToUpper())
             {
                 case "UDP":
@@ -116,7 +120,6 @@ namespace statsd.net.Backends
             _tcpClient.Connect(ipAddress, configuration.Port);
             _tcpStream = _tcpClient.GetStream();
         }
-
         public void SendLine(GraphiteLine line)
         {
             byte[] data = Encoding.ASCII.GetBytes((line + "\r\n"));
