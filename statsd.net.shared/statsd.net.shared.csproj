@@ -59,6 +59,7 @@
     <Compile Include="Encryption\SimplerAES.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Factories\MessageParserBlockFactory.cs" />
+    <Compile Include="Listeners\MSSQLRelayListener.cs" />
     <Compile Include="Structures\DecoderBlockPacket.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
     <Compile Include="Listeners\IListener.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="Structures\LatencyDatapointBox.cs" />
     <Compile Include="Structures\PercentileBucket.cs" />
     <Compile Include="Structures\RawBucket.cs" />
+    <Compile Include="Structures\RelayMetric.cs" />
     <Compile Include="Structures\SetsBucket.cs" />
     <Compile Include="SuperCheapIOC.cs" />
     <Compile Include="Utility.cs" />

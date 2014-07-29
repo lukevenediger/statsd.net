@@ -102,6 +102,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
+    <None Include="statsdnet.db-relay.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="statsdnet.config">
       <SubType>Designer</SubType>
     </None>
