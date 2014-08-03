@@ -14,58 +14,83 @@ using statsd.net.shared.Structures;
 
 namespace statsd.net.Framework
 {
-  public class TimedSetAggregatorBlockFactory
-  {
-    public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<SetsBucket> target,
-      string rootNamespace, 
-      IIntervalService intervalService,
-      ILog log)
+    public class TimedSetAggregatorBlockFactory
     {
-      var sets = new ConcurrentDictionary<string, ConcurrentDictionary<int, bool>>();
-      var root = rootNamespace;
-      var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
+        public static readonly char[] UNDERSCORE = new char[] { '_' };
 
-      var incoming = new ActionBlock<StatsdMessage>(p =>
+        public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<CounterBucket> target,
+          string rootNamespace,
+          IIntervalService intervalService,
+          ILog log)
         {
-          var set = p as Set;
-          sets.AddOrUpdate(set.Name, 
-            (key) =>
+            var sets = new ConcurrentDictionary<string, ConcurrentDictionary<string, int>>();
+            var windows = new ConcurrentDictionary<string, ConcurrentDictionary<string, int>>();
+            var root = rootNamespace;
+            var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
+            var timeWindow = new SetTimeWindow();
+
+            var incoming = new ActionBlock<StatsdMessage>(p =>
               {
-                var setDict = new ConcurrentDictionary<int, bool>();
-                setDict.AddOrUpdate( set.Value, ( key2 ) => true, ( key2, oldValue ) => true );
-                return setDict;
+                  var set = p as Set;
+                  var metricName = set.Name + "." + set.Value;
+
+                  foreach (var period in timeWindow.AllPeriods)
+                  {
+                      windows.AddOrUpdate(period,
+                        (key) =>
+                        {
+                            var window = new ConcurrentDictionary<string, int>();
+                            window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => oldValue + 1);
+                            return window;
+                        },
+                        (key, window) =>
+                        {
+                            window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => oldValue + 1);
+                            return window;
+                        }
+                      );
+                  }
               },
-            (key, setDict) =>
+              new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
+
+            intervalService.Elapsed += (sender, e) =>
               {
-                setDict.AddOrUpdate( set.Value, ( key2 ) => true, ( key2, oldValue ) => true );
-                return setDict;
+                  if (sets.Count == 0)
+                  {
+                      return;
+                  }
+                  var currentTimeWindow = new SetTimeWindow();
+                  var periodsNotPresent = currentTimeWindow.GetDifferences(timeWindow);
+                  // Make the current time window the one we use to manage the collections
+                  timeWindow = currentTimeWindow;
+                  CounterBucket bucket;
+
+                  foreach (var period in periodsNotPresent)
+                  {
+                      ConcurrentDictionary<String, int> window;
+                      if (windows.TryRemove(period, out window))
+                      {
+                          var parts = period.Split(UNDERSCORE);
+                          var qualifier = "." + parts[0] + "." + parts[1];
+                          var metrics = window.ToArray().Select(metric =>
+                              {
+                                  return new KeyValuePair<string, int>(
+                                    metric.Key + qualifier,
+                                    metric.Value
+                                  );
+                              }).ToArray();
+                          bucket = new CounterBucket(metrics, e.Epoch, ns);
+                          target.Post(bucket);
+                          break;
+                      }
+                  }
+              };
+            incoming.Completion.ContinueWith(p =>
+              {
+                  // Tell the upstream block that we're done
+                  target.Complete();
               });
-        },
-        new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
-
-      intervalService.Elapsed += (sender, e) =>
-        {
-          if (sets.Count == 0)
-          {
-            return;
-          }
-          var rawData = sets.ToArray();
-          sets.Clear();
-          var bucket = new SetsBucket(
-            rawData.Select(p =>
-              new KeyValuePair<string, List<KeyValuePair<int, bool>>>(p.Key, p.Value.ToList())
-            ).ToList(),
-            e.Epoch,
-            ns);
-
-          target.Post(bucket);
-        };
-      incoming.Completion.ContinueWith(p =>
-        {
-          // Tell the upstream block that we're done
-          target.Complete();
-        });
-      return incoming;
+            return incoming;
+        }
     }
-  }
 }

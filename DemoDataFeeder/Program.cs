@@ -39,6 +39,8 @@ namespace DemoDataFeeder
                 client.LogCount( "test.count.bigValue", rnd.Next( 50 ) );
                 client.LogTiming( "test.timing." + rnd.Next( 5 ), rnd.Next( 100, 2000 ) );
                 client.LogGauge( "test.gauge." + rnd.Next( 5 ), rnd.Next( 100 ) );
+                client.LogSet("test.set.a", rnd.Next(5));
+                client.LogSet("test.set.b", rnd.Next(5));
                 Thread.Sleep( options.Delay );
                 Interlocked.Add( ref totalMetricsSent, 4 );
 

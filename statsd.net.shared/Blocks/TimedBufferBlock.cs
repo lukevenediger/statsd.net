@@ -24,6 +24,7 @@ namespace statsd.net.shared.Blocks
       CancellationToken? cancellationToken = null)
     {
       _buffer = new ConcurrentStack<T>();
+      _isActive = true;
          
       _completionTask = new Task(() =>
       {
