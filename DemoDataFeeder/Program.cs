@@ -20,6 +20,7 @@ namespace DemoDataFeeder
         var tokenSource = new System.Threading.CancellationTokenSource();
         var stopwatch = Stopwatch.StartNew();
         var totalMetricsSent = 0;
+        var letters = new String[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
         var tasks = new List<Task>();
         int numThreads = options.Threads == 0 ? 1 : options.Threads;
         for ( int count = 0; count < numThreads; count++ )
@@ -35,12 +36,11 @@ namespace DemoDataFeeder
               }
               while ( true )
               {
-                client.LogCount( "test.count.one." + rnd.Next( 5 ) );
-                client.LogCount( "test.count.bigValue", rnd.Next( 50 ) );
-                client.LogTiming( "test.timing." + rnd.Next( 5 ), rnd.Next( 100, 2000 ) );
-                client.LogGauge( "test.gauge." + rnd.Next( 5 ), rnd.Next( 100 ) );
-                client.LogSet("test.set.a", rnd.Next(5));
-                client.LogSet("test.set.b", rnd.Next(5));
+                //client.LogCount( "test.count.one." + rnd.Next( 5 ) );
+                //client.LogCount( "test.count.bigValue", rnd.Next( 50 ) );
+                //client.LogTiming( "test.timing." + rnd.Next( 5 ), rnd.Next( 100, 2000 ) );
+                //client.LogGauge( "test.gauge." + rnd.Next( 5 ), rnd.Next( 100 ) );
+                client.LogCalendargram("test.calendargram.users", letters.Next(), CalendargramRetentionPeriod.ONE_MINUTE);
                 Thread.Sleep( options.Delay );
                 Interlocked.Add( ref totalMetricsSent, 4 );
 

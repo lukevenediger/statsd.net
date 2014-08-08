@@ -59,6 +59,9 @@
     <Compile Include="Encryption\SimplerAES.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Factories\MessageParserBlockFactory.cs" />
+    <Compile Include="Messages\Calendargram.cs" />
+    <Compile Include="Messages\CalendargramRetentionPeriod.cs" />
+    <Compile Include="Services\TimeWindowService.cs" />
     <Compile Include="Structures\DecoderBlockPacket.cs" />
     <Compile Include="Listeners\HttpStatsListener.cs" />
     <Compile Include="Listeners\IListener.cs" />
@@ -89,7 +92,7 @@
     <Compile Include="Structures\PercentileBucket.cs" />
     <Compile Include="Structures\RawBucket.cs" />
     <Compile Include="Structures\SetsBucket.cs" />
-    <Compile Include="Structures\SetTimeWindow.cs" />
+    <Compile Include="Structures\TimeWindow.cs" />
     <Compile Include="SuperCheapIOC.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

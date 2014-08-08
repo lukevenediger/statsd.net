@@ -14,7 +14,7 @@ using statsd.net.shared.Structures;
 
 namespace statsd.net.Framework
 {
-    public class TimedSetAggregatorBlockFactory
+    public class TimedCalendargramAggregatorBlockFactory
     {
         public static readonly char[] UNDERSCORE = new char[] { '_' };
         public const string METRIC_IDENTIFIER_SEPARATOR = "^ ^";
@@ -23,60 +23,53 @@ namespace statsd.net.Framework
         public static ActionBlock<StatsdMessage> CreateBlock(ITargetBlock<CounterBucket> target,
           string rootNamespace,
           IIntervalService intervalService,
+          ITimeWindowService timeWindowService,
           ILog log)
         {
-            var sets = new ConcurrentDictionary<string, ConcurrentDictionary<string, int>>();
-            var windows = new ConcurrentDictionary<string, ConcurrentDictionary<string, bool>>();
+            var windows = new ConcurrentDictionary<string, ConcurrentDictionary<string, int>>();
             var root = rootNamespace;
             var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
-            var timeWindow = new TimeWindow();
 
             var incoming = new ActionBlock<StatsdMessage>(p =>
               {
-                  var set = p as Set;
-                  var metricName = set.Name + METRIC_IDENTIFIER_SEPARATOR + set.Value;
+                  var calendargram = p as Calendargram;
+                  var metricName = calendargram.Name + METRIC_IDENTIFIER_SEPARATOR + calendargram.Value;
 
-                  foreach (var period in timeWindow.AllPeriods)
-                  {
-                      windows.AddOrUpdate(period,
-                        (key) =>
-                        {
-                            var window = new ConcurrentDictionary<string, bool>();
-                            window.AddOrUpdate(metricName, (key2) => true, (key2, oldValue) => true);
-                            return window;
-                        },
-                        (key, window) =>
-                        {
-                            window.AddOrUpdate(metricName, (key2) => true, (key2, oldValue) => true);
-                            return window;
-                        }
-                      );
-                  }
+                  var period = timeWindowService.GetTimeWindow().GetTimePeriod(calendargram.Period);
+                  windows.AddOrUpdate(period,
+                    (key) =>
+                    {
+                        var window = new ConcurrentDictionary<string, int>();
+                        window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => oldValue + 1);
+                        return window;
+                    },
+                    (key, window) =>
+                    {
+                        window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => oldValue + 1);
+                        return window;
+                    }
+                  );
               },
               new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
 
             intervalService.Elapsed += (sender, e) =>
               {
-                  if (sets.Count == 0)
+                  if (windows.Count == 0)
                   {
                       return;
                   }
-                  var currentTimeWindow = new TimeWindow();
-                  var periodsNotPresent = currentTimeWindow.GetDifferences(timeWindow);
-                  // Make the current time window the one we use to manage the collections
-                  timeWindow = currentTimeWindow;
+                  var currentTimeWindow = timeWindowService.GetTimeWindow();
+
+                  var periodsNotPresent = windows
+                      .ToArray()
+                      .Where(p => !currentTimeWindow.AllPeriods.Contains(p.Key))
+                      .Select(p => p.Key);
+
                   CounterBucket bucket;
-
-                  // (Parallel) For each period that was measured (Day, Week, Month etc)
-                    // for every unique metric + value
-                      // Count the number of entries that start with the metric name
-                      // Add that metric to the list
-
 
                   foreach (var period in periodsNotPresent)
                   {
-                      ConcurrentDictionary<String, bool> window;
-                      // Take this window out of the dictionary
+                      ConcurrentDictionary<String, int> window;
                       if (windows.TryRemove(period, out window))
                       {
                           var parts = period.Split(UNDERSCORE);
@@ -86,7 +79,11 @@ namespace statsd.net.Framework
                           var metrics = new Dictionary<String, int>();
                           for (int index = 0; index < metricsAndValues.Length; index++)
                           {
-                              var metricName = metricsAndValues[index].Key.Split(METRIC_IDENTIFIER_SEPARATOR_SPLITTER, StringSplitOptions.RemoveEmptyEntries)[0] + qualifier;
+                              var metricName = metricsAndValues[index].Key.Split(
+                                  METRIC_IDENTIFIER_SEPARATOR_SPLITTER, 
+                                  StringSplitOptions.RemoveEmptyEntries
+                              )[0] + qualifier;
+
                               if (metrics.ContainsKey(metricName))
                               {
                                   metrics[metricName] += 1;
@@ -98,20 +95,20 @@ namespace statsd.net.Framework
                           }
 
                           var metricList = metrics.Select(metric =>
-                              {
-                                  return new KeyValuePair<string, int>(
-                                    metric.Key,
-                                    metric.Value
-                                  );
-                              }).ToArray();
+                          {
+                              return new KeyValuePair<string, int>(
+                                metric.Key,
+                                metric.Value
+                              );
+                          }).ToArray();
                           bucket = new CounterBucket(metricList, e.Epoch, ns);
                           target.Post(bucket);
-                          break;
                       }
                   }
               };
             incoming.Completion.ContinueWith(p =>
               {
+                  log.Info("TimedCounterAggregatorBlock completing.");
                   // Tell the upstream block that we're done
                   target.Complete();
               });

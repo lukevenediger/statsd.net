@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 
 namespace statsd.net.shared.Messages
 {
-    public enum MessageType
+    public enum CalendargramRetentionPeriod
     {
-        Counter,
-        Timing,
-        Set,
-        Gauge,
-        Calendargram,
-        Raw,
-        Invalid,
-        Unknown,
+        OneMinute,
+        FiveMinute,
+        Hour,
+        Day,
+        DayOfWeek,
+        Week,
+        Month
     }
 }

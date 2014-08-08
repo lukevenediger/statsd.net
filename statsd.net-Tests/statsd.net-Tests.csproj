@@ -74,6 +74,7 @@
     <Compile Include="Infrastructure\BucketOutputBlock.cs" />
     <Compile Include="Infrastructure\ControllableIntervalService.cs" />
     <Compile Include="Infrastructure\InAppListenerOutputChannel.cs" />
+    <Compile Include="Infrastructure\MockTimeWindowService.cs" />
     <Compile Include="Infrastructure\OutputBufferBlock.cs" />
     <Compile Include="Infrastructure\GraphiteLineOutputBlock.cs" />
     <Compile Include="Integration\Gauges.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="Infrastructure\TestUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SystemTests.cs" />
+    <Compile Include="TimedCalendargramAggregatorBlockTests.cs" />
     <Compile Include="TimedCounterAggregatorBlockTests.cs" />
     <Compile Include="TimedGaugeAggregatorBlockTests.cs" />
     <Compile Include="TimedLatencyAggregatorBlockTests.cs" />

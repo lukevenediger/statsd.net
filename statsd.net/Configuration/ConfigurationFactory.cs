@@ -9,96 +9,99 @@ using statsd.net.shared;
 
 namespace statsd.net.Configuration
 {
-  public static class ConfigurationFactory
-  {
-    public static StatsdnetConfiguration Parse(string configFile)
+    public static class ConfigurationFactory
     {
-      var config = new StatsdnetConfiguration();
-      var xml = XDocument.Parse(File.ReadAllText(configFile));
-      var statsdnet = xml.Element("statsdnet");
-      config.Name = statsdnet.Attribute("name").Value;
-      if ( statsdnet.Attributes().Any( p => p.Name == "hideSystemStats" ) )
-      {
-        config.HideSystemStats = statsdnet.ToBoolean( "hideSystemStats" );
-      }
-
-      // Add listeners
-      foreach (var item in statsdnet.Element("listeners").Elements())
-      {
-        ListenerConfiguration listener = null;
-        switch (item.Name.LocalName)
+        public static StatsdnetConfiguration Parse(string configFile)
         {
-          case "udp":
-            listener = new UDPListenerConfiguration(item.ToInt("port"));
-            break;
-          case "tcp":
-            listener = new TCPListenerConfiguration(item.ToInt("port"));
-            break;
-          case "http":
-            listener = new HTTPListenerConfiguration(item.ToInt("port"));
-            if ( item.Attribute( "headerKey" ) != null )
+            var config = new StatsdnetConfiguration();
+            var xml = XDocument.Parse(File.ReadAllText(configFile));
+            var statsdnet = xml.Element("statsdnet");
+            config.Name = statsdnet.Attribute("name").Value;
+            if (statsdnet.Attributes().Any(p => p.Name == "hideSystemStats"))
             {
-              ( ( HTTPListenerConfiguration )listener ).HeaderKey = item.Attribute( "headerKey" ).Value;
+                config.HideSystemStats = statsdnet.ToBoolean("hideSystemStats");
             }
-            break;
-          case "statsdnet":
-            listener = new StatsdnetListenerConfiguration(item.ToInt("port"));
-            break;
-          default:
-            throw new ArgumentOutOfRangeException("Not sure what this listener is: " + item.Name);
+
+            // Add listeners
+            foreach (var item in statsdnet.Element("listeners").Elements())
+            {
+                ListenerConfiguration listener = null;
+                switch (item.Name.LocalName)
+                {
+                    case "udp":
+                        listener = new UDPListenerConfiguration(item.ToInt("port"));
+                        break;
+                    case "tcp":
+                        listener = new TCPListenerConfiguration(item.ToInt("port"));
+                        break;
+                    case "http":
+                        listener = new HTTPListenerConfiguration(item.ToInt("port"));
+                        if (item.Attribute("headerKey") != null)
+                        {
+                            ((HTTPListenerConfiguration)listener).HeaderKey = item.Attribute("headerKey").Value;
+                        }
+                        break;
+                    case "statsdnet":
+                        listener = new StatsdnetListenerConfiguration(item.ToInt("port"));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Not sure what this listener is: " + item.Name);
+                }
+                config.Listeners.Add(listener);
+            }
+
+            // Add Backends
+            foreach (var item in statsdnet.Element("backends").Elements())
+            {
+                string name = item.Name.LocalName;
+                config.BackendConfigurations[name] = item;
+            }
+
+            // Add aggregators
+            var flushInterval = ConvertToTimespan(statsdnet.Element("aggregation").Attribute("flushInterval").Value);
+            config.FlushInterval = flushInterval;
+            var aggregatorGroup = new AggregatorConfiguration();
+            foreach (var item in statsdnet.Element("aggregation").Elements())
+            {
+                switch (item.Name.LocalName)
+                {
+                    case "gauges":
+                        config.Aggregators.Add("gauges", new GaugeAggregatorConfig(ns: item.Attribute("namespace").Value,
+                            removeZeroGauges: item.ToBoolean("removeZeroGauges")));
+                        break;
+                    case "counters":
+                        config.Aggregators.Add("counters", new CounterAggregationConfig(ns: item.Attribute("namespace").Value));
+                        break;
+                    case "sets":
+                        config.Aggregators.Add("sets", new SetAggregationConfig(ns: item.Attribute("namespace").Value));
+                        break;
+                    case "calendargrams":
+                        config.Aggregators.Add("calendargrams", new CalendargramAggregationConfig(ns: item.Attribute("namespace").Value));
+                        break;
+                    case "timers":
+                        var timerConfig = new TimersAggregationConfig(ns: item.Attribute("namespace").Value, calculateSumSquares: item.ToBoolean("calculateSumSquares"));
+                        config.Aggregators.Add("timers", timerConfig);
+                        // Now add the percentiles
+                        foreach (var subItem in item.Elements())
+                        {
+                            if (!timerConfig.AddPercentile(new PercentileConfig(
+                              name: subItem.Attribute("name").Value,
+                              threshold: subItem.ToInt("threshold"),
+                              flushInterval: ConvertToTimespan(subItem.Attribute("flushInterval").Value)
+                              )))
+                            {
+                                // TODO: log that a duplicate percentile was ignored
+                            }
+                        }
+                        break;
+                }
+            }
+            return config;
         }
-        config.Listeners.Add(listener);
-      }
 
-      // Add Backends
-      foreach (var item in statsdnet.Element("backends").Elements())
-      {
-        string name = item.Name.LocalName;
-        config.BackendConfigurations[name] = item;
-      }
-
-      // Add aggregators
-      var flushInterval = ConvertToTimespan(statsdnet.Element("aggregation").Attribute("flushInterval").Value);
-      config.FlushInterval = flushInterval;
-      var aggregatorGroup = new AggregatorConfiguration();
-      foreach (var item in statsdnet.Element("aggregation").Elements())
-      {
-        switch (item.Name.LocalName)
+        private static TimeSpan ConvertToTimespan(string time)
         {
-          case "gauges":
-            config.Aggregators.Add("gauges", new GaugeAggregatorConfig(ns: item.Attribute("namespace").Value,
-                removeZeroGauges: item.ToBoolean("removeZeroGauges")));
-            break;
-          case "counters":
-            config.Aggregators.Add("counters", new CounterAggregationConfig(ns: item.Attribute("namespace").Value));
-            break;
-          case "sets":
-            config.Aggregators.Add("sets", new SetAggregationConfig(ns: item.Attribute("namespace").Value));
-            break;
-          case "timers":
-            var timerConfig = new TimersAggregationConfig( ns: item.Attribute( "namespace" ).Value, calculateSumSquares: item.ToBoolean( "calculateSumSquares" ) );
-            config.Aggregators.Add("timers", timerConfig);
-            // Now add the percentiles
-            foreach (var subItem in item.Elements())
-            {
-              if (!timerConfig.AddPercentile(new PercentileConfig(
-                name: subItem.Attribute("name").Value,
-                threshold: subItem.ToInt("threshold"),
-                flushInterval: ConvertToTimespan(subItem.Attribute("flushInterval").Value)
-                )))
-              {
-                // TODO: log that a duplicate percentile was ignored
-              }
-            }
-            break;
+            return Utility.ConvertToTimespan(time);
         }
-      }
-      return config;
     }
-
-    private static TimeSpan ConvertToTimespan(string time)
-    {
-      return Utility.ConvertToTimespan(time);
-    }
-  }
 }

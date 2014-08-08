@@ -84,6 +84,7 @@
     <Compile Include="Configuration\ListenerConfiguration.cs" />
     <Compile Include="Configuration\StatsdnetConfiguration.cs" />
     <Compile Include="Framework\PassThroughBlockFactory.cs" />
+    <Compile Include="Framework\TimedCalendargramAggregatorBlockFactory.cs" />
     <Compile Include="Framework\TimedSetAggregatorBlockFactory.cs" />
     <Compile Include="Framework\TimedLatencyPercentileAggregatorBlockFactory.cs" />
     <Compile Include="Framework\TimedCounterAggregatorBlockFactory.cs" />
