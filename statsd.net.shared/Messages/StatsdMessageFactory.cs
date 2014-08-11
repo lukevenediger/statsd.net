@@ -46,7 +46,8 @@ namespace statsd.net.shared.Messages
             return new Gauge(nameAndValue[0], Int32.Parse(statProperties[0]));
           case "s":
             // uniques:765|s
-            return new Set(nameAndValue[0], Int32.Parse(statProperties[0]));
+            // uniques:ABSA434As1|s
+            return new Set(nameAndValue[0], statProperties[0]);
           case "r":
             // some.other.value:12312|r
             // some.other.value:12312|r|99988883333
@@ -58,6 +59,9 @@ namespace statsd.net.shared.Messages
             {
               return new Raw(nameAndValue[0], Int32.Parse(statProperties[0]), long.Parse(statProperties[2]));
             }
+          case "cg":
+            // calendargram.key:value|cg|{h,d,w,m,dow}
+            return new Calendargram(nameAndValue[0], statProperties[0], statProperties[2]);
           default:
             return new InvalidMessage("Unknown message type: " + statProperties[1]);
         }

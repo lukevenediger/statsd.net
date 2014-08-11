@@ -8,9 +8,9 @@ namespace statsd.net.shared.Messages
 {
   public sealed class Set : StatsdMessage
   {
-    public int Value { get; set; }
+    public string Value { get; set; }
 
-    public Set(string name, int value)
+    public Set(string name, string value)
     {
       Name = name;
       Value = value;

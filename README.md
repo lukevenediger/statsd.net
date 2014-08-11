@@ -22,6 +22,7 @@ Statsd.net is actively being used in a high-volume multi-site production environ
 * More backends
 * Web-based management console with a RESTful API
 * Histogram stats
+* Calendargram stats - easily count unique values according to calendar buckets
 
 ## About the Codebase
 
