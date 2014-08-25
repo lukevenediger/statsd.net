@@ -1,4 +1,5 @@
 ﻿using log4net;
+using statsd.net.shared;
 using statsd.net.shared.Messages;
 using System;
 using System.Collections.Concurrent;
@@ -90,6 +91,12 @@ public static class ExtensionMethods
     public static bool ToBoolean(this XElement element, string attributeName)
     {
         return Boolean.Parse(element.Attribute(attributeName).Value);
+    }
+
+    public static TimeSpan ToTimeSpan(this XElement element, string attributeName)
+    {
+        var value = element.Attribute(attributeName).Value;
+        return Utility.ConvertToTimespan(value);
     }
 
     public static bool ToBoolean(this XElement element, string attributeName, bool defaultValue)

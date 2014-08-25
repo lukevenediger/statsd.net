@@ -44,6 +44,12 @@ namespace statsd.net.Configuration
                     case "statsdnet":
                         listener = new StatsdnetListenerConfiguration(item.ToInt("port"));
                         break;
+                    case "mssql-relay":
+                        listener = new MSSQLRelayListenerConfiguration(item.Attribute("connectionString").Value,
+                            item.ToInt("batchSize"),
+                            item.ToBoolean("deleteAfterSend"),
+                            item.ToTimeSpan("pollInterval"));
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException("Not sure what this listener is: " + item.Name);
                 }
@@ -58,7 +64,7 @@ namespace statsd.net.Configuration
             }
 
             // Add aggregators
-            var flushInterval = ConvertToTimespan(statsdnet.Element("aggregation").Attribute("flushInterval").Value);
+            var flushInterval = statsdnet.Element("aggregation").ToTimeSpan("flushInterval");
             config.FlushInterval = flushInterval;
             var aggregatorGroup = new AggregatorConfiguration();
             foreach (var item in statsdnet.Element("aggregation").Elements())
@@ -87,7 +93,7 @@ namespace statsd.net.Configuration
                             if (!timerConfig.AddPercentile(new PercentileConfig(
                               name: subItem.Attribute("name").Value,
                               threshold: subItem.ToInt("threshold"),
-                              flushInterval: ConvertToTimespan(subItem.Attribute("flushInterval").Value)
+                              flushInterval: subItem.ToTimeSpan("flushInterval")
                               )))
                             {
                                 // TODO: log that a duplicate percentile was ignored
@@ -97,11 +103,6 @@ namespace statsd.net.Configuration
                 }
             }
             return config;
-        }
-
-        private static TimeSpan ConvertToTimespan(string time)
-        {
-            return Utility.ConvertToTimespan(time);
         }
     }
 }

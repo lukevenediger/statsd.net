@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Backends\ConsoleBackend.cs" />
     <Compile Include="Backends\GraphiteBackend.cs" />
+    <Compile Include="Backends\GraphiteTCPBackend.cs" />
     <Compile Include="Backends\Librato\APIPayload.cs" />
     <Compile Include="Backends\Librato\LibratoBackend.cs" />
     <Compile Include="Backends\Librato\LibratoCounter.cs" />
@@ -103,7 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
-    <None Include="statsdnet.db-relay.config">
+    <None Include="statsdnet.config.dbrelay">
       <SubType>Designer</SubType>
     </None>
     <None Include="statsdnet.config">

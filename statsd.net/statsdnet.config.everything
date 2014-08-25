@@ -5,12 +5,14 @@
         <tcp port="8001" />
         <http port="8002" />
         <statsdnet port="8003" />
+        <mssql-relay batchSize="10" deleteAfterSend="false" pollInterval="1s" connectionString="your-db-connection-string" />
     </listeners>
     <aggregation flushInterval="1m">
-        <gauges namespace="test.gauges" removeZeroGauges="true" />
-        <counters namespace="test.counters" />
-        <sets namespace="test.sets" />
-        <timers namespace="test.timers" calculateSumSquares="false">
+        <gauges namespace="gauges" removeZeroGauges="true" />
+        <counters namespace="counters" />
+        <sets namespace="sets" />
+        <calendargrams namespace="calgrams" />
+        <timers namespace="timers" calculateSumSquares="false">
             <percentile name="p90-5min" threshold="90" flushInterval="5m" />
             <percentile name="p90-1hour" threshold="90" flushInterval="1h" />
             <percentile name="p50-1hour" threshold="50" flushInterval="1h" />
@@ -28,6 +30,7 @@
         <sqlserver connectionString="server=localhost;database=metrics;uid=mmetricsuser;password=metricsuser"
                    writeBatchSize="500" />
         <graphite host="localhost" port="2003" />
+        <graphite-tcp host="metricsas1" port="2003" />
         <statsdnet host="localhost" port="11002" flushInterval="5s"/>
     </backends>
 </statsdnet>

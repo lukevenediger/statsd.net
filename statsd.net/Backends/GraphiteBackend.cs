@@ -37,7 +37,7 @@ namespace statsd.net.Backends
       _log = SuperCheapIOC.Resolve<ILog>();
       _systemMetrics = systemMetrics;
       _completionTask = new Task(() => { _isActive = false; });
-      _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.UnboundedExecution());
+      _senderBlock = new ActionBlock<GraphiteLine>((message) => SendLine(message), Utility.OneAtATimeExecution());
       _isActive = true;
 
       var config = new GraphiteConfiguration(configElement.Attribute("host").Value, configElement.ToInt("port"));

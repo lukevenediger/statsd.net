@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<statsdnet name="statsdnet">
+    <listeners>
+        <!-- this relay will read data that was written by the MSSQL backend -->
+        <mssql-relay batchSize="10" deleteAfterSend="false" pollInterval="1s" connectionString="your-db-connection-string" />
+    </listeners>
+    <aggregation flushInterval="5s">
+        <gauges namespace="luke.gauges" removeZeroGauges="true" />
+        <counters namespace="luke.counters" />
+        <sets namespace="luke.sets" />
+        <calendargrams namespace="luke.calgrams" />
+        <timers namespace="luke.timers" calculateSumSquares="false">
+            <percentile name="p90-5min" threshold="90" flushInterval="5m" />
+            <percentile name="p90-1hour" threshold="90" flushInterval="1h" />
+            <percentile name="p50-1hour" threshold="50" flushInterval="1h" />
+        </timers>
+    </aggregation>
+    <backends>
+        <graphite-tcp host="metricsas1" port="2003" />
+        <console />
+    </backends>
+</statsdnet>

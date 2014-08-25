@@ -92,7 +92,6 @@
     <Compile Include="Structures\LatencyDatapointBox.cs" />
     <Compile Include="Structures\PercentileBucket.cs" />
     <Compile Include="Structures\RawBucket.cs" />
-    <Compile Include="Structures\RelayMetric.cs" />
     <Compile Include="Structures\SetsBucket.cs" />
     <Compile Include="Structures\TimeWindow.cs" />
     <Compile Include="SuperCheapIOC.cs" />

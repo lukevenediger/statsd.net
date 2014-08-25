@@ -114,7 +114,7 @@ namespace statsd.net
               _messageBroadcaster,
               systemMetrics);
             // Load Listeners
-            LoadListeners(config, systemMetrics);
+            LoadListeners(config, _tokenSource.Token, systemMetrics);
 
             // Now start the interval service
             intervalServices.ForEach(p => p.Start());
@@ -200,7 +200,9 @@ namespace statsd.net
             }
         }
 
-        private void LoadListeners(StatsdnetConfiguration config, ISystemMetricsService systemMetrics)
+        private void LoadListeners(StatsdnetConfiguration config, 
+            CancellationToken cancellationToken,
+            ISystemMetricsService systemMetrics)
         {
             // Load listeners - done last and once the rest of the chain is in place
             foreach (var listenerConfig in config.Listeners)
@@ -228,6 +230,16 @@ namespace statsd.net
                     var statsdnetConfig = listenerConfig as StatsdnetListenerConfiguration;
                     AddListener(new StatsdnetTcpListener(statsdnetConfig.Port, systemMetrics));
                     systemMetrics.LogCount("startup.listener.statsdnet." + statsdnetConfig.Port);
+                }
+                else if (listenerConfig is MSSQLRelayListenerConfiguration)
+                {
+                    var mssqlRelayConfig = listenerConfig as MSSQLRelayListenerConfiguration;
+                    AddListener(new MSSQLRelayListener(mssqlRelayConfig.ConnectionString,
+                        mssqlRelayConfig.PollInterval,
+                        cancellationToken,
+                        mssqlRelayConfig.BatchSize,
+                        mssqlRelayConfig.DeleteAfterSend,
+                        systemMetrics));
                 }
             }
         }
