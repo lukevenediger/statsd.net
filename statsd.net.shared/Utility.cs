@@ -62,7 +62,7 @@ namespace statsd.net.shared
     
     public static ExecutionDataflowBlockOptions OneAtATimeExecution()
     {
-      return new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = ExecutionDataflowBlockOptions.Unbounded };
+      return new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = 1 };
     }
 
     public static TimeSpan ConvertToTimespan(string time)

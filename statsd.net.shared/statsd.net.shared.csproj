@@ -86,6 +86,7 @@
     <Compile Include="Services\SystemMetricsService.cs" />
     <Compile Include="Structures\CounterBucket.cs" />
     <Compile Include="Structures\DatapointBox.cs" />
+    <Compile Include="Structures\GaugeOperation.cs" />
     <Compile Include="Structures\GaugesBucket.cs" />
     <Compile Include="Structures\LatencyBucket.cs" />
     <Compile Include="Structures\LatencyDatapointBox.cs" />
