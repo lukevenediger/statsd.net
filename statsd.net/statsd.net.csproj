@@ -104,6 +104,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
+    <None Include="statsdnet.config.graphite">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="statsdnet.config.dbrelay">
       <SubType>Designer</SubType>
     </None>

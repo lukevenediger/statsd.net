@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<statsdnet name="statsdnet">
+    <listeners>
+        <udp port="12000" />
+    </listeners>
+    <aggregation flushInterval="5s">
+        <gauges namespace="gauges" removeZeroGauges="true" />
+        <counters namespace="counters" />
+        <sets namespace="sets" />
+        <calendargrams namespace="calgrams" />
+        <timers namespace="timers" calculateSumSquares="false">
+            <percentile name="p90-5min" threshold="90" flushInterval="5m" />
+            <percentile name="p90-1hour" threshold="90" flushInterval="1h" />
+            <percentile name="p50-1hour" threshold="50" flushInterval="1h" />
+        </timers>
+    </aggregation>
+    <backends>
+        <graphite host="graphite" port="2003" />
+        <console />
+    </backends>
+</statsdnet>

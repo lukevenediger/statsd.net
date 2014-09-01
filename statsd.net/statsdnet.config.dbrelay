@@ -2,7 +2,7 @@
 <statsdnet name="statsdnet">
     <listeners>
         <!-- this relay will read data that was written by the MSSQL backend -->
-        <mssql-relay batchSize="10" deleteAfterSend="false" pollInterval="1s" connectionString="your-db-connection-string" />
+        <mssql-relay batchSize="10" deleteAfterSend="true" pollInterval="1s" connectionString="your-db-connection-string" />
     </listeners>
     <aggregation flushInterval="5s">
         <gauges namespace="luke.gauges" removeZeroGauges="true" />

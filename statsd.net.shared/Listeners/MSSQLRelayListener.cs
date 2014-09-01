@@ -134,6 +134,11 @@ namespace statsd.net.shared.Listeners
                 if (counter > 0)
                 {
                     UpdateLastRowID(conn, lastRowID);
+
+                    if (_deleteAfterSend)
+                    {
+                        DeleteProcessedRecords(conn, lastRowID);
+                    }
                 }
 
                 return rows;
