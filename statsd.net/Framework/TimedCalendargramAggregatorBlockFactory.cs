@@ -40,12 +40,12 @@ namespace statsd.net.Framework
                     (key) =>
                     {
                         var window = new ConcurrentDictionary<string, int>();
-                        window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => oldValue + 1);
+                        window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => 1);
                         return window;
                     },
                     (key, window) =>
                     {
-                        window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => oldValue + 1);
+                        window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => 1);
                         return window;
                     }
                   );
