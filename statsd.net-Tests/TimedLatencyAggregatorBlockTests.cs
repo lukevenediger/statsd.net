@@ -47,12 +47,13 @@ namespace statsd.net_Tests
       _block.WaitUntilAllItemsProcessed();
       _intervalService.Pulse(pulseDate);
 
-      Assert.AreEqual(new GraphiteLine("foo.bar.baz.count", 1, pulseDate.ToEpoch()), _outputBuffer[0]);
-      Assert.AreEqual(new GraphiteLine("foo.bar.baz.min", 100, pulseDate.ToEpoch()), _outputBuffer[1]);
-      Assert.AreEqual(new GraphiteLine("foo.bar.baz.max", 100, pulseDate.ToEpoch()), _outputBuffer[2]);
-      Assert.AreEqual(new GraphiteLine("foo.bar.baz.mean", 100, pulseDate.ToEpoch()), _outputBuffer[3]);
-      Assert.AreEqual(new GraphiteLine("foo.bar.baz.sum", 100, pulseDate.ToEpoch()), _outputBuffer[4]);
-      Assert.AreEqual(5, _outputBuffer.Items.Count);
+      Assert.AreEqual(new GraphiteLine("foo.bar.baz.count", 1, pulseDate.ToEpoch()),_outputBuffer.GetGraphiteLine(0));
+      Assert.AreEqual(new GraphiteLine("foo.bar.baz.min", 100, pulseDate.ToEpoch()), _outputBuffer.GetGraphiteLine(1));
+      Assert.AreEqual(new GraphiteLine("foo.bar.baz.max", 100, pulseDate.ToEpoch()), _outputBuffer.GetGraphiteLine(2));
+      Assert.AreEqual(new GraphiteLine("foo.bar.baz.mean", 100, pulseDate.ToEpoch()), _outputBuffer.GetGraphiteLine(3));
+      Assert.AreEqual(new GraphiteLine("foo.bar.baz.sum", 100, pulseDate.ToEpoch()), _outputBuffer.GetGraphiteLine(4));
+      Assert.AreEqual(new GraphiteLine("foo.bar.baz.sumSquares", 10000, pulseDate.ToEpoch()), _outputBuffer.GetGraphiteLine(5));
+      Assert.AreEqual(6, _outputBuffer.GraphiteLines.Count);
       // Ensure that min, max, mean and sum are all equal
       Assert.IsTrue(_outputBuffer.GetGraphiteLine(1).Quantity == _outputBuffer.GetGraphiteLine(2).Quantity 
         && _outputBuffer.GetGraphiteLine(2).Quantity == _outputBuffer.GetGraphiteLine(3).Quantity
@@ -103,14 +104,16 @@ namespace statsd.net_Tests
       Assert.AreEqual(500, _outputBuffer["foo.max"]);
       Assert.AreEqual(300, _outputBuffer["foo.mean"]);
       Assert.AreEqual(1500, _outputBuffer["foo.sum"]);
+      Assert.AreEqual(550000, _outputBuffer["foo.sumSquares"]);
 
       Assert.AreEqual(5, _outputBuffer["bar.count"]);
       Assert.AreEqual(100, _outputBuffer["bar.min"]);
       Assert.AreEqual(500, _outputBuffer["bar.max"]);
       Assert.AreEqual(300, _outputBuffer["bar.mean"]);
       Assert.AreEqual(1500, _outputBuffer["bar.sum"]);
+      Assert.AreEqual(550000, _outputBuffer["bar.sumSquares"]);
 
-      Assert.AreEqual(10, _outputBuffer.Items.Count);
+      Assert.AreEqual(12, _outputBuffer.GraphiteLines.Count);
     }
 
 

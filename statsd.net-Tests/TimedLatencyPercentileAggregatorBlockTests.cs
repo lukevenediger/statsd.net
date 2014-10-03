@@ -105,7 +105,7 @@ namespace statsd.net_Tests
 
       Assert.AreEqual(400, _outputBuffer["foo.p80"]);
       Assert.AreEqual(400, _outputBuffer["bar.p80"]);
-      Assert.AreEqual(2, _outputBuffer.Items.Count);
+      Assert.AreEqual(1, _outputBuffer.Items.Count);
     }
   }
 }
