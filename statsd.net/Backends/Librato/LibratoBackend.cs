@@ -164,7 +164,7 @@ namespace statsd.net.Backends.Librato
           break;
         case BucketType.Percentile:
           var percentileBucket = bucket as PercentileBucket;
-          int percentileValue;
+          double percentileValue;
           foreach (var pair in percentileBucket.Timings)
           {
             if (percentileBucket.TryComputePercentile(pair, out percentileValue))

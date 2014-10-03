@@ -34,7 +34,7 @@ namespace statsd.net_Tests.Infrastructure
       return _targetBlock[line];
     }
 
-    public int this[string key]
+    public double this[string key]
     {
       get { return _targetBlock[key]; }
     }

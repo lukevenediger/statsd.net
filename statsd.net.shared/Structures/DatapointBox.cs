@@ -10,16 +10,16 @@ namespace statsd.net.shared.Structures
   {
     private object _sync;
     private int _size;
-    private int[] _points;
-    private LinkedList<int> _pointsList;
+    private double[] _points;
+    private LinkedList<double> _pointsList;
     private bool _reachedLimit;
     private Random _random;
 
-    public DatapointBox(int size, int? firstDataPoint = null)
+    public DatapointBox(int size, double? firstDataPoint = null)
     {
       _size = size;
       _sync = new object();
-      _pointsList = new LinkedList<int>();
+      _pointsList = new LinkedList<double>();
       _reachedLimit = false;
       _random = new Random();
 
@@ -29,7 +29,7 @@ namespace statsd.net.shared.Structures
       }
     }
 
-    public virtual void Add(int dataPoint)
+    public virtual void Add(double dataPoint)
     {
       lock (_sync)
       {
@@ -37,7 +37,7 @@ namespace statsd.net.shared.Structures
       }
     }
 
-    protected void AddInternal(int dataPoint)
+    protected void AddInternal(double dataPoint)
     {
         if (_reachedLimit)
         {
@@ -58,7 +58,7 @@ namespace statsd.net.shared.Structures
         }
     }
 
-    public int[] ToArray()
+    public double[] ToArray()
     {
       lock (_sync)
       {

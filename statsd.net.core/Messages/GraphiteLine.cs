@@ -5,15 +5,15 @@ namespace statsd.net.core.Messages
 {
   public class GraphiteLine
   {
-    private readonly int _quantity;
+    private readonly double _quantity;
     private readonly long _epoc;
 
     public string Name { get; private set; }
-    public int Quantity { get { return _quantity; } }
+    public double Quantity { get { return _quantity; } }
     public long Epoc { get { return _epoc; } }
 
     public GraphiteLine(string name, 
-      int quantity, 
+      double quantity,
       long? epoc = null)
     {
       Name = name;

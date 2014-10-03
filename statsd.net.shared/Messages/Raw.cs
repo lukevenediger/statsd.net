@@ -8,11 +8,11 @@ namespace statsd.net.shared.Messages
 {
   public class Raw : StatsdMessage
   {
-    public int Value { get; set; }
+    public double Value { get; set; }
     public long? Timestamp { get; set; }
 
     public Raw(string name,
-      int value,
+      double value,
       long? timestamp = null)
     {
       MessageType = MessageType.Raw;

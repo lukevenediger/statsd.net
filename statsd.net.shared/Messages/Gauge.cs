@@ -8,9 +8,9 @@ namespace statsd.net.shared.Messages
 {
   public sealed class Gauge : StatsdMessage
   {
-    public int Value { get; set; }
+    public double Value { get; set; }
 
-    public Gauge(string name, int value)
+    public Gauge(string name, double value)
     {
       Name = name;
       Value = value;

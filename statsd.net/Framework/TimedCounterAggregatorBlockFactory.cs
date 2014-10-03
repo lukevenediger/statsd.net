@@ -21,7 +21,7 @@ namespace statsd.net.Framework
       IIntervalService intervalService,
       ILog log)
     {
-      var counters = new ConcurrentDictionary<string, int>();
+      var counters = new ConcurrentDictionary<string, double>();
       var root = rootNamespace;
       var ns = String.IsNullOrEmpty(rootNamespace) ? "" : (rootNamespace + ".");
 

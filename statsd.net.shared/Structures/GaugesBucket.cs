@@ -12,9 +12,9 @@ namespace statsd.net.shared.Structures
 {
   public class GaugesBucket : Bucket
   {
-    public KeyValuePair<string, int>[] Gauges { get; set; }
+    public KeyValuePair<string, double>[] Gauges { get; set; }
 
-    public GaugesBucket(KeyValuePair<string, int>[] gauges, long epoch, string rootNamespace = "")
+    public GaugesBucket(KeyValuePair<string, double>[] gauges, long epoch, string rootNamespace = "")
       : base(BucketType.Gauge, epoch, rootNamespace)
     {
       Gauges = gauges;

@@ -11,17 +11,17 @@ namespace statsd.net.Backends.Librato
     {
       public string name { get; set; }
       public int count { get; set; }
-      public int sum { get; set; }
-      public int sum_squares { get; set; }
-      public int min { get; set; }
-      public int max { get; set; }
+      public double sum { get; set; }
+      public double sum_squares { get; set; }
+      public double min { get; set; }
+      public double max { get; set; }
 
       public LibratoTiming(string name, 
         int count,
-        int sum,
-        int sumOfSquares,
-        int min,
-        int max,
+        double sum,
+        double sumOfSquares,
+        double min,
+        double max,
         long epoch)
         : base(LibratoMetricType.Timing, epoch)
       {

@@ -12,9 +12,9 @@ namespace statsd.net.shared.Structures
 {
   public class SetsBucket : Bucket
   {
-    public List<KeyValuePair<string, List<KeyValuePair<int, bool>>>> Sets { get; private set; }
+    public List<KeyValuePair<string, List<KeyValuePair<double, bool>>>> Sets { get; private set; }
 
-    public SetsBucket(List<KeyValuePair<string, List<KeyValuePair<int, bool>>>> sets, 
+    public SetsBucket(List<KeyValuePair<string, List<KeyValuePair<double, bool>>>> sets,
       long epoch, 
       string rootNamespace = "")
       : base(BucketType.Set, epoch, rootNamespace)
