@@ -12,9 +12,9 @@ namespace statsd.net.Backends.Librato
   public class LibratoCounter : LibratoMetric
   {
     public string name { get; set; }
-    public int value { get; set; }
+    public double value { get; set; }
 
-    public LibratoCounter(string name, int value, long epoch)
+    public LibratoCounter(string name, double value, long epoch)
       : base(LibratoMetricType.Counter, epoch)
     {
       this.name = Regex.Replace(name, LibratoBackend.ILLEGAL_NAME_CHARACTERS, "_");

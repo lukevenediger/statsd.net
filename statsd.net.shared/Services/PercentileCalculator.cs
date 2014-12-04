@@ -8,7 +8,7 @@ namespace statsd.net.shared.Services
 {
   public static class PercentileCalculator
   {
-    public static bool TryCompute(List<int> data, int percentile, out int percentileValue)
+    public static bool TryCompute(List<double> data, int percentile, out double percentileValue)
     {
       percentileValue = 0;
       if (percentile < 0 || percentile > 100)

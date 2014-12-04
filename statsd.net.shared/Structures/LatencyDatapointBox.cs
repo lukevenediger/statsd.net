@@ -12,23 +12,23 @@ namespace statsd.net.shared.Structures
   {
     private object _sync;
 
-    public int Min { get; private set; }
-    public int Max { get; private set; }
+    public double Min { get; private set; }
+    public double Max { get; private set; }
     private int _count;
     public int Count { get { return _count; } }
-    private int _sum;
-    public int Sum { get { return _sum; } }
-    public int Mean
+    private double _sum;
+    public double Sum { get { return _sum; } }
+    public double Mean
     {
       get
       {
-        return Convert.ToInt32(base.ToArray().Average());
+        return base.ToArray().Average();
       }
     }
-    private int _sumSquares;
-    public int SumSquares { get { return _sumSquares; } }
+    private double _sumSquares;
+    public double SumSquares { get { return _sumSquares; } }
 
-    public LatencyDatapointBox(int maxItems = 1000, int? firstDataPoint = null)
+    public LatencyDatapointBox(int maxItems = 1000, double? firstDataPoint = null)
       : base(maxItems)
     {
       _sync = new Object();
@@ -38,11 +38,11 @@ namespace statsd.net.shared.Structures
       if (firstDataPoint.HasValue) Add(firstDataPoint.Value);
     }
 
-    public override void Add(int dataPoint)
+    public override void Add(double dataPoint)
     {
-      Interlocked.Add(ref _sum, dataPoint);
+      AtomicAdd(ref _sum, dataPoint);
       Interlocked.Increment(ref _count);
-      Interlocked.Add(ref _sumSquares, dataPoint * dataPoint);
+      AtomicAdd(ref _sumSquares, dataPoint * dataPoint);
       lock (_sync)
       {
         if (Min == -1 || dataPoint < Min) Min = dataPoint;
@@ -51,5 +51,18 @@ namespace statsd.net.shared.Structures
         base.AddInternal(dataPoint);
       }
     }
+
+    public double AtomicAdd(ref double location1, double value)
+    {
+      double newCurrentValue = 0;
+      while (true)
+      {
+        double currentValue = newCurrentValue;
+        double newValue = currentValue + value;
+        newCurrentValue = Interlocked.CompareExchange(ref location1, newValue, currentValue);
+        if (newCurrentValue == currentValue)
+          return newValue;
+       }
+     }
   }
 }

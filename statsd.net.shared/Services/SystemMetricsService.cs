@@ -23,7 +23,7 @@ namespace statsd.net.shared.Services
   {
     private string _prefix;
     private ITargetBlock<Bucket> _target;
-    private ConcurrentDictionary<string, int> _metrics;
+    private ConcurrentDictionary<string, double> _metrics;
     public bool HideSystemStats { get; set; }
 
     public SystemMetricsService(string serviceName, string prefix = null, IIntervalService intervalService = null, bool hideSystemStats = false)
@@ -33,7 +33,7 @@ namespace statsd.net.shared.Services
         intervalService = new IntervalService(10);
       }
       _prefix = serviceName + "." + (String.IsNullOrEmpty(prefix) ? String.Empty : (prefix + "."));
-      _metrics = new ConcurrentDictionary<string, int>();
+      _metrics = new ConcurrentDictionary<string, double>();
       HideSystemStats = hideSystemStats;
       intervalService.Elapsed += SendMetrics;
       intervalService.Start();

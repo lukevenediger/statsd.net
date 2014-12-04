@@ -32,7 +32,7 @@ namespace statsd.net.shared.Structures
     public override GraphiteLine[] ToLines()
     {
       var lines = new List<GraphiteLine>();
-      int percentileValue;
+      double percentileValue;
       foreach (var measurements in Timings)
       {
         if (TryComputePercentile(measurements, out percentileValue))
@@ -50,7 +50,7 @@ namespace statsd.net.shared.Structures
 
     public override void FeedTarget(ITargetBlock<GraphiteLine> target)
     {
-      int percentileValue;
+      double percentileValue;
       foreach (var measurements in Timings)
       {
         if (TryComputePercentile(measurements, out percentileValue))
@@ -64,7 +64,7 @@ namespace statsd.net.shared.Structures
       }
     }
 
-    public bool TryComputePercentile(KeyValuePair<string, DatapointBox> pair, out int percentileValue)
+    public bool TryComputePercentile(KeyValuePair<string, DatapointBox> pair, out double percentileValue)
     {
       return PercentileCalculator.TryCompute(
         pair.Value.ToArray().ToList(),
@@ -75,7 +75,7 @@ namespace statsd.net.shared.Structures
     public override string ToString ()
     {
       var graphiteLines = new List<string>();
-      int percentileValue;
+      double percentileValue;
       foreach (var measurements in Timings)
       {
         if (TryComputePercentile(measurements, out percentileValue))

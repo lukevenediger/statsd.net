@@ -83,7 +83,7 @@ namespace statsd.net.Framework
                           var qualifier = "." + parts[0] + "." + parts[1];
 
                           var metricsAndValues = window.ToArray();
-                          var metrics = new Dictionary<String, int>();
+                          var metrics = new Dictionary<String, double>();
                           for (int index = 0; index < metricsAndValues.Length; index++)
                           {
                               var metricName = metricsAndValues[index].Key.Split(METRIC_IDENTIFIER_SEPARATOR_SPLITTER, StringSplitOptions.RemoveEmptyEntries)[0] + qualifier;
@@ -99,7 +99,7 @@ namespace statsd.net.Framework
 
                           var metricList = metrics.Select(metric =>
                               {
-                                  return new KeyValuePair<string, int>(
+                                  return new KeyValuePair<string, double>(
                                     metric.Key,
                                     metric.Value
                                   );

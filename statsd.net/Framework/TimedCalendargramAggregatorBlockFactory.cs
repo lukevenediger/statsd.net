@@ -26,7 +26,7 @@ namespace statsd.net.Framework
           ITimeWindowService timeWindowService,
           ILog log)
         {
-            var windows = new ConcurrentDictionary<string, ConcurrentDictionary<string, int>>();
+            var windows = new ConcurrentDictionary<string, ConcurrentDictionary<string, double>>();
             var root = rootNamespace;
             var ns = String.IsNullOrEmpty(rootNamespace) ? "" : rootNamespace + ".";
 
@@ -39,7 +39,7 @@ namespace statsd.net.Framework
                   windows.AddOrUpdate(period,
                     (key) =>
                     {
-                        var window = new ConcurrentDictionary<string, int>();
+                        var window = new ConcurrentDictionary<string, double>();
                         window.AddOrUpdate(metricName, (key2) => 1, (key2, oldValue) => 1);
                         return window;
                     },
@@ -69,14 +69,14 @@ namespace statsd.net.Framework
 
                   foreach (var period in periodsNotPresent)
                   {
-                      ConcurrentDictionary<String, int> window;
+                      ConcurrentDictionary<String, double> window;
                       if (windows.TryRemove(period, out window))
                       {
                           var parts = period.Split(UNDERSCORE);
                           var qualifier = "." + parts[0] + "." + parts[1];
 
                           var metricsAndValues = window.ToArray();
-                          var metrics = new Dictionary<String, int>();
+                          var metrics = new Dictionary<String, double>();
                           for (int index = 0; index < metricsAndValues.Length; index++)
                           {
                               var metricName = metricsAndValues[index].Key.Split(
@@ -96,7 +96,7 @@ namespace statsd.net.Framework
 
                           var metricList = metrics.Select(metric =>
                           {
-                              return new KeyValuePair<string, int>(
+                              return new KeyValuePair<string, double>(
                                 metric.Key,
                                 metric.Value
                               );

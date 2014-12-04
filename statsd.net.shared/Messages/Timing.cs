@@ -8,9 +8,9 @@ namespace statsd.net.shared.Messages
 {
   public sealed class Timing : StatsdMessage
   {
-    public int ValueMS { get; set; }
+    public double ValueMS { get; set; }
 
-    public Timing(string name, int valueMS)
+    public Timing(string name, double valueMS)
     {
       Name = name;
       ValueMS = valueMS;

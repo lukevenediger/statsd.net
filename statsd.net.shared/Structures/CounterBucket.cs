@@ -10,9 +10,9 @@ using System.Threading.Tasks.Dataflow;
 
 namespace statsd.net.shared.Structures
 {
-  public class CounterBucket : Bucket<int>
+  public class CounterBucket : Bucket<double>
   {
-    public CounterBucket(KeyValuePair<string, int>[] counts, long epoch, string rootNamespace = "")
+    public CounterBucket(KeyValuePair<string, double>[] counts, long epoch, string rootNamespace = "")
       : base(BucketType.Count, counts, epoch, rootNamespace)
     {
     }
