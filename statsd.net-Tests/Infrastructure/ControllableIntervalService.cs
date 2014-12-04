@@ -41,7 +41,7 @@ namespace statsd.net_Tests.Infrastructure
     public DateTime Pulse(DateTime? pulseDateTime = null)
     {
       pulseDateTime = pulseDateTime ?? DateTime.Now;
-      FireEvent( RunOnceDateTime.ToEpoch() );
+      FireEvent( pulseDateTime.Value.ToEpoch() );
       return pulseDateTime.Value;
     }
 
