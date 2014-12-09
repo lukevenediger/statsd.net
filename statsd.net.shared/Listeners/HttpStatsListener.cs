@@ -1,10 +1,8 @@
 ﻿using Kayak;
 using Kayak.Http;
 using statsd.net.core;
-using statsd.net.shared.Services;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -18,7 +16,7 @@ namespace statsd.net.shared.Listeners
   public class HttpStatsListener : IListener
   {
     private const string FLASH_CROSSDOMAIN = "<?xml version=\"1.0\" ?>\r\n<cross-domain-policy>\r\n  <allow-access-from domain=\"*\" />\r\n</cross-domain-policy>\r\n";
-
+    private const string SILVERLIGHT_CROSSDOMAIN = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n <access-policy>\r\n <cross-domain-access>\r\n <policy>\r\n <allow-from http-request-headers=\"SOAPAction\">\r\n <domain uri=\"http://*\"/>\r\n <domain uri=\"https://*\" />\r\n </allow-from>\r\n <grant-to>\r\n <resource include-subpaths=\"true\" path=\"/\"/>\r\n </grant-to>\r\n </policy>\r\n </cross-domain-access>\r\n </access-policy>\r\n";
     private IScheduler _scheduler;
     private ISystemMetricsService _systemMetrics;
     private ITargetBlock<string> _target;
@@ -36,23 +34,23 @@ namespace statsd.net.shared.Listeners
       IsListening = true;
       _scheduler = KayakScheduler.Factory.Create(new SchedulerDelegate());
       var wsTask = Task.Factory.StartNew(() =>
-        {
-          var server = KayakServer.Factory.CreateHttp(
-            new RequestDelegate(this),
-            _scheduler);
+      {
+        var server = KayakServer.Factory.CreateHttp(
+          new RequestDelegate(this),
+          _scheduler);
 
-          using (server.Listen(new IPEndPoint(IPAddress.Any, _port)))
-          {
-            _scheduler.Start();
-          }
-          IsListening = false;
-        });
+        using (server.Listen(new IPEndPoint(IPAddress.Any, _port)))
+        {
+          _scheduler.Start();
+        }
+        IsListening = false;
+      });
 
       Task.Factory.StartNew(() =>
-        {
-          token.WaitHandle.WaitOne();
-          _scheduler.Stop();
-        });
+      {
+        token.WaitHandle.WaitOne();
+        _scheduler.Stop();
+      });
     }
 
     public bool IsListening { get; private set; }
@@ -61,7 +59,7 @@ namespace statsd.net.shared.Listeners
     {
       public void OnException(IScheduler scheduler, Exception e)
       {
-         // Ignore
+        // Ignore
       }
 
       public void OnStop(IScheduler scheduler)
@@ -77,8 +75,8 @@ namespace statsd.net.shared.Listeners
         _parent = parent;
       }
 
-      public void OnRequest(HttpRequestHead head, 
-        IDataProducer body, 
+      public void OnRequest(HttpRequestHead head,
+        IDataProducer body,
         IHttpResponseDelegate response)
       {
         if (head.Method.ToUpperInvariant() == "OPTIONS")
@@ -92,6 +90,10 @@ namespace statsd.net.shared.Listeners
         else if (head.Method.ToUpperInvariant() == "GET" && head.Uri == "/crossdomain.xml")
         {
           ProcessCrossDomainRequest(body, response);
+        }
+        else if (head.Method.ToUpperInvariant() == "GET" && head.Uri == "/clientaccesspolicy.xml")
+        {
+          ProcessClientAccessPolicyRequest(body, response);
         }
         else if (head.Method.ToUpperInvariant() == "GET" && head.QueryString.Contains("metrics"))
         {
@@ -126,32 +128,32 @@ namespace statsd.net.shared.Listeners
 
       private void ProcessPOSTRequest(IDataProducer body, IHttpResponseDelegate response)
       {
-          body.Connect(new BufferedConsumer(
-            (payload) =>
+        body.Connect(new BufferedConsumer(
+          (payload) =>
+          {
+            try
             {
-              try
-              {
-                _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(payload));
-                // Further split by ',' to match the GET while keeping backward compatibility and allowing you to use the join for both methods.
-                string[] lines = payload.Replace("\r", "").Split(new char[] { '\n', ',' }, StringSplitOptions.RemoveEmptyEntries);                
+              _parent._systemMetrics.LogCount("listeners.http.bytes", Encoding.UTF8.GetByteCount(payload));
+              // Further split by ',' to match the GET while keeping backward compatibility and allowing you to use the join for both methods.
+              string[] lines = payload.Replace("\r", "").Split(new char[] { '\n', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-                for (int index = 0; index < lines.Length; index++)
-                {
-                  _parent._target.Post(lines[index]);
-                }
-                _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
-                Respond(response, "200 OK");
-              }
-              catch
+              for (int index = 0; index < lines.Length; index++)
               {
-                Respond(response, "400 bad request");
+                _parent._target.Post(lines[index]);
               }
-
-            },
-            (error) =>
+              _parent._systemMetrics.LogCount("listeners.http.lines", lines.Length);
+              Respond(response, "200 OK");
+            }
+            catch
             {
-              Respond(response, "500 Internal server error");
-            }));
+              Respond(response, "400 bad request");
+            }
+
+          },
+          (error) =>
+          {
+            Respond(response, "500 Internal server error");
+          }));
       }
 
       private void ProcessCrossDomainRequest(IDataProducer body, IHttpResponseDelegate response)
@@ -168,6 +170,21 @@ namespace statsd.net.shared.Listeners
         };
         response.OnResponse(responseHead, new BufferedProducer(FLASH_CROSSDOMAIN));
       }
+
+      private void ProcessClientAccessPolicyRequest(IDataProducer body, IHttpResponseDelegate response)
+      {
+        var responseHead = new HttpResponseHead()
+        {
+          Status = "200 OK",
+          Headers = new Dictionary<string, string>
+            {
+              { "Content-Type", "text/xml" },
+              { "Content-Length", Encoding.UTF8.GetByteCount(SILVERLIGHT_CROSSDOMAIN).ToString() }
+            }
+        };
+        response.OnResponse(responseHead, new BufferedProducer(SILVERLIGHT_CROSSDOMAIN));
+      }
+
 
       private void ProcessGETRequest(IDataProducer body, HttpRequestHead head, IHttpResponseDelegate response)
       {
@@ -201,7 +218,7 @@ namespace statsd.net.shared.Listeners
         _parent._systemMetrics.LogCount("listeners.http.loadbalancer");
         Respond(response, "200 OK");
       }
-      
+
       private void ProcessFileNotFound(IDataProducer body, IHttpResponseDelegate response)
       {
         _parent._systemMetrics.LogCount("listeners.http.404");
@@ -246,7 +263,7 @@ namespace statsd.net.shared.Listeners
         _callback = callback;
         _error = error;
       }
-      
+
       public bool OnData(ArraySegment<byte> data, Action continuation)
       {
         _buffer.Add(data);
