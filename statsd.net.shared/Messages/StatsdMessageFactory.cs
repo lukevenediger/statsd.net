@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace statsd.net.shared.Messages
 {
@@ -31,19 +32,19 @@ namespace statsd.net.shared.Messages
             if (statProperties.Length == 2)
             {
               // gorets:1|c
-              return new Counter(nameAndValue[0], Double.Parse(statProperties[0]));
+              return new Counter(nameAndValue[0], Double.Parse(statProperties[0], CultureInfo.InvariantCulture));
             }
             else
             {
               // gorets:1|c|@0.1
-              return new Counter(nameAndValue[0], Double.Parse(statProperties[0]), float.Parse(statProperties[2].Remove(0, 1)));
+              return new Counter(nameAndValue[0], Double.Parse(statProperties[0], CultureInfo.InvariantCulture), float.Parse(statProperties[2].Remove(0, 1), CultureInfo.InvariantCulture));
             }
           case "ms":
             // glork:320|ms
-            return new Timing(nameAndValue[0], Double.Parse(statProperties[0]));
+            return new Timing(nameAndValue[0], Double.Parse(statProperties[0], CultureInfo.InvariantCulture));
           case "g":
             // gaugor:333|g
-            return new Gauge(nameAndValue[0], Double.Parse(statProperties[0]));
+            return new Gauge(nameAndValue[0], Double.Parse(statProperties[0], CultureInfo.InvariantCulture));
           case "s":
             // uniques:765|s
             // uniques:ABSA434As1|s
@@ -53,11 +54,11 @@ namespace statsd.net.shared.Messages
             // some.other.value:12312|r|99988883333
             if (statProperties.Length == 2)
             {
-              return new Raw(nameAndValue[0], Double.Parse(statProperties[0]));
+              return new Raw(nameAndValue[0], Double.Parse(statProperties[0], CultureInfo.InvariantCulture));
             }
             else
             {
-              return new Raw(nameAndValue[0], Double.Parse(statProperties[0]), long.Parse(statProperties[2]));
+              return new Raw(nameAndValue[0], Double.Parse(statProperties[0], CultureInfo.InvariantCulture), long.Parse(statProperties[2]));
             }
           case "cg":
             // calendargram.key:value|cg|{h,d,w,m,dow}
